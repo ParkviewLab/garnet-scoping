@@ -130,86 +130,94 @@ R7.9. A session that continues an earlier one under a new id (resumed or forked:
 
 ## Proposed: seeing more of what sessions do (2026-11-14)
 
-These requirements are proposed, not decided: they extend R1, R2, R3 and R7 and await review, and each open question below (Q5 to Q16) is a choice for the owner. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2).
+These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7 and await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
 
 ### R8. Live state
 
 Now: the session list shows a session's title, folder and time of last activity, and marks it recently active when its transcript was written in the last ten minutes (R1.1); a Desk says when the agent has spoken last and the turn is the person's (R2.4), but shows a session stopped inside a turn, on a permission request or a question, as at work, and neither knows whether the session is still running.
 
-R8.1. Each live session's state is one of: **Working**, **Idle** (with the time it became idle), or **Waiting for you**. It is shown on the session's row in the list and on the header of its window, and it is current within two seconds of the session's state changing. Idle stands beside R2.4's "your turn", which still says that the agent has spoken last.
+R8.1. Each session's state is one of: **Working**; **Idle** (with the time it became idle); **Waiting for you**; **Not running** (no Claude Code process holds it; it can be resumed); or **Unknown** (the app cannot read its state, R8.5). It is shown on the session's row in the list and on the header of its window, and, while the session files are readable (P8), it is current within two seconds of the session's state changing. Idle stands beside R2.4's "your turn", which still says that the agent has spoken last. The "recently active" mark of R1.1 remains for sessions whose state is Not running.
 
-R8.2. A session that is not running is shown as such, distinct from Idle, so that a finished session is never taken for one waiting.
+R8.2. A session is **Waiting for you** when it is stopped inside a turn on a permission request or on a question put through Claude Code's question tool (AskUserQuestion); when it is holding (R2.8); or when its turn ended with a question in the desktop app's next-step box (R2.4's "Asked"). A turn that simply ended is Idle, whether or not the agent's last message asks anything (R2.4). A background session (started with `claude --bg`) that waits with no terminal attached is Waiting for you, labelled "background, attach to answer", where Claude Code records whether one is attached.
 
-R8.3. The list can be sorted so that sessions waiting for the person come first, and the number of sessions waiting for the person is shown where the person sees it without opening the app (on macOS, the Dock icon's badge; on Ubuntu, Q8).
+R8.3. In the list, sessions waiting for the person come first within each project's group; the list also offers a flat view of all sessions with those waiting first. The number of sessions waiting for the person is shown on the Dock icon's badge on macOS (which needs the person's permission for notifications), and on Ubuntu on the dock icon where the system supports a count, and nowhere where it does not.
 
-R8.4. **Why it waits:** when a session is waiting for the person, the Desk says on what, and since when: a permission request, named by the tool and its one-line description as R5.2 names actions (never the raw command or input); or a question put through Claude Code's question tool (AskUserQuestion). A waiting reason disappears when the session moves on.
+R8.4. **Why it waits:** when a session is waiting for the person, the Desk says on what, and since when: a permission request, named by the tool and its one-line description as R5.2 names actions (never the raw command); a question put through the question tool, shown with its text and the labels of its options, which are the agent's words, not a tool's output (taken from the transcript where live state does not carry them); a hold; or a next-step question. A reason the app does not recognise is shown as Claude Code gives it, and counted as waiting. A waiting reason is removed when the session moves on, unless a Discuss mark on it is open.
 
-R8.5. Where the source of live state is missing or reads nothing the app recognises, the app falls back to what it shows now (R1.1, R2.4) and says that live state is unavailable, as R6 requires of format drift.
+R8.5. Where the source of live state is missing or reads nothing the app recognises (P8), the app falls back to what it shows now (R1.1, R2.4), shows the state as Unknown, and says that live state is unavailable, as R6 requires of format drift.
 
-### R9. Dispatches
+### R9. Subagents
 
 Now: a subagent appears as the action that started it, in Now and the Trail (R2.2, R3.1), and that action's output, shown on request (R5.2), is its final report; one started in the background is also listed in Waiting while it runs (R2.3), and its completion notice appears in the Trail. Its own actions are not shown (S5).
 
-R9.1. The window has a sixth panel, **Dispatches**, turned on and off like the others; this adds it to D9's list. It lists every subagent the session started, including those started in the background, newest first: its agent type, the task description it was given, the model it ran on, whether it is still running, and, once finished, its duration, its token count and its number of tool calls.
+R9.1. The window has a sixth panel, **Subagents**, turned on and off like the others; this adds it to D9's list. It lists every subagent the session started, including those started in the background, newest first: its agent type, the task description it was given, the model it ran on with its effort level beside it ("Opus 5.5, max"), whether it is still running, stopped without finishing (its session ended first), or finished, and, once finished and where Claude Code recorded them, its duration, its token count and its number of tool calls. Background sessions are not listed here: each is a session of its own, with its own row in the list (R1.1).
 
-R9.2. A dispatch's row expands to its own actions, shown as R2.2 and R3.1 show the session's (descriptions and targets, with raw output only for the action the person picks, R5.2), and to its final report.
+R9.2. A subagent's row expands to its own actions, shown as R2.2 and R3.1 show the session's (descriptions and targets, with raw output only for the action the person picks, R5.2), and to its final report. A subagent that a subagent started is shown beneath it.
 
-R9.3. A dispatch's row is linked to the action in the Trail that started it, and that action to the row, so that either leads to the other.
+R9.3. A subagent's row is linked to the action in the Trail that started it, and that action to the row, so that either leads to the other.
+
+R9.4. A Discuss mark on a subagent's row or on one of its actions reaches the session's agent as any mark does; the agent answers from the subagent's transcript, which the mark names.
 
 ### R10. Background work and wake-ups
 
 Now: Waiting (R2.3) lists background work that the transcript shows was started and not yet seen to finish, inferred from its records.
 
-R10.1. Waiting lists the session's running background work as Claude Code reports it at the end of each turn: each item's description and how long it has run, and the command by its description, with its raw text only for the item the person picks (R5.2).
+R10.1. Waiting lists the session's running background work from both sources: what the transcript shows (as now), and what Claude Code reports at the end of each turn. Work started or finished in the middle of a turn is shown from the transcript at once; the end-of-turn report confirms it and adds what the transcript does not show. Each item shows its description and how long it has run, and the time of the last report is shown. A command is shown by its description, with its raw text only for the item the person picks (R5.2).
 
-R10.2. Waiting also lists the session's scheduled wake-ups: each one's next time ("wakes at 14:30"), whether it recurs, and the prompt it will send (its extent is Q11).
+R10.2. Waiting also lists the session's scheduled wake-ups: each one's next time ("wakes at 14:30"), whether it recurs, and the prompt it will send, by its first line, expandable to the whole of it.
 
-R10.3. Where the report is unavailable (the hook is not installed, or the session predates it), Waiting falls back to what it shows now, and says so.
+R10.3. Where the report is unavailable (the hook is not installed, or the session predates it), Waiting shows what the transcript shows, as now, and says so.
 
 ### R11. Compaction
 
-Now: a compaction is not shown. The summary the session continues from is recorded as a message of the person's kind, and the reader hides it as a system record, so the Trail runs on past the compaction with no sign of it.
+Now: a compaction is not shown. The summary the session continues from is recorded as a message of the person's kind, and the reader hides it as a system record because its opening words match a fixed list, so the Trail runs on past the compaction with no sign of it.
 
 R11.1. Where the session's context was compacted, the Trail shows a marker at that point: when it happened, whether the person or Claude Code started it, and how much context it replaced.
 
-R11.2. The marker expands to the summary the agent continues from, so that the person can see what the agent still holds of the earlier session. The summary is the session's work, not its setup (R5.5).
+R11.2. The marker expands to the summary the agent continues from, so that the person can see what the agent still holds of the earlier session: its first paragraph, expandable to the whole, shown rendered in a box that scrolls. The summary is the session's work, not its setup (R5.5).
 
-R11.3. The summary is never shown as a message from the person (R3.1).
+R11.3. The summary is recognised by the field Claude Code marks it with, not by its wording, and is never shown as a message from the person (R3.1).
 
 ### R12. Board tools for the agent
 
 Now: the agent reads the rendition and writes a request file (R7.3, R7.4), which also carries its Discuss answers, a confirmed hold and a finished review (R2.7, R2.8, R7.6). The app applies board changes only while the window has its board open and reports the outcome only on the board's status line; the agent is not told what was refused, and a request that is not valid JSON stays on disk unapplied.
 
-R12.1. The agent can read the board, add shapes, answer a Discuss mark and confirm a hold through tools it calls by name, each of which answers at once with what changed or why it was refused.
+R12.1. The agent can do through tools it calls by name everything the request file does: read the board; add, relabel and remove shapes and images; answer a Discuss mark; confirm a hold; and report a finished review. Each tool answers at once: with what changed; with why it was refused; or, for a board change while the board is not open, that the change is queued and will be applied when it opens, and the agent can ask afterwards what became of it.
 
-R12.2. The tools change nothing that R7.5 protects: the person's edits and the agent's requests merge by element, and neither overwrites the other.
+R12.2. The tools change nothing that R7.5 protects: the person's edits and the agent's requests merge by element, and neither overwrites the other. The tools and the request file sit beside each other and go through the same merge.
 
-R12.3. Where the tools are not available in a session, the request file (R7.4) still works.
+R12.3. The tools are offered in every session where Claude Code loads the extension that provides them, in the desktop app and in the terminal; where they are not available, the request file (R7.4) still works.
+
+### Rulings, 2026-11-14
+
+- **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
+- **Order:** waiting first within each project's group, and a flat view with waiting first (R8.3).
+- **Background sessions waiting:** shown as Waiting for you, labelled "background, attach to answer" (R8.2).
+- **Questions:** a waiting question is shown with its text and option labels (R8.4).
+- **The panel:** named Subagents, listing subagents only; background sessions stay rows of their own (R9.1).
+- **Effort:** each subagent's effort is shown beside its model (R9.1).
+- **Long text:** a wake-up's prompt and a compaction summary are shown by their opening, expandable to the whole (R10.2, R11.2).
+- **Board tools:** beside the request file, through the same merge (R12.2), offered wherever the extension loads (R12.3).
+- **Install:** as the watcher is, by Claude from text the person pastes (P5).
 
 ### Proposed defaults
 
-- P5. **Install:** the hooks and any extension these require are installed as the watcher is (R7.7): from text in the Set-up Info window, which the person pastes into a session and Claude carries out; the app itself still writes nothing in the Claude configuration directory (R5.1), and keeps what the hooks record in its own folder.
+- P5. **Install:** the hooks and the extension these require are installed as the watcher is (R7.7): from text in the Set-up Info window, which the person pastes into a session and Claude carries out. R5.1 is restated accordingly: the app itself never writes in the Claude configuration directory; Claude writes there, at the person's request, from that text. The app says when the installed hooks or extension differ from those it ships, so that an update of the app does not leave them stale.
 - P6. **Order:** R8 first, then R9 and R11, then R10 and R12, each its own pull request.
 - P7. **Subagents:** R9 takes up what S5 left out of the first version.
+- P8. **Source of live state:** the app watches the files Claude Code writes per process (`~/.claude/sessions/<pid>.json`), which change the moment a session's state does, and treats a file whose process has gone as stale. Where those files are missing or unrecognised, it reads Claude Code's documented listing (`claude agents --json`) at a slower interval; only where both fail is the state Unknown. Reason: the files are undocumented but cost nothing to watch; the listing is documented and is the check on them. The listing is the only process the app runs; probed on 2.1.325, it wrote nothing under `~/.claude`, behaved identically with the network and writes there blocked, and took about 0.1 s. That probe is repeated whenever the checked Claude Code versions are raised.
+- P9. **What the hooks record:** in the app's own folder only; no raw command, prompt or tool input beyond what the session's transcript already holds; deleted when that session's transcript is.
+- P10. **Format drift:** R6's requirement extends to every new source: the session files, the listing, hook input, and subagents' transcripts and description files. Each is checked against the versions it was probed on.
+- P11. **The compaction summary** is recognised by `isCompactSummary`, and the boundary by its `compact_boundary` record, which carries what R11.1 shows.
 
 ### Open questions
 
-- Q5. Whether Dispatches lists background sessions (sessions of their own, started with `claude --bg` or from agent view) as well as subagents; and its name: Subagents if it lists subagents alone, or Dispatches with background sessions included and the term defined under Definitions (the handbook and `claude agents` both use "dispatch" more widely).
-- Q6. What the app installs (P5): new hooks in the person's Claude settings, and for R12 an extension Claude Code loads; whether Claude installs them from that text, as for the watcher, or the person installs them by hand, and whether R5.1 needs restating to say that Claude, at the person's request, writes there.
-- Q7. Is the waiting count on the Dock (R8.3) wanted, or only the sort?
-- Q8. What Ubuntu shows in place of the Dock badge (R8.3), given D4.
-- Q9. Whether a session waiting on a question the agent asked shows the question's text, or only that there is one (R8.4).
-- Q10. Whether R8 reads live state from Claude Code's documented session listing, which costs a process each time it is read, or from a file Claude Code writes per session, which is undocumented (design, but it decides how current R8.1 can be).
-- Q11. Whether R10.2 shows a scheduled prompt's full text or only its first line.
-- Q12. Whether the compaction summary (R11.2) is shown in full, or only its opening, given that it can run to thousands of words.
-- Q13. Whether the board tools (R12) replace the request file or sit beside it (R12.3 proposes beside).
-- Q14. Whether R12's extension also loads in a terminal session (not yet tried), or the channel server (R7.7) must offer the tools there.
-- Q15. Whether R9 shows a dispatch's effort level beside its model.
-- Q16. What `Waiting for you` means for a background session that no terminal is attached to (`claude attach`).
+- Q17. Whether a terminal session loads R12's extension as the desktop app's driver does (expected, as `--plugin-dir` is an ordinary option; to be tried before design); if not, the channel server (R7.7) offers the tools there.
+- Q18. Whether Claude Code records that a background session has a terminal attached (R8.2); not yet seen.
 
 ### Feasibility, probed 2026-11-14
 
-Probed on Claude Code 2.1.325, in test sessions driven as the desktop app drives them; none of this is built. Live state and its waiting reason (R8) are reported by Claude Code's session listing and by a file it writes per process (`~/.claude/sessions/<pid>.json`, carrying the session's id, its status and when that changed), both of which showed "waiting" with "permission prompt" while a permission request was open; a hook that runs on each permission request receives the tool and its input at once. The end-of-turn hook already installed for the watcher receives the running background work and the session's cron jobs (R10). Each subagent has its own transcript and a short description file beside the session's, and its effort is recorded on each assistant record of its own transcript, as the session's is (R9). For a subagent in the foreground, the session's transcript records its model, duration, tokens and tool calls; for one in the background, the figures arrive in its completion notice (not yet seen on 2.1.325) and the model only in its own transcript and description file. A compaction is recorded in the transcript itself, with the summary that follows it (R11). An extension loaded into a test session registered a tool the model called, which wrote a request file (R12); not yet tried in the desktop app itself, where the person is asked once to allow such an extension, and its reply to the model needs the shape Claude Code expects. Not yet seen: what is reported when a session waits on a question rather than a permission (Q9), and whether a wake-up set with ScheduleWakeup is reported with the cron jobs.
+Probed on Claude Code 2.1.325, in test sessions driven as the desktop app drives them; none of this is built. Live state and its waiting reason (R8) are reported by Claude Code's session listing and by a file it writes per process (`~/.claude/sessions/<pid>.json`, carrying the session's id, its status and when that changed), both of which showed "waiting" with "permission prompt" while a permission request was open; a hook that runs on each permission request receives the tool and its input at once. The end-of-turn hook already installed for the watcher receives the running background work and the session's cron jobs (R10). Each subagent has its own transcript and a short description file beside the session's, and its effort is recorded on each assistant record of its own transcript, as the session's is (R9). For a subagent in the foreground, the session's transcript records its model, duration, tokens and tool calls; for one in the background, the figures arrive in its completion notice (not yet seen on 2.1.325) and the model only in its own transcript and description file. A compaction is recorded in the transcript itself, with the summary that follows it (R11). An extension loaded into a test session registered a tool the model called, which wrote a request file (R12); not yet tried in the desktop app itself, where the person is asked once to allow such an extension, and its reply to the model needs the shape Claude Code expects. Not yet seen: what is reported when a session waits on a question rather than a permission, and whether a wake-up set with ScheduleWakeup is reported with the cron jobs.
 
 ## Proposed and settled
 
