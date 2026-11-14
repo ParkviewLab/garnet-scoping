@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.8.5] - 2026-11-14
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Bug fixes
+
+- Raise the checked Claude Code versions to 2.1.325 (#62)
+
 ## [v0.8.4] - 2026-11-09
 
 ### Highlights
