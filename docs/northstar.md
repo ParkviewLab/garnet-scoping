@@ -4,7 +4,7 @@ This northstar is the canonical statement of garnet-scoping's purpose. It is her
 
 ## What it is
 
-garnet-scoping is a macOS app that sits beside a Claude Code session and gives the person and the agent a common view of their work. For each session it shows a Desk, read from the session's transcript (the agent's plan, what it is doing now, what it is waiting on, its last word, the files and memory notes it has touched, and the trail of every turn), and a board on which both of them draw. Through the Desk and the board the person signals the agent: Review asks it to read the board, Discuss points it at a row of the Desk, Hold asks it to stop after its current step. The app only reads what Claude Code writes, and it writes only to its own folder.
+garnet-scoping is a macOS and Ubuntu app that sits beside a Claude Code session and gives the person and the agent a common view of their work. For each session it shows a Desk, read from the session's transcript (the agent's plan, what it is doing now, what it is waiting on, its last word, the files and memory notes it has touched, and the trail of every turn), and a board on which both of them draw. Through the Desk and the board the person signals the agent: Review asks it to read the board, Discuss points it at a row of the Desk, Hold asks it to stop after its current step. The app only reads what Claude Code writes, and it writes only to its own folder.
 
 ## Why it exists
 
@@ -24,7 +24,7 @@ garnet-scoping serves three complementary intents: facets of one purpose, presen
 
 ### 1. Shared perception, both ways
 
-From the agent to the person, perception is the Desk: the present state at a glance, and the trail beneath it, both derived from the transcript and current within a second or two. It shows what the agent did, which may differ from what the agent says it did, and it shows what the agent is waiting on, so that a long silence has a visible cause.
+From the agent to the person, perception is the Desk: the present state at a glance, and the trail beneath it, both derived from what Claude Code records (the transcript, and the state Claude Code keeps for each running session) and current within a second or two. It shows what the agent did, which may differ from what the agent says it did, and it shows what the agent is waiting on, so that a long silence has a visible cause.
 
 From the person to the agent, perception is the person's signals, each kept in a file the agent can read and each delivered without a message: Editing tells the agent that the board is still being changed; Review, Discuss and Hold ask for its attention. They reach the agent through a watcher in every session, or, where Claude Code allows it, through a channel that pushes them into the session the moment they appear.
 
@@ -54,7 +54,7 @@ The same axioms support all the intents, from different angles.
 
 1. **Easy to use means will be used.** A feature that takes effort is used only when it seems worth the trouble, which is less often than it would help. Every signal, view and exchange is made as easy as it can be, for the person and for the agent alike.
 
-2. **The record over the report.** What the Desk shows is derived from the transcript, not from the agent's account of its work. Where the two differ, the Desk shows what happened.
+2. **The record over the report.** What the Desk shows is derived from what Claude Code records, chiefly the transcript, not from the agent's account of its work. Where the two differ, the Desk shows what happened.
 
 3. **No cost to the agent's work.** The app only reads; a watcher costs nothing while it waits; a signal interrupts only when the person means it to. A feature that slows the agent down needs a reason stronger than the help it gives.
 
@@ -87,7 +87,7 @@ When making a decision, these are the questions to keep answering:
 - **Not a client for Claude Code.** It does not send prompts, run sessions or replace the conversation; the conversation stays where the work is done.
 - **Not a monitoring or reporting tool.** It serves the person working with the session now, not an audience looking back at many sessions.
 - **Not a general whiteboard.** The board serves the session beside it: shapes, text and connections, readable by the agent, and nothing that the agent cannot read.
-- **Not a way to control the agent from outside.** Every signal is a request the agent answers in the session; the app stops nothing and changes nothing in Claude Code.
+- **Not a way to control the agent from outside.** Every signal is a request the agent answers in the session; the app stops nothing and changes nothing in Claude Code; the hooks it relies on are installed by Claude, at the person's request.
 
 ---
 <sub>© 2026 Gary Frattarola · Licensed under [CC-BY-4.0](../LICENSES/CC-BY-4.0.txt)</sub>
