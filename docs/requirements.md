@@ -130,7 +130,7 @@ R7.9. A session that continues an earlier one under a new id (resumed or forked:
 
 ## Proposed: seeing more of what sessions do (2026-11-14)
 
-These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7 and await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
+These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
 
 ### R8. Live state
 
@@ -188,6 +188,34 @@ R12.2. The tools change nothing that R7.5 protects: the person's edits and the a
 
 R12.3. The tools are offered in every session where Claude Code loads the extension that provides them, in the desktop app and in the terminal; where they are not available, the request file (R7.4) still works.
 
+### R13. Questions on the board
+
+Now: the person asks about something on the board only by Review, which tells the agent to read the board without saying what about (R7.6), or in the conversation, away from the thing asked about.
+
+R13.1. A right-click anywhere on the board offers **Add question**. It places a speech balloon (a rounded rectangle whose pointer arm is part of its outline) with the arm's tip at the point clicked, on a shape, a mark the person drew, or empty board, and the person types the question into the balloon; Enter sends it and Escape discards it.
+
+R13.2. A sent question reaches the agent as a signal, as a Discuss mark does (R2.7, R7.7), with its text, what its arm points at, and a picture of the area round that point, so that the agent sees the person's marks as drawn. The header counts the open questions as it counts open Discuss marks.
+
+R13.3. The agent answers on the board: a note in a colour of its own, joined to the question by a line. An answer that needs more than a few lines is given in the conversation, and the note says so. A right-click on the agent's latest answer offers **Add question**, which places a follow-up balloon whose arm already points at that answer; the questions and answers of one exchange form a chain.
+
+R13.4. Every balloon and note can be dragged on its own; the arms and lines that join the chain, and the first arm's tip on the thing asked about, stay attached and reshape as it moves.
+
+R13.5. A right-click on any piece of an exchange offers **Remove this exchange**, which removes every balloon, note and link in it at once. The agent can remove an exchange too, through its board requests (R7.4) or tools (R12), and says in the conversation which one it removed and why.
+
+R13.6. The person's balloons and the agent's notes differ in colour and shape, so that whose words they are is never in doubt.
+
+### R14. Notes from the agent
+
+Now: only the person can point at an item to raise it (R2.7); an assumption the agent makes in place of asking is visible only if it says so in the conversation.
+
+R14.1. The agent can pin a one-line note to a plan step, a board shape, a file it sent the person, or its own last message, through its board requests (R7.4) or tools (R12): an assumption it made ("Assumed: sorted by date, newest first") or a thing it wants looked at.
+
+R14.2. The Desk shows each note on its item with a badge, counts the open notes in the header, and lists them as it lists Discuss marks, leading to the item as R2.7 does.
+
+R14.3. The person answers a note with **Confirm**, **Correct** (with one line) or **Dismiss**, and the answer reaches the agent as a signal, as a Discuss answer does. The agent does not wait for it.
+
+R14.4. A note is the agent's report, not the record (northstar, axiom 2), and is shown as such.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -199,6 +227,9 @@ R12.3. The tools are offered in every session where Claude Code loads the extens
 - **Long text:** a wake-up's prompt and a compaction summary are shown by their opening, expandable to the whole (R10.2, R11.2).
 - **Board tools:** beside the request file, through the same merge (R12.2), offered wherever the extension loads (R12.3).
 - **Install:** as the watcher is, by Claude from text the person pastes (P5).
+- **Questions on the board:** asked from the right-click menu, typed into a balloon pointing at the spot clicked, answered on the board, chained by follow-ups, removable by either side (R13); demonstrated in mock-ups on 2026-11-14.
+- **Notes from the agent:** accepted (R14).
+- **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
 
 ### Proposed defaults
 
