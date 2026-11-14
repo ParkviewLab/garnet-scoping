@@ -130,7 +130,7 @@ R7.9. A session that continues an earlier one under a new id (resumed or forked:
 
 ## Proposed: seeing more of what sessions do (2026-11-14)
 
-These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
+These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, R16 adds asides, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
 
 ### R8. Live state
 
@@ -226,6 +226,18 @@ R15.2. When no watcher or channel is running for a session, its window says so p
 
 R15.3. Signals that were waiting are marked Delivered when a watcher or channel next passes them on.
 
+### R16. Asides
+
+Now: a question about the agent's work reaches only the agent, by Discuss (R2.7), and is answered when the agent reaches a step boundary, which can be long in coming; asking costs the agent a pause in its work.
+
+R16.1. A row's right-click menu offers **Ask aside** beside Discuss. The person types a question (prefilled with a suggestion), and a copy of the session, taken from its transcript as it stands, answers it at once under the row, while the agent works on undisturbed and is not told.
+
+R16.2. An aside's answer says what it is: answered by a copy of the session that has no tools, so it explains from what the session has done and can be wrong; it is never shown as the agent's own answer (northstar, axiom 2).
+
+R16.3. Asides and their answers are kept with the session's marks (R2.7), so that the agent can read them later and the person can turn one into a Discuss mark when the agent itself should answer.
+
+R16.4. An aside uses tokens on the person's account; the app says so where it is asked, and asks nothing on its own.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -240,6 +252,7 @@ R15.3. Signals that were waiting are marked Delivered when a watcher or channel 
 - **Questions on the board:** asked from the right-click menu, typed into a balloon pointing at the spot clicked, answered on the board, chained by follow-ups, removable by either side (R13); demonstrated in mock-ups on 2026-11-14.
 - **Notes from the agent:** accepted (R14).
 - **Receipts:** accepted (R15), demonstrated in a mock-up.
+- **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
 
 ### Proposed defaults
@@ -252,6 +265,7 @@ R15.3. Signals that were waiting are marked Delivered when a watcher or channel 
 - P10. **Format drift:** R6's requirement extends to every new source: the session files, the listing, hook input, and subagents' transcripts and description files. Each is checked against the versions it was probed on.
 - P11. **The compaction summary** is recognised by `isCompactSummary`, and the boundary by its `compact_boundary` record, which carries what R11.1 shows.
 - P12. **Receipts** are read from what the watcher already writes in the app's folder: `<session>.watcher.pid` (whether a watcher is running, checked against a live process) and `<session>.watched` (the signals it has delivered). The channel records what it delivers in the same way. Reason: both files exist today and nothing reads them (verified 2026-11-14).
+- P13. **Asides** are answered by a single tool-less completion over the session's own transcript, the prefix served from Claude Code's prompt cache where it is still warm (`$.model.fork`, in use in a mod on this machine). Whether the desktop app runs one while the agent is mid-turn is to be probed before design.
 
 ### Open questions
 
