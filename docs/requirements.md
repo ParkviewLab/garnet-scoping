@@ -130,7 +130,7 @@ R7.9. A session that continues an earlier one under a new id (resumed or forked:
 
 ## Proposed: seeing more of what sessions do (2026-11-14)
 
-These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, R16 adds asides, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
+These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, R16 adds asides, R17 an Away toggle, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
 
 ### R8. Live state
 
@@ -238,6 +238,18 @@ R16.3. Asides and their answers are kept with the session's marks (R2.7), so tha
 
 R16.4. An aside uses tokens on the person's account; the app says so where it is asked, and asks nothing on its own.
 
+### R17. Away
+
+Now: the agent cannot tell whether the person is there; it may stop on a question while the person is away, and it cannot tell whether the board on which it places an image is open.
+
+R17.1. The window's header has an **Away** toggle, with an optional time of return ("away until 15:00"). Turning it on or off reaches the agent as a signal (R7.7) and shows on the session's row in the list (R8).
+
+R17.2. While the person is away, the agent does not stop to ask: it makes the assumption it would otherwise have asked about, records it as a note from the agent (R14), and carries on, stopping only where no reasonable assumption can be made. Permission requests are Claude Code's and are not affected.
+
+R17.3. On return (the toggle turned off, or the time passed, which the app shows rather than acting on), the Desk shows what accumulated while the person was away: the notes from the agent, questions answered on the board, and any session that came to wait for the person.
+
+R17.4. The state the agent reads also says whether this session's window is open and its board shown, worded as a fact about the window and not about the person's attention (northstar: nothing is inferred from silence).
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -253,6 +265,7 @@ R16.4. An aside uses tokens on the person's account; the app says so where it is
 - **Notes from the agent:** accepted (R14).
 - **Receipts:** accepted (R15), demonstrated in a mock-up.
 - **Asides:** accepted (R16), demonstrated in a mock-up.
+- **Away:** accepted (R17).
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
 
 ### Proposed defaults
