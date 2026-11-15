@@ -126,6 +126,26 @@ A question is kept in the board's state as a draft, with Editing ticked, until t
 
 Set-up Info's text now also has Claude copy `setup/garnet-board` to `~/.claude/mods/garnet-board` and replace, rather than skip, an earlier "garnet-scoping signals" section in `~/.claude/CLAUDE.md`, whose rules now cover questions, notes, Away and the board tools. The app reads, and never writes, what is installed: each session window compares the installed hooks and extension with the ones it ships, byte for byte, and says when they are from an earlier version or missing, with a button to open Set-up Info.
 
+## The manual (R18, P14 to P16)
+
+The mock-up the owner reviewed is [`manual-mockup.html`](manual-mockup.html): a session window with a **?** on each panel and **How do I…** in the Help menu, and the manual window beside it playing a lesson.
+
+**Entry points.** Each panel's header carries a **?** at its right; it drops down the lessons whose script names that panel, each with Play, and a last line, "All lessons, How do I…". The Help menu's How do I… (⌘? on macOS, F1 on Ubuntu) opens the manual window with its search field focused; the search matches every word typed against each lesson's title and captions.
+
+**The manual window.** One per app, opened beside the session window it was called from. Its top shows the lesson's number and title and "← All lessons"; below, a stage holding the demo session's window, drawn by the same renderer as a real session window; below that, the controls: Pause and Play, Back a step, Replay, Captions, Sound, and the step counter. A lesson marked macOS only, such as lesson 2, is not listed on Ubuntu.
+
+**A lesson's script.** A JSON file per lesson in `manual/lessons/`, holding its number, title, group, the panels that list it, the platforms it plays on, and its steps. A step names the element it acts on by a `data-ui` attribute the interface carries for the purpose (`data-ui="hold"`, `data-ui="panel-plan"`), the action (point, click, type a given text, wait), and the caption, which is also what the voice says. The last step is the try: the pointer withdraws, the caption asks the person to act, and the manual waits for that action on the named element, with Skip the try beside it.
+
+**Playing.** The pointer is an overlay that moves to the named element's centre over about a second; a click is shown as a brief ring and then performed on the demo, so the demo's own code changes what it shows (Hold turns to Holding). Each step's audio plays as its caption appears; the next step starts when both the audio and a minimum time have passed. Back a step restores the demo to the state recorded before that step; Replay restores it to the start.
+
+**The demo session** (P16) is a folder in `manual/demo/` holding a short transcript, a board and a state file, read by the same code that reads a real session. The manual window gives that code the demo folder in place of the boards folder, so a lesson's Hold or Review is written there and goes nowhere; the folder is copied afresh for each lesson, so one lesson's clicks never carry into the next.
+
+**Voice-over** (P14). The audio is made when a lesson is written, not when it is played: `scripts/voice-lessons.mjs` sends each changed caption to phonorheos in the voice bf_emma and writes `manual/audio/<lesson>-<step>.opus`, with the caption's hash beside it in `manual/audio/index.json`. The files are committed and ship inside the app, about 5 MB for the 28 lessons at Opus's speech bit rates (a WAV of the same would be about 40 MB). The app plays them with the renderer's own audio element and never calls phonorheos.
+
+**Kept current** (R18.11). A test reads every lesson and fails when a `data-ui` name a step uses is no longer present in the renderer's source, when a lesson's panel no longer exists, or when a caption's hash differs from the one its audio was made from. The last means that a changed caption cannot ship with the old voice.
+
+**What phonorheos needs.** phonorheos speaks and keeps speech in memory but writes no file (checked 2026-11-14). The manual needs, in phonorheos, a way to render text to a file without playing it: `phonorheos say --voice <voice> --to-file <path>` (and the same as a field of POST /speak), writing Ogg Opus at 24 kHz mono when the path ends in `.opus` and WAV when it ends in `.wav`, waiting until the file is complete and failing with a message when it cannot write it. It is a change in that repository, with its own pull request and release, and it comes before the lessons are voiced.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

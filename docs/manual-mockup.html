@@ -1,0 +1,98 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual mock-up</title>
+<style>
+/* Palette, the app's own: background #1e1f22, text #dcddde, accent #d0607a. */
+:root{--bg:#1e1f22;--panel:#17181a;--fg:#dcddde;--muted:#8b8e94;--line:#2f3237;--accent:#d0607a}
+*{box-sizing:border-box}
+body{margin:0;background:#111214;color:var(--fg);font:13px/1.5 system-ui,sans-serif;padding:16px}
+.note{color:var(--muted);max-width:60em;margin:0 0 12px}
+.desk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.desk{grid-template-columns:1fr}}
+.win{background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+.menu{display:flex;gap:18px;padding:6px 12px;background:#0c0d0e;color:var(--fg);font-size:12px}
+.menu span{cursor:default;padding:0 4px;border-radius:4px}
+.menu .open{background:var(--accent);color:#fff}
+.drop{position:absolute;top:28px;left:120px;background:#26282c;border:1px solid var(--line);border-radius:6px;padding:4px;min-width:220px;z-index:5}
+.drop div{padding:4px 10px;border-radius:4px;cursor:pointer;display:flex;justify-content:space-between}
+.drop div:hover{background:var(--accent);color:#fff}
+.head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.head b{font-weight:600}
+.badge{font-size:11px;padding:1px 8px;border-radius:5px;background:#1d3557;color:#a8c5f0}
+.btn{border:1px solid #3a3d42;border-radius:5px;padding:2px 10px;font-size:12px;color:var(--fg);background:transparent;cursor:pointer;font-family:inherit}
+.btn:hover{border-color:var(--accent)}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.card{margin:10px 14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;position:relative}
+.card h3{margin:0 0 4px;font-size:11px;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.q{width:18px;height:18px;border-radius:50%;border:1px solid #3a3d42;color:var(--muted);font-size:11px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;padding:0}
+.q:hover{border-color:var(--accent);color:var(--accent)}
+.row{color:#a9abb0;padding:2px 0}
+.pop{position:absolute;right:8px;top:30px;background:#26282c;border:1px solid var(--line);border-radius:8px;padding:8px;width:300px;z-index:4}
+.pop .t{color:var(--muted);font-size:11px;margin-bottom:4px}
+.lesson{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:5px;cursor:pointer}
+.lesson:hover{background:#30333a}
+.lesson .play{color:var(--accent);font-size:12px}
+.manual .search{margin:10px 14px;display:flex;gap:8px}
+.manual input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--fg);padding:5px 9px;font:inherit}
+.results{margin:0 14px 8px}
+.stage{position:relative;margin:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;height:200px;overflow:hidden}
+.stage .bar{display:flex;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ptr{position:absolute;width:14px;height:14px;border-radius:50%;background:#f0f0f0;border:2px solid var(--accent);left:20px;top:150px;transition:left 1s ease,top 1s ease}
+.cap{position:absolute;left:8px;right:8px;bottom:8px;background:rgba(0,0,0,.78);border-radius:6px;padding:6px 8px}
+.ctl{display:flex;gap:6px;align-items:center;margin:0 14px 12px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.empty{padding:40px 14px;color:var(--muted);text-align:center}
+</style>
+<p class="note">Mock-up of the manual (R18), for review. Left: a session window, as now, with a <b>?</b> on each panel and <b>How do I…</b> in the Help menu. Right: the manual window, which opens beside it. Try the <b>?</b> on Plan or Now, or Help → How do I…, then play a lesson and try it on the demo.</p>
+<div class="desk">
+ <div class="win" id="sess">
+  <div class="menu"><span>garnet-scoping</span><span>File</span><span id="helpm" onclick="toggleHelp()">Help</span></div>
+  <div class="drop" id="drop" hidden>
+   <div onclick="openManual(true)">How do I… <span class="muted">⌘?</span></div>
+   <div onclick="toggleHelp()">Set-up Info</div>
+  </div>
+  <div class="head"><b>Garnet-Scoping Development</b><span class="badge">Working</span><span style="flex:1"></span><span class="btn">Away</span><span class="btn">Hold</span></div>
+  <div class="card"><h3>PLAN <button class="q" title="Lessons for this panel" onclick="pop('plan',this)">?</button></h3>
+   <div class="row">1. Write R18 out in requirements.md</div><div class="row">2. Build the manual mock-up</div></div>
+  <div class="card"><h3>NOW <button class="q" title="Lessons for this panel" onclick="pop('now',this)">?</button></h3>
+   <div class="row">Writing docs/manual-mockup.html</div><div class="row">Read the requirements around R18</div></div>
+  <div class="card"><h3>WAITING <button class="q" title="Lessons for this panel" onclick="pop('waiting',this)">?</button></h3>
+   <div class="row">Nothing running in the background, and no wake-up set.</div></div>
+ </div>
+ <div class="win manual" id="man">
+  <div class="menu"><span class="muted">Manual</span></div>
+  <div id="manBody"><div class="empty">The manual window opens here when you choose a lesson or How do I….</div></div>
+ </div>
+</div>
+<script>
+const L={
+ plan:[[7,'Read the Desk at a glance'],[14,'Ask the agent about a row (Discuss)']],
+ now:[[7,'Read the Desk at a glance'],[14,'Ask the agent about a row (Discuss)'],[16,'Pause the agent with Hold']],
+ waiting:[[8,'See why a session is waiting'],[13,'Check the work running in the background and the wake-ups']]};
+const ALL=[[1,'Find the sessions waiting for you'],[7,'Read the Desk at a glance'],[8,'See why a session is waiting'],[13,'Check the work running in the background and the wake-ups'],[14,'Ask the agent about a row (Discuss)'],[15,'Ask an aside without interrupting'],[16,'Pause the agent with Hold'],[17,'Tell the agent you are away, and come back'],[21,'Ask a question on the board'],[25,'Set up Claude Code with Set-up Info']];
+let popEl=null;
+function closePop(){if(popEl){popEl.remove();popEl=null}}
+function pop(panel,btn){closePop();const p=document.createElement('div');p.className='pop';p.innerHTML='<div class="t">Lessons for this panel</div>'+L[panel].map(([n,t])=>`<div class="lesson" onclick="play(${n},'${t.replace(/'/g,"\\'")}')"><span>${t}</span><span class="play">Play</span></div>`).join('')+'<div class="lesson muted" onclick="openManual(true)">All lessons, How do I…</div>';btn.closest('.card').append(p);popEl=p}
+function toggleHelp(){const d=document.getElementById('drop');d.hidden=!d.hidden;document.getElementById('helpm').classList.toggle('open',!d.hidden)}
+function openManual(search){closePop();document.getElementById('drop').hidden=true;document.getElementById('helpm').classList.remove('open');
+ const b=document.getElementById('manBody');b.innerHTML='<div class="search"><input id="s" placeholder="How do I… (for example: pause the agent)" oninput="filter()"></div><div class="results" id="r"></div>';filter();if(search)document.getElementById('s').focus()}
+function filter(){const q=(document.getElementById('s').value||'').toLowerCase();document.getElementById('r').innerHTML=ALL.filter(([,t])=>t.toLowerCase().includes(q)||q.split(' ').every(w=>t.toLowerCase().includes(w))).map(([n,t])=>`<div class="lesson" onclick="play(${n},'${t.replace(/'/g,"\\'")}')"><span>${n}. ${t}</span><span class="play">Play</span></div>`).join('')||'<div class="muted">No lesson matches. Try other words.</div>'}
+let steps,i,playing,timer,caps=true,trying=false;
+function play(n,t){closePop();document.getElementById('drop').hidden=true;
+ const b=document.getElementById('manBody');
+ b.innerHTML=`<div class="search"><span class="btn" onclick="openManual(true)">← All lessons</span><b style="align-self:center">${n}. ${t}</b></div>
+ <div class="stage" id="st"><div class="bar"><b>Demo session</b><span class="badge">Working</span><span style="flex:1"></span><span class="btn">Away</span><button class="btn" id="dh" onclick="tried()">Hold</button><span class="btn" id="dd">Desk</span></div>
+ <div style="padding:6px 10px" class="muted">Now: running the tests</div><div class="ptr" id="p"></div><div class="cap" id="cap"></div></div>
+ <div class="ctl"><button class="btn" id="pp" onclick="toggle()">Pause</button><button class="btn" onclick="go(Math.max(0,i-1))">Back a step</button><button class="btn" onclick="start()">Replay</button><button class="btn on" id="cc" onclick="cc()">Captions</button><button class="btn on" id="snd" onclick="this.classList.toggle('on')">Sound</button><span class="muted" style="margin-left:auto" id="n"></span></div>
+ <div class="ctl" id="tryrow"></div>`;
+ steps=[{t:'dd',c:'This is a demo session: nothing you do here reaches a real one.'},{t:'dh',c:'Hold stops the agent after its current step.'},{t:'dh',c:'Nothing is lost: release Hold and the work resumes.'}];start()}
+function start(){trying=false;document.getElementById('tryrow').innerHTML='';const h=document.getElementById('dh');h.classList.remove('on');h.textContent='Hold';document.getElementById('p').style.display='block';playing=true;document.getElementById('pp').textContent='Pause';go(0)}
+function go(k){i=k;const s=steps[i],e=document.getElementById(s.t),p=document.getElementById('p');p.style.left=(e.offsetLeft+e.offsetWidth/2-7)+'px';p.style.top=(e.offsetTop+e.offsetHeight/2-7)+'px';const c=document.getElementById('cap');c.textContent=s.c;c.hidden=!caps;document.getElementById('n').textContent=`Step ${i+1} of ${steps.length}`;if(i===1){document.getElementById('dh').classList.add('on');document.getElementById('dh').textContent='Holding'}if(i===0){document.getElementById('dh').classList.remove('on');document.getElementById('dh').textContent='Hold'}clearTimeout(timer);if(playing)timer=setTimeout(()=>i<steps.length-1?go(i+1):yourTurn(),2400)}
+function toggle(){playing=!playing;document.getElementById('pp').textContent=playing?'Pause':'Play';if(playing)go(i);else clearTimeout(timer)}
+function cc(){caps=!caps;document.getElementById('cc').classList.toggle('on',caps);document.getElementById('cap').hidden=!caps}
+function yourTurn(){const h=document.getElementById('dh');h.classList.remove('on');h.textContent='Hold';document.getElementById('p').style.display='none';document.getElementById('cap').textContent='Your turn: press Hold on the demo.';document.getElementById('cap').hidden=false;trying=true;document.getElementById('tryrow').innerHTML='<button class="btn" onclick="skipTry()">Skip the try</button>'}
+function tried(){if(!trying)return;trying=false;const h=document.getElementById('dh');h.classList.add('on');h.textContent='Holding';document.getElementById('cap').textContent='That is it: the agent stops after its step. Replay, or choose another lesson.';document.getElementById('tryrow').innerHTML=''}
+function skipTry(){trying=false;document.getElementById('cap').textContent='End of lesson. Replay, or choose another.';document.getElementById('tryrow').innerHTML=''}
+document.addEventListener('click',e=>{if(popEl&&!e.target.closest('.pop')&&!e.target.classList.contains('q'))closePop()});
+</script>
