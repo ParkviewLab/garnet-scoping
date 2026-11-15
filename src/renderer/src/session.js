@@ -59,6 +59,9 @@ window.addEventListener('keydown', (e) => e.key === 'Escape' && ($('viewer').hid
 // menu marks it with or without a note. Marks live in the session's state
 // file, where the agent's watcher sees them; the agent answers them there.
 let marks = []
+let notes = [] // the agent's notes (R14)
+let boardStateNow = null
+let delivery = { watching: true, delivered: [] } // receipts (R15)
 // The Discuss badge: lit while a request to discuss, outlined when turned
 // off or answered; a click toggles it.
 function badge(m, title) {
@@ -104,6 +107,8 @@ $('hold').addEventListener('click', () => {
 function setMarks(state) {
   showHold(state)
   marks = state?.discuss ?? []
+  notes = state?.notes ?? []
+  boardStateNow = state ?? boardStateNow
   renderDiscuss()
   if (view) {
     renderPresent()
@@ -328,7 +333,14 @@ function pathList(entries, kind) {
 // ---- the present state (R2) ----
 function renderPresent() {
   const plan = $('plan')
-  plan.replaceChildren(...view.plan.items.map((it) => markable(el('li', it.status, it.content), { panel: 'plan', key: `plan:${it.content}`, text: it.content })))
+  // A note the agent pinned to an item shows on the item (R14.2).
+  const noteOn = (panel, key) => notes.find((n) => n.status === 'open' && n.on.panel === panel && n.on.key === key)
+  const withNote = (node, panel, key) => {
+    const n = noteOn(panel, key)
+    if (n) node.append(el('div', 'note-badge', `From the agent: ${n.text}`))
+    return node
+  }
+  plan.replaceChildren(...view.plan.items.map((it) => withNote(markable(el('li', it.status, it.content), { panel: 'plan', key: `plan:${it.content}`, text: it.content }), 'plan', `plan:${it.content}`)))
   if (!view.plan.items.length) plan.replaceChildren(el('li', 'muted', 'No plan in this session.'))
 
   $('now').replaceChildren(...(view.now.length ? view.now.map((a) => actionRow(a, { showAgo: true })) : [el('li', 'muted', 'No actions yet.')]))
@@ -378,6 +390,8 @@ function renderPresent() {
   if (lw?.text) box.append(Object.assign(markdown(lw.text), { className: 'speech markdown' }))
   if (lw?.recap) box.append(el('div', 'recap', lw.recap))
   if (lw?.ask) box.append(el('div', 'awaiting', `Asked: ${lw.ask}`))
+  const lwNote = notes.find((n) => n.status === 'open' && n.on.panel === 'lastword')
+  if (lwNote) box.append(el('div', 'note-badge', `From the agent: ${lwNote.text}`))
   if (lw?.agentSpokeLast) box.append(el('div', 'awaiting', `The agent has spoken last${lw.at ? ` (${ago(lw.at)})` : ''}: your turn.`))
   else if (lw?.working) box.append(el('div', 'muted', 'The agent is at work.'))
   if (!box.childNodes.length) box.append(el('span', 'muted', 'Nothing yet.'))
@@ -729,6 +743,7 @@ function discussItem(m, after) {
   body.append(el('div', 'discuss-meta', meta))
   if (m.note) body.append(el('div', 'discuss-note', `“${m.note}”`))
   if (m.answer) body.append(el('div', 'discuss-ans', `Answered: ${m.answer}`))
+  if (m.status !== 'off') body.append(receipt(`discuss ${m.id} ${m.at}`, m.status === 'answered'))
   item.append(flag, body)
   item.title = 'Show it where it is'
   item.addEventListener('click', () => {
@@ -737,6 +752,75 @@ function discussItem(m, after) {
   })
   return item
 }
+
+// ---- the agent's notes (R14) ----
+const NOTE_WHERE = { plan: 'Plan', foryou: 'For you', board: 'Board', lastword: 'Last word' }
+function answerNote(n, status, reply = null) {
+  const next = notes.map((x) => (x.id === n.id ? { ...x, status, reply, answeredAt: new Date().toISOString().replace(/\.\d+Z$/, 'Z') } : x))
+  window.garnet.board.setState({ notes: next }).then(setMarks)
+}
+function noteItem(n) {
+  const item = el('div', `discuss-item note ${n.status}`)
+  const body = el('div', 'discuss-body')
+  body.append(el('div', 'note-from', 'From the agent'), el('div', 'discuss-what', n.text))
+  body.append(el('div', 'discuss-meta', [NOTE_WHERE[n.on.panel] ?? n.on.panel, n.on.panel === 'plan' ? n.on.key.slice(5) : n.on.panel === 'foryou' ? basename(n.on.key.slice(5)) : null, n.at ? ago(n.at) : null].filter(Boolean).join(' · ')))
+  if (n.status === 'open') {
+    const row = el('div', 'note-actions')
+    const confirm = el('button', null, 'Confirm')
+    const correct = el('button', null, 'Correct…')
+    const dismiss = el('button', null, 'Dismiss')
+    for (const b of [confirm, correct, dismiss]) b.type = 'button'
+    confirm.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'confirmed')))
+    dismiss.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'dismissed')))
+    correct.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const input = el('input', 'note-correction')
+      input.placeholder = 'Your correction, then Enter'
+      input.addEventListener('click', (ev) => ev.stopPropagation())
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' && input.value.trim()) answerNote(n, 'corrected', input.value.trim())
+        if (ev.key === 'Escape') input.replaceWith(row)
+      })
+      row.replaceWith(input)
+      input.focus()
+    })
+    row.append(confirm, correct, dismiss)
+    body.append(row)
+  } else body.append(el('div', 'discuss-ans', n.status === 'corrected' ? `You corrected: ${n.reply}` : `You ${n.status} it.`))
+  body.append(receipt(n.status === 'open' ? null : `note ${n.id} ${n.answeredAt}`, n.status !== 'open', n.status === 'open' ? 'pinned' : 'answer'))
+  item.append(body)
+  if (n.on.panel === 'plan' || n.on.panel === 'foryou') {
+    item.title = 'Show it where it is'
+    item.addEventListener('click', () => jumpTo({ panel: n.on.panel, key: n.on.key }))
+  }
+  return item
+}
+
+// ---- receipts (R15) ----
+// Sent, then delivered (the watcher woke the session with it), then
+// answered. Delivered means the session was woken, not that it was read.
+function receipt(key, answered, kind = 'signal') {
+  const sentLabel = kind === 'pinned' ? 'Pinned by the agent' : 'Sent'
+  const delivered = answered || (key != null && delivery.delivered.includes(key))
+  const box = el('div', 'receipt')
+  const step = (text, on, bad = false) => el('span', `step${on ? ' on' : ''}${bad ? ' bad' : ''}`, text)
+  if (kind === 'pinned') return box.append(step(sentLabel, true), step('Waiting for your answer', false)), box
+  box.append(step('Sent', true), step(delivered ? 'Delivered' : delivery.watching ? 'Delivering…' : 'Not delivered', delivered, !delivered && !delivery.watching), step('Answered', answered))
+  box.title = 'Delivered means the watcher woke the session with it, not that the agent has read it.'
+  return box
+}
+function showDelivery(d) {
+  if (d) delivery = d
+  const warn = $('watch-warning')
+  const waiting = marks.filter((m) => m.status === 'open').length + (boardStateNow?.review ? 1 : 0) + (boardStateNow?.hold === 'requested' ? 1 : 0)
+  warn.hidden = delivery.watching
+  const holdKey = boardStateNow?.hold === 'requested' ? `hold ${boardStateNow.holdAt}` : null
+  if (holdKey) $('hold').title = delivery.delivered.includes(holdKey) ? 'Hold delivered: the agent was woken with it' : delivery.watching ? 'Hold sent; delivering…' : 'Hold sent, but no watcher is running, so it has not reached the agent'
+  warn.textContent = `No watcher is running for this session, so your signals are not reaching it${waiting ? ` (${waiting} waiting)` : ''}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
+  renderDiscuss()
+}
+window.garnet.board.onDelivery(showDelivery)
+window.garnet.board.delivery().then((d) => d && showDelivery(d))
 
 function renderDiscuss() {
   const entries = discussEntries()
@@ -747,7 +831,14 @@ function renderDiscuss() {
   btn.classList.toggle('lit', openCount > 0)
   btn.title = openCount ? `${openCount} request${openCount === 1 ? '' : 's'} to discuss` : 'No open requests to discuss'
   const list = $('discuss-list')
-  list.replaceChildren(...(entries.length ? entries.map((m) => discussItem(m)) : [el('p', 'muted', 'Nothing marked to discuss in this session.')]))
+  const openNotes = notes.filter((n) => n.status === 'open')
+  const noteNodes = notes.length ? [el('h3', null, `Notes from the agent${openNotes.length ? ` (${openNotes.length} awaiting you)` : ''}`), ...[...openNotes, ...notes.filter((n) => n.status !== 'open')].reverse().map(noteItem), el('h3', null, 'Your requests to discuss')] : []
+  list.replaceChildren(...noteNodes, ...(entries.length ? entries.map((m) => discussItem(m)) : [el('p', 'muted', 'Nothing marked to discuss in this session.')]))
+  if (openNotes.length) {
+    btn.hidden = false
+    btn.append(el('span', 'note-count', `${openNotes.length} from the agent`))
+    btn.classList.add('lit')
+  }
   const drop = $('discuss-drop')
   if (!drop.hidden) fillDrop()
 }

@@ -24,6 +24,8 @@ function describe(o: any) {
   if (o.removed) parts.push(`removed ${o.removed}`)
   if (o.reviewed) parts.push('marked the review done')
   if (o.answered) parts.push(`placed ${o.answered} answer${o.answered === 1 ? '' : 's'} on the board`)
+  if (o.pinned) parts.push(`pinned ${o.pinned} note${o.pinned === 1 ? '' : 's'}`)
+  if (o.notesRefused) parts.push(`refused ${o.notesRefused} note${o.notesRefused === 1 ? '' : 's'} (unknown item: use plan:, file:, shape: or last-message)`)
   if (o.discussed) parts.push(`recorded ${o.discussed} Discuss answer${o.discussed === 1 ? '' : 's'}`)
   if (o.holding) parts.push('confirmed the hold')
   if (o.holdIgnored) parts.push('ignored "holding": no hold was requested')
@@ -72,6 +74,7 @@ export const register: Register = (on) => {
           discussed: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, answer: { type: 'string' } } } },
           reviewed: { type: 'boolean' },
           holding: { type: 'boolean' },
+          notes: { type: 'array', description: 'One-line notes to pin to an item instead of stopping to ask: { on: "plan:<step text>" | "file:<path>" | "shape:<id>" | "last-message", text: "Assumed: …" }. Carry on without waiting; the answer comes as a signal.', items: { type: 'object', properties: { on: { type: 'string' }, text: { type: 'string' } } } },
           answers: { type: 'array', description: 'Answers to questions asked on the board, by question id (q…): a few lines each, placed as a note joined to the question.', items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } } } },
         },
       },
@@ -92,7 +95,7 @@ export const register: Register = (on) => {
     return { result: await send($, base, await $.session.id(), { ...(add ? { add } : {}), ...(relabel ? { relabel } : {}), ...(remove ? { remove } : {}), ...(removeExchange ? { removeExchange } : {}) }) }
   })
   on('tool.call', { tool: 'mcp__garnet-board__board_answer' }, async ($, e: any) => {
-    const { discussed, reviewed, holding, answers } = e
-    return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}), ...(answers ? { answers } : {}) }) }
+    const { discussed, reviewed, holding, answers, notes } = e
+    return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}), ...(answers ? { answers } : {}), ...(notes ? { notes } : {}) }) }
   })
 }

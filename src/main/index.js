@@ -109,6 +109,7 @@ function openSession(info, { sessions = false } = {}) {
         onRequest: (r) => send('board:request', r),
         onExternal: (elements) => send('board:external', elements),
         onPending: () => send('board:pending'),
+        onDelivery: (d) => send('board:delivery', d),
         onState: (state) => {
           send('board:state', state)
           updateLive()
@@ -240,6 +241,7 @@ function registerIpc() {
   ipcMain.handle('board:save', (e, scene) => entryOf(e)?.boardReady.then((b) => b.save(scene)))
   ipcMain.handle('board:ready', (e) => entryOf(e)?.boardReady.then((b) => b.ready()))
   ipcMain.handle('board:outcome', (e, o) => entryOf(e)?.boardReady.then((b) => b.outcome(o)))
+  ipcMain.handle('board:delivery', (e) => entryOf(e)?.boardReady.then((b) => b.delivery()))
   ipcMain.handle('board:picture', (e, qid, bytes) => entryOf(e)?.boardReady.then((b) => b.picture(qid, bytes)))
   // Files the agent delivered in this session: opened with their default
   // app, or read for the in-app preview. Only delivered files are served.
