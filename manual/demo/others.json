@@ -1,0 +1,28 @@
+[
+  {
+    "id": "00000000-0000-4000-8000-00000000de31",
+    "title": "Demo: release notes",
+    "folder": "release-notes",
+    "state": "waiting",
+    "question": "Which changelog format shall I use?",
+    "options": [
+      "Keep a Changelog",
+      "Plain list"
+    ],
+    "age": 3
+  },
+  {
+    "id": "00000000-0000-4000-8000-00000000de32",
+    "title": "Demo: fix the login page",
+    "folder": "login-page",
+    "state": "idle",
+    "age": 25
+  },
+  {
+    "id": "00000000-0000-4000-8000-00000000de33",
+    "title": "Demo: tidy the docs",
+    "folder": "docs",
+    "state": "not-running",
+    "age": 240
+  }
+]

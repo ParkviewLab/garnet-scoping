@@ -62,11 +62,11 @@ export async function listLessons(dir, platform = process.platform) {
 
 // The demo's transcript, with its folder filled in and its times moved so that
 // the last record is a minute old.
-export function rebase(text, dir, now = Date.now()) {
+export function rebase(text, dir, now = Date.now(), age = LAST_AGE_MS) {
   const lines = text.replaceAll('__DEMO__', dir).split('\n').filter(Boolean)
   const records = lines.map((l) => JSON.parse(l))
   const times = records.map((r) => Date.parse(r.timestamp)).filter(Number.isFinite)
-  const shift = times.length ? now - LAST_AGE_MS - Math.max(...times) : 0
+  const shift = times.length ? now - age - Math.max(...times) : 0
   return (
     records
       .map((r) => {
@@ -97,12 +97,30 @@ export async function prepareDemo(from, to) {
   await rm(to, { recursive: true, force: true })
   await cp(join(from, 'demo'), to, { recursive: true })
   const file = join(to, 'session.jsonl')
-  await writeFile(file, rebase(await readFile(file, 'utf8'), to))
-  return {
-    id: DEMO_ID,
-    file,
-    project: 'demo',
-    title: 'Manual',
-    dirs: { boards: join(to, 'boards'), memory: join(to, 'memory') },
+  const now = Date.now()
+  await writeFile(file, rebase(await readFile(file, 'utf8'), to, now))
+  const dirs = { boards: join(to, 'boards'), memory: join(to, 'memory') }
+  // The other sessions its Sessions panel lists, each dated by its own age.
+  const others = JSON.parse(await readFile(join(to, 'others.json'), 'utf8').catch(() => '[]'))
+  for (const o of others) {
+    o.file = join(to, 'others', `${o.id}.jsonl`)
+    o.cwd = join(to, o.folder)
+    o.modified = now - o.age * 60_000
+    await writeFile(o.file, rebase(await readFile(o.file, 'utf8'), to, now, o.age * 60_000))
   }
+  return { id: DEMO_ID, file, project: 'demo', title: 'Manual', dirs, others, cwd: join(to, 'csv-parser'), modified: now - LAST_AGE_MS }
+}
+
+// The demo sessions as the Sessions panel lists them.
+export const demoList = (demo) => [
+  { id: demo.id, title: 'Demo: a CSV parser', cwd: demo.cwd, project: 'demo', file: demo.file, modified: demo.modified },
+  ...demo.others.map((o) => ({ id: o.id, title: o.title, cwd: o.cwd, project: 'demo', file: o.file, modified: o.modified })),
+]
+
+// The live state the manual gives each other demo session.
+export function demoState(o, now = Date.now()) {
+  const since = now - o.age * 60_000
+  if (o.state === 'waiting') return { state: 'waiting', since, reason: { type: 'question', text: o.question, options: o.options ?? [], at: since } }
+  if (o.state === 'idle') return { state: 'idle', since, yourTurn: true }
+  return { state: 'not-running' }
 }

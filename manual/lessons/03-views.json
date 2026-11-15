@@ -1,0 +1,47 @@
+{
+  "n": 3,
+  "title": "Switch between Waiting first, Recent first and Alphabetical",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: the panel keeps the view you chose.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "The Sessions panel has three views."
+    },
+    {
+      "target": [
+        "view-waiting"
+      ],
+      "action": "click",
+      "caption": "Waiting first: the sessions waiting for you at the top, then the most recent."
+    },
+    {
+      "target": [
+        "view-recent"
+      ],
+      "action": "click",
+      "caption": "Recent first: grouped by folder, the most recently active first."
+    },
+    {
+      "target": [
+        "view-alphabetical"
+      ],
+      "action": "click",
+      "caption": "Alphabetical: grouped by folder, the folders in alphabetical order."
+    },
+    {
+      "target": [
+        "view-recent"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: choose Recent first."
+    }
+  ]
+}

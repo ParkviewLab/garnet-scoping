@@ -103,7 +103,33 @@ const board = {
   ],
 }
 
+// The other sessions the demo's Sessions panel lists (lessons 1 to 6), each
+// a short transcript of its own, and the state the manual gives it: one
+// waiting on a question, one idle, one no longer running. `age` is how many
+// minutes ago its last record is.
+const OTHERS = [
+  { id: '00000000-0000-4000-8000-00000000de31', title: 'Demo: release notes', folder: 'release-notes', state: 'waiting', question: 'Which changelog format shall I use?', options: ['Keep a Changelog', 'Plain list'], age: 3 },
+  { id: '00000000-0000-4000-8000-00000000de32', title: 'Demo: fix the login page', folder: 'login-page', state: 'idle', age: 25 },
+  { id: '00000000-0000-4000-8000-00000000de33', title: 'Demo: tidy the docs', folder: 'docs', state: 'not-running', age: 240 },
+]
+function other(o) {
+  const cwd = `__DEMO__/${o.folder}`
+  const b = () => ({ sessionId: o.id, cwd, gitBranch: 'develop', version: '2.1.325', entrypoint: 'claude-desktop', timestamp: at() })
+  const recs = [
+    { type: 'custom-title', customTitle: o.title, sessionId: o.id },
+    { ...b(), type: 'user', origin: { kind: 'human' }, message: { role: 'user', content: o.title.replace('Demo: ', 'Please ') + '.' } },
+    { ...b(), type: 'assistant', message: { model: 'claude-opus-5-5', content: [say('Done as far as I can; one question remains.')] }, effort: 'medium' },
+  ]
+  if (o.question) recs.push({ ...b(), type: 'assistant', message: { model: 'claude-opus-5-5', content: [tool(`q-${o.folder}`, 'AskUserQuestion', { questions: [{ question: o.question, options: o.options.map((label) => ({ label })) }] })] }, effort: 'medium' })
+  return recs
+}
+
 mkdirSync(join(OUT, 'memory'), { recursive: true })
+mkdirSync(join(OUT, 'others'), { recursive: true })
+for (const o of OTHERS) {
+  writeFileSync(join(OUT, 'others', `${o.id}.jsonl`), other(o).map((r) => JSON.stringify(r)).join('\n') + '\n')
+}
+writeFileSync(join(OUT, 'others.json'), JSON.stringify(OTHERS.map(({ id, title, folder, state, question, options, age }) => ({ id, title, folder, state, question, options, age })), null, 2) + '\n')
 mkdirSync(join(OUT, 'boards'), { recursive: true })
 mkdirSync(join(OUT, 'csv-parser', 'samples'), { recursive: true })
 writeFileSync(join(OUT, 'session.jsonl'), records.map((r) => JSON.stringify(r)).join('\n') + '\n')
