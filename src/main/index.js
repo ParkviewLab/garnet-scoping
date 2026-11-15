@@ -25,7 +25,7 @@ import { createSession, snapshot } from './transcript/session.js'
 import { classify } from './transcript/records.js'
 import { boardPaths, cleanState, BOARDS } from './board.js'
 import { parseWork, nextRun } from './work.js'
-import { DEMO_ID, listLessons, prepareDemo, agentStep } from './manual.js'
+import { DEMO_ID, listLessons, prepareDemo, agentStep, demoList, demoState } from './manual.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
@@ -44,6 +44,7 @@ let known = [] // the session list, as listSessions gives it
 let liveFacts = { available: true, bySession: {} }
 let live = { available: true, states: {} }
 let liveTimer = null
+let demo = null // the manual's current copy of the demo (prepareDemo)
 // The manual's lessons and demo (R18): shipped in the app's resources, and
 // copied for each lesson into the app's own folder.
 const MANUAL_SRC = () => (app.isPackaged ? join(process.resourcesPath, 'manual') : join(__dirname, '../../manual'))
@@ -154,7 +155,7 @@ async function openManual({ lesson = null, from = null } = {}) {
     open.win.focus()
     return open.win.webContents.send('manual:show', { lesson })
   }
-  const info = await prepareDemo(MANUAL_SRC(), DEMO_DIR())
+  const info = (demo = await prepareDemo(MANUAL_SRC(), DEMO_DIR()))
   const near = from?.getBounds?.()
   const bounds = near ? { x: near.x + 60, y: near.y + 40, width: 1200, height: 820 } : { width: 1200, height: 820 }
   openSession(info, { demo: true, bounds, query: { manual: '1', ...(lesson != null ? { lesson: String(lesson) } : {}) } })
@@ -166,13 +167,14 @@ async function openManual({ lesson = null, from = null } = {}) {
 async function resetManual(lesson, step) {
   const old = windows.get(DEMO_ID)
   const bounds = old && !old.win.isDestroyed() ? old.win.getBounds() : null
-  if (old && !old.win.isDestroyed()) {
+  // Every window on the demo goes, the other sessions' included.
+  for (const w of [...windows.values()].filter((x) => x.demo && !x.win.isDestroyed())) {
     await new Promise((done) => {
-      old.onClosed = done
-      old.win.destroy()
+      w.onClosed = done
+      w.win.destroy()
     })
   }
-  const info = await prepareDemo(MANUAL_SRC(), DEMO_DIR())
+  const info = (demo = await prepareDemo(MANUAL_SRC(), DEMO_DIR()))
   openSession(info, { demo: true, bounds, query: { manual: '1', lesson: String(lesson), step: String(step) } })
 }
 
@@ -234,7 +236,7 @@ function registerIpc() {
   // real session.
   ipcMain.handle('sessions:list', async (e) => {
     const w = entryOf(e)
-    if (w?.demo) return [{ id: DEMO_ID, title: 'Demo: a CSV parser', cwd: join(DEMO_DIR(), 'csv-parser'), project: 'demo', file: w.file, modified: Date.now() }]
+    if (w?.demo) return demo ? demoList(demo) : []
     return (known = await listSessions(PROJECTS))
   })
   ipcMain.handle('manual:lessons', () => listLessons(MANUAL_SRC()))
@@ -249,7 +251,13 @@ function registerIpc() {
   ipcMain.handle('live:get', () => live)
   ipcMain.handle('setup:check', () => installedMatches())
   ipcMain.handle('setup:open', () => openSetupInfo())
-  ipcMain.handle('sessions:open', (_e, info) => openSession(info))
+  // From a window on the demo, only a demo session opens, on the demo's copy.
+  ipcMain.handle('sessions:open', (e, info) => {
+    if (!entryOf(e)?.demo) return openSession(info)
+    const o = demo?.others.find((x) => x.id === info?.id)
+    if (info?.id === DEMO_ID) return windows.get(DEMO_ID)?.win.focus()
+    if (o) openSession({ id: o.id, file: o.file, project: 'demo', title: o.title, dirs: demo.dirs }, { demo: true, bounds: { width: 1100, height: 760 } })
+  })
   ipcMain.handle('session:view', async (e) => {
     const w = entryOf(e)
     if (!w) return null
@@ -373,10 +381,11 @@ async function computeLive() {
   const n = waitingCount(states)
   // The manual's demo is always at work, and waits only on its own Hold; it is
   // never counted on the Dock.
-  const demo = windows.get(DEMO_ID)
-  if (demo && !demo.win.isDestroyed()) {
-    const board = await boardStateOf(DEMO_ID, demo.dirs.boards)
+  const manual = windows.get(DEMO_ID)
+  if (manual && !manual.win.isDestroyed()) {
+    const board = await boardStateOf(DEMO_ID, manual.dirs.boards)
     states[DEMO_ID] = { ...sessionState({ live: { status: 'busy', since: Date.now() - 60_000 }, hold: board?.hold ?? 'off' }), away: Boolean(board?.away?.on) }
+    for (const o of demo?.others ?? []) states[o.id] = demoState(o)
   }
   live = { available: liveFacts.available, states }
   for (const w of BrowserWindow.getAllWindows()) {

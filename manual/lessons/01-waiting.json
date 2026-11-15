@@ -1,0 +1,42 @@
+{
+  "n": 1,
+  "title": "Find the sessions waiting for you",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: the session's own window opens.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "The Sessions panel lists every Claude Code session on this machine, with its state."
+    },
+    {
+      "target": [
+        "view-waiting"
+      ],
+      "action": "click",
+      "caption": "Waiting first puts the sessions waiting for you at the top."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "point",
+      "caption": "Under each, why it waits: here, a question, with its options."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: click the waiting session to go to it."
+    }
+  ]
+}

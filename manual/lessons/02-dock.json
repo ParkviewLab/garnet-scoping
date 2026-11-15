@@ -1,0 +1,37 @@
+{
+  "n": 2,
+  "title": "Read the Dock count",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "platforms": [
+    "darwin"
+  ],
+  "done": "That is it: the sessions at the top are the ones the Dock counts.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "The number on garnet-scoping's icon in the Dock counts the sessions waiting for you."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "point",
+      "caption": "It counts them whichever window is in front, so a glance at the Dock tells you when to look."
+    },
+    {
+      "target": [
+        "view-waiting"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: choose Waiting first, to see the sessions it counts."
+    }
+  ]
+}

@@ -62,6 +62,8 @@ describe('the player', () => {
 describe('every element a lesson names', () => {
   const sources = ['session.html', 'settings.html', 'src/session.js', 'src/board.js', 'src/sessions-panel.js', 'src/manual.js'].map((f) => readFileSync(join(ROOT, 'src', 'renderer', f), 'utf8')).join('\n')
   const named = new Set([...sources.matchAll(/data-ui="([^"]+)"|dataset\.ui = '([^']+)'|ui\([^;]*?, '([a-z0-9-]+)'\)/g)].map((m) => m[1] ?? m[2] ?? m[3]))
+  // Names set by an expression are listed in a comment: "data-ui: a, b".
+  for (const m of sources.matchAll(/data-ui: ([a-z0-9, -]+)/g)) for (const n of m[1].split(',')) named.add(n.trim())
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   const labels = new Set([...sources.matchAll(/\['([^']+)', \(\)/g)].map((m) => slug(m[1])))
   const exists = (name) => named.has(name) || (name.startsWith('menu-') && labels.has(name.slice(5))) || (name.startsWith('board-menu-') && labels.has(name.slice(11)))

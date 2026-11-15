@@ -211,7 +211,7 @@ export function startManual({ lesson: wanted, step: from }) {
   function armTry(step) {
     pointer.hidden = true
     say(step.caption)
-    const kind = step.action === 'point' || step.action === 'show' ? 'click' : step.action === 'menu' ? 'contextmenu' : step.action
+    const kind = step.action === 'point' || step.action === 'show' ? 'click' : step.action === 'menu' ? 'contextmenu' : step.action === 'type' ? 'input' : step.action
     const done = (e) => within(e.target, step.target) && finish(lesson.done)
     trying = { kind, done }
     document.addEventListener(kind, done, true)

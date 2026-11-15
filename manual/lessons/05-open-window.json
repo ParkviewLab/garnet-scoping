@@ -1,0 +1,43 @@
+{
+  "n": 5,
+  "title": "Open another session's window",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: each session has a window of its own, with its own Desk and board.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "Each session listed has a window of its own."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row-current"
+      ],
+      "action": "point",
+      "caption": "The session this window shows is marked."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "point",
+      "caption": "Click any other to open its window beside this one, or to bring it to the front."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: click another session to open its window."
+    }
+  ]
+}

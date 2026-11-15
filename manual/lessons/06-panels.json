@@ -1,0 +1,49 @@
+{
+  "n": 6,
+  "title": "Turn panels on and off",
+  "group": "Getting around",
+  "panels": [
+    "panel-plan",
+    "pane-trail",
+    "pane-memory"
+  ],
+  "done": "That is it: the window keeps the panels you chose.",
+  "steps": [
+    {
+      "target": [
+        "tog-desk"
+      ],
+      "action": "point",
+      "caption": "These buttons turn the window's panels on and off. Any mix can be shown."
+    },
+    {
+      "target": [
+        "tog-trail"
+      ],
+      "action": "click",
+      "caption": "Trail on: it sits beside the Desk."
+    },
+    {
+      "target": [
+        "tog-board"
+      ],
+      "action": "click",
+      "caption": "Board off: the panels take the whole window."
+    },
+    {
+      "target": [
+        "tog-board"
+      ],
+      "action": "click",
+      "caption": "And the board on again."
+    },
+    {
+      "target": [
+        "tog-memory"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: turn Memory on."
+    }
+  ]
+}
