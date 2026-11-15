@@ -1161,3 +1161,132 @@ input[type='search'] {
   font-size: 12px;
   padding: 2px 8px;
 }
+
+/* The manual (R18): the ? on each panel and its list of lessons. */
+.lesson-q {
+  float: right;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted);
+}
+h2 {
+  position: relative;
+}
+.lesson-drop {
+  position: absolute;
+  right: 0;
+  top: 22px;
+  z-index: 20;
+  width: 300px;
+  padding: 8px;
+  background: #26282c;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: normal;
+}
+.lesson-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 4px 6px;
+}
+.lesson-item:hover {
+  background: #30333a;
+}
+.lesson-play {
+  color: var(--accent);
+}
+/* The manual's window: the lesson's bar above the demo, its controls below,
+   the pointer and the caption over it. */
+.manual-top,
+.manual-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: var(--panel, #17181a);
+  border-bottom: 1px solid var(--line);
+}
+.manual-bar {
+  border-top: 1px solid var(--line);
+  border-bottom: none;
+}
+.manual-top[hidden],
+.manual-bar[hidden] {
+  display: none;
+}
+.manual-name {
+  font-weight: 600;
+}
+.manual-search {
+  flex: 1;
+  min-width: 200px;
+}
+.manual-results {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 40vh;
+  overflow: auto;
+}
+.manual-lesson {
+  display: flex;
+  justify-content: space-between;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 4px 8px;
+}
+.manual-lesson:hover {
+  background: #30333a;
+}
+.manual-play {
+  color: var(--accent);
+}
+.manual-bar button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.manual-count {
+  margin-left: auto;
+  color: var(--muted);
+}
+.manual-pointer {
+  position: fixed;
+  z-index: 1000;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  transition:
+    left 0.9s ease,
+    top 0.9s ease;
+}
+.manual-pointer.press {
+  box-shadow: 0 0 0 8px rgba(208, 96, 122, 0.35);
+}
+.manual-caption {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  max-width: min(720px, 90vw);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  pointer-events: none;
+}
