@@ -78,3 +78,19 @@ describe('every element a lesson names', () => {
     })
   }
 })
+
+// Every caption and closing line has its voice, made from the text as it is
+// now (R18.8, R18.11): a changed caption fails here until it is voiced again
+// (node scripts/voice-lessons.mjs).
+describe('the voice-over', async () => {
+  const { voiceKeys, captionHash } = await import('../src/main/voice.js')
+  const { existsSync } = await import('node:fs')
+  const index = JSON.parse(readFileSync(join(MANUAL, 'audio', 'index.json'), 'utf8'))
+  for (const f of readdirSync(join(MANUAL, 'lessons'))) {
+    it(`is current for lesson ${f}`, () => {
+      const lesson = JSON.parse(readFileSync(join(MANUAL, 'lessons', f), 'utf8'))
+      const stale = voiceKeys(lesson).filter(({ key, text }) => index[key] !== captionHash(text) || !existsSync(join(MANUAL, 'audio', `${key}.m4a`)))
+      expect(stale.map((s) => s.key)).toEqual([])
+    })
+  }
+})

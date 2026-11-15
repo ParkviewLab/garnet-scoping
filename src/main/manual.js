@@ -8,6 +8,8 @@
 
 import { readdir, readFile, writeFile, rm, cp } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
+import { existsSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 export const DEMO_ID = '00000000-0000-4000-8000-00000000de30'
 
@@ -42,6 +44,15 @@ export function cleanLesson(raw) {
   }
 }
 
+// A lesson with its voice-over's files, where they exist (R18.8).
+function withAudio(lesson, dir) {
+  const url = (key) => {
+    const file = join(dir, `${key}.m4a`)
+    return existsSync(file) ? pathToFileURL(file).href : null
+  }
+  return { ...lesson, doneAudio: url(`${lesson.n}-done`), steps: lesson.steps.map((s, k) => ({ ...s, audio: url(`${lesson.n}-${k + 1}`) })) }
+}
+
 // The lessons for this system, in their order.
 export async function listLessons(dir, platform = process.platform) {
   let names
@@ -54,7 +65,7 @@ export async function listLessons(dir, platform = process.platform) {
   for (const f of names) {
     try {
       const l = cleanLesson(JSON.parse(await readFile(join(dir, 'lessons', f), 'utf8')))
-      if (l && (!l.platforms || l.platforms.includes(platform))) lessons.push(l)
+      if (l && (!l.platforms || l.platforms.includes(platform))) lessons.push(withAudio(l, join(dir, 'audio')))
     } catch {}
   }
   return lessons.sort((a, b) => a.n - b.n)
