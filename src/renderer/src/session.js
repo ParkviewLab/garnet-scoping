@@ -581,6 +581,7 @@ async function previewFile(path, row) {
     [`Show in ${window.garnet.fileManager}`, () => window.garnet.showInFinder(path)],
     ['Discuss…', () => askNote(row)],
   ]) {
+    // data-ui: file-open, file-show, file-discuss
     const b = ui(el('button', null, label), `file-${slug(label.split(' ')[0])}`)
     b.type = 'button'
     b.addEventListener('click', act)

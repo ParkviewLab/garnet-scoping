@@ -241,6 +241,13 @@ function registerIpc() {
   })
   ipcMain.handle('manual:lessons', () => listLessons(MANUAL_SRC()))
   ipcMain.handle('manual:open', (e, lesson) => openManual({ lesson: Number.isInteger(lesson) ? lesson : null, from: BrowserWindow.fromWebContents(e.sender) }))
+  // A lesson's step that opens one of the app's own windows, which a lesson
+  // cannot reach from its menu: Set-up Info, or Settings.
+  ipcMain.handle('manual:window', (e, name) => {
+    if (!entryOf(e)?.demo) return
+    if (name === 'setup') openSetupInfo()
+    if (name === 'settings') openSettings()
+  })
   ipcMain.handle('manual:agent', (e, request) => {
     const w = entryOf(e)
     if (w?.demo && request && typeof request === 'object') return agentStep(w.dirs.boards, request)
@@ -249,7 +256,9 @@ function registerIpc() {
     if (entryOf(e)?.demo && Number.isInteger(lesson) && Number.isInteger(step)) return resetManual(lesson, step)
   })
   ipcMain.handle('live:get', () => live)
-  ipcMain.handle('setup:check', () => installedMatches())
+  // The manual's demo always shows the notice that the install is stale, for
+  // its lesson on updating it (R18.9, lesson 26).
+  ipcMain.handle('setup:check', (e) => (entryOf(e)?.demo ? { ok: false, stale: ['~/.claude/hooks/garnet-watch.sh'] } : installedMatches()))
   ipcMain.handle('setup:open', () => openSetupInfo())
   // From a window on the demo, only a demo session opens, on the demo's copy.
   ipcMain.handle('sessions:open', (e, info) => {
