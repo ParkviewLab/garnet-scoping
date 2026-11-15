@@ -239,6 +239,7 @@ function registerIpc() {
   ipcMain.handle('session:discuss', (e, op) => entryOf(e)?.boardReady.then((b) => b.discuss(op)))
   ipcMain.handle('board:save', (e, scene) => entryOf(e)?.boardReady.then((b) => b.save(scene)))
   ipcMain.handle('board:ready', (e) => entryOf(e)?.boardReady.then((b) => b.ready()))
+  ipcMain.handle('board:outcome', (e, o) => entryOf(e)?.boardReady.then((b) => b.outcome(o)))
   // Files the agent delivered in this session: opened with their default
   // app, or read for the in-app preview. Only delivered files are served.
   const delivered = (e, p) => {

@@ -315,6 +315,7 @@ export async function mountBoard(container) {
     if (error) return setStatus(error, true)
     await sizeImages(request)
     const d = applyRequest(request)
+    window.garnet.board.outcome({ requestId: request.requestId ?? null, added: d.added, relabelled: d.relabelled, removed: d.removed, problems: d.problems })
     setStatus(`The agent ${[d.added && `added ${d.added}`, d.relabelled && `relabelled ${d.relabelled}`, d.removed && `removed ${d.removed}`].filter(Boolean).join(', ') || 'changed nothing'}.${d.problems.length ? ` Problems: ${d.problems.join('; ')}.` : ''}`, d.problems.length > 0)
   })
   window.garnet.board.onExternal((incoming) => mergeExternal(incoming))
