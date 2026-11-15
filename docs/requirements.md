@@ -240,13 +240,13 @@ R16.4. An aside uses tokens on the person's account; the app says so where it is
 
 ### R17. Away
 
-Now: the agent cannot tell whether the person is there; it may stop on a question while the person is away, and it cannot tell whether the board on which it places an image is open.
+Now: the agent cannot tell whether the person is there, and it cannot tell whether the board on which it places an image is open.
 
 R17.1. The window's header has an **Away** toggle, with an optional time of return ("away until 15:00"). Turning it on or off reaches the agent as a signal (R7.7) and shows on the session's row in the list (R8).
 
-R17.2. While the person is away, the agent does not stop to ask: it makes the assumption it would otherwise have asked about, records it as a note from the agent (R14), and carries on, stopping only where no reasonable assumption can be made. Permission requests are Claude Code's and are not affected.
+R17.2. Away only informs: the agent is told that the person is away, and until when, and works exactly as it does otherwise; it is not asked to stop asking, to assume, or to change how it waits. Permission requests are Claude Code's and are not affected.
 
-R17.3. On return (the toggle turned off, or the time passed, which the app shows rather than acting on), the Desk shows what accumulated while the person was away: the notes from the agent, questions answered on the board, and any session that came to wait for the person.
+R17.3. On return (the toggle turned off, or the time passed, which the app shows rather than acting on), the Desk shows what happened while the person was away: notes from the agent, questions answered on the board, and any session that came to wait for the person.
 
 R17.4. The state the agent reads also says whether this session's window is open and its board shown, worded as a fact about the window and not about the person's attention (northstar: nothing is inferred from silence).
 
@@ -275,7 +275,7 @@ R18.3. The manual works without a network connection: lessons, captions and voic
 - **Notes from the agent:** accepted (R14).
 - **Receipts:** accepted (R15), demonstrated in a mock-up.
 - **Asides:** accepted (R16), demonstrated in a mock-up.
-- **Away:** accepted (R17).
+- **Away:** accepted (R17), as information only; the agent works exactly as it does otherwise.
 - **Manual:** lessons with voice-over, found from each panel and by search (R18), built last, once the features it teaches exist.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
 
