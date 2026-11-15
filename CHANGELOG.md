@@ -4,6 +4,22 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.10.0] - 2026-11-14
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- A Subagents panel and a compaction marker in the Trail (#72)
+- Background work, scheduled jobs and wake-ups in Waiting (#73)
+- Board tools the agent calls, answered with what became of each request (#74)
+- Questions on the board, sent with Review and answered on the board (#75)
+- Notes the agent pins to items, and receipts for the person's signals (#76)
+- Asides answered by a copy of the session, and an Away toggle (#77)
+- Set-up Info installs the board extension and current rules, and the app says when they are stale (#78)
+
 ## [v0.9.0] - 2026-11-14
 
 ### Highlights
