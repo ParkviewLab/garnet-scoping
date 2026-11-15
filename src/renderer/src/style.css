@@ -1206,7 +1206,10 @@ h2 {
   color: var(--accent);
 }
 /* The manual's window: the lesson's bar above the demo, its controls below,
-   the pointer and the caption over it. */
+   the pointer and the caption over it. Its page never scrolls sideways. */
+body.manual-mode {
+  overflow-x: hidden;
+}
 .manual-top,
 .manual-bar {
   display: flex;
