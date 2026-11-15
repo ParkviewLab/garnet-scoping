@@ -1024,3 +1024,7 @@ input[type='search'] {
   align-self: flex-start;
   margin-top: 2px;
 }
+
+.muted.small {
+  font-size: 12px;
+}

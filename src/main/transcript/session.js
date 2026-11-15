@@ -95,6 +95,7 @@ export function createSession(id = null) {
     background: new Map(), // task id -> { id, text, startedAt, finishedAt, status }
     deliveries: [], // files the agent sent the person: { id, files, caption, at }
     subagents: new Map(), // tool-use id -> subagent the session started (R9)
+    wakeups: [], // ScheduleWakeup calls: { at (when it fires), reason, prompt, setAt } (R10.2)
     // Earlier sessions this one continues: a resumed or forked conversation
     // begins with the earlier records, which keep their own session id.
     lineage: [],
@@ -241,6 +242,11 @@ export function createSession(id = null) {
             }
             t.items.push(action)
             s.pending.set(part.id, action)
+            if (part.name === 'ScheduleWakeup' && !part.input.stop && Number.isFinite(part.input.delaySeconds)) {
+              const setAt = Date.parse(r.at)
+              if (Number.isFinite(setAt)) s.wakeups.push({ at: setAt + part.input.delaySeconds * 1000, reason: String(part.input.reason ?? ''), prompt: String(part.input.prompt ?? ''), setAt })
+            }
+            if (part.name === 'ScheduleWakeup' && part.input.stop) s.wakeups = []
             if (part.name === 'Agent' || part.name === 'Task') {
               s.subagents.set(part.id, {
                 id: part.id,
@@ -412,6 +418,8 @@ export function snapshot(s) {
     deliveries: s.deliveries.slice(-50).reverse(),
     // The subagents the session started, newest first (R9).
     subagents: [...s.subagents.values()].reverse(),
+    // The wake-ups the session set; the window shows those still to come.
+    wakeups: s.wakeups.slice(-5),
     // The earlier sessions, the most recent first.
     lineage: [...s.lineage].reverse(),
     lastWord: last ? { text: last.closing, recap: last.recap, ask: last.ask, at: last.closingAt, agentSpokeLast, working: running } : null,

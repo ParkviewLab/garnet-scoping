@@ -96,6 +96,10 @@ At start the app opens a window on the most recently active session with the pan
 
 **Compaction.** `records.js` recognises the boundary record (`system`, subtype `compact_boundary`, with `compactMetadata.trigger`, `preTokens` and `postTokens`) and the summary record by `isCompactSummary`, never by its wording. The model places a compaction item in the Trail where it happened, carrying the summary; the Trail shows it as a marker that opens to the summary's first paragraph and then the whole.
 
+## Background work and wake-ups (R10)
+
+The watcher's hook (`setup/garnet-rewake.sh`), which Claude Code already runs at the end of every turn, keeps that turn's input whole as `<session>.work.json` in the app's folder: Claude Code gives it the session's running background work (`background_tasks`) and its scheduled jobs (`session_crons`). `src/main/work.js` reads it, showing each piece of work by its description, never its command, and works out each job's next run from its five-field schedule. Waiting shows the work the transcript shows at once, adds what only the report shows, lists the jobs and the session's own wake-ups (its ScheduleWakeup calls, from the transcript) with their next time and the first line of their prompt, opening to the whole, and says how old the report is, or that there is none yet. An installation from Set-up Info before this version has no such report until the hook is installed again.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.
