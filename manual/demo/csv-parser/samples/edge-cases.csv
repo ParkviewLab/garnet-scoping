@@ -1,0 +1,6 @@
+case,example
+empty field,"a,,c"
+quoted comma,"""a,b"""
+quoted line break,"line one
+line two"
+doubled quote,"say ""hi"""
