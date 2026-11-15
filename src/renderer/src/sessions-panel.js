@@ -59,6 +59,7 @@ export function mountSessions(root, currentId) {
   function row(s) {
     const st = live.states[s.id]
     const r = el('div', `sessions-row${s.id === currentId ? ' current' : ''}`)
+    r.dataset.ui = 'session-row' // named for the manual's lessons (R18)
     r.tabIndex = 0
     const head = el('div', 'head')
     head.append(el('span', 'name', s.title ?? s.firstMessage ?? s.id), badge(st))

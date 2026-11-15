@@ -371,6 +371,8 @@ function showMenu(ev, items) {
       const b = document.createElement('button')
       b.type = 'button'
       b.textContent = label
+      // Named for the manual's lessons (R18), as in session.js.
+      b.dataset.ui = `board-menu-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
       b.addEventListener('click', () => {
         hideMenu()
         fn()
@@ -552,6 +554,7 @@ export async function mountBoard(container) {
   const copy = document.createElement('button')
   copy.type = 'button'
   copy.textContent = 'Copy the board’s path for the agent'
+  copy.dataset.ui = 'board-copy-path'
   copy.addEventListener('click', () => {
     navigator.clipboard.writeText(`The shared board's rendition is ${info.paths.rendition}; read it, and change the board by writing ${info.paths.request} as its header describes.`)
     setStatus('Copied.')
@@ -563,6 +566,7 @@ export async function mountBoard(container) {
   // "reviewed" turns it off.
   const editing = document.createElement('label')
   editing.className = 'board-editing'
+  editing.dataset.ui = 'board-editing'
   editingBox = document.createElement('input')
   editingBox.type = 'checkbox'
   editingBox.addEventListener('change', () => setState({ editing: editingBox.checked }))
@@ -570,6 +574,7 @@ export async function mountBoard(container) {
   reviewButton = document.createElement('button')
   reviewButton.type = 'button'
   reviewButton.className = 'board-review'
+  reviewButton.dataset.ui = 'board-review'
   reviewButton.textContent = 'Review'
   // Asking for a review ends editing.
   // Review also sends the questions added since the last one (R13.2).
@@ -580,6 +585,7 @@ export async function mountBoard(container) {
   const fit = document.createElement('button')
   fit.type = 'button'
   fit.className = 'board-fit'
+  fit.dataset.ui = 'board-fit'
   fit.textContent = 'Fit'
   fit.title = 'Zoom to fit the whole board (Shift+1)'
   fit.addEventListener('click', () => api?.scrollToContent(undefined, { fitToContent: true, animate: true }))
