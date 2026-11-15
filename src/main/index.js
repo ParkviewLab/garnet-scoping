@@ -18,9 +18,15 @@ import { openBoard, inheritBoard } from './board.js'
 import { openAboutWindow, openLicensesWindow } from './about.js'
 import { loadSettings, saveSettings, clean } from './settings.js'
 import { openSetupInfo, installChannel } from './setupInfo.js'
+import { watchLive } from './live/index.js'
+import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
+import { readEdge } from './transcript/reader.js'
+import { boardPaths, cleanState } from './board.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
+const LIVE_DIR = join(CLAUDE, 'sessions')
+const TAIL = 64 * 1024
 const PUSH_MS = 400
 // Files the preview shows as text.
 const TEXT_FILE = /\.(md|markdown|txt|text|log|json|csv|tsv|ya?ml|toml|ini|xml|html?|css|js|mjs|cjs|ts|tsx|jsx|py|rb|rs|go|java|kt|swift|c|h|cpp|sh|zsh|sql)$/i
@@ -30,6 +36,10 @@ let settingsWindow = null
 let settingsFile = null
 let settings = null
 const windows = new Map() // session id -> { win, follower, project }
+let known = [] // the session list, as listSessions gives it
+let liveFacts = { available: true, bySession: {} }
+let live = { available: true, states: {} }
+let liveTimer = null
 
 function pageUrl(page, query = {}) {
   const q = new URLSearchParams(query).toString()
@@ -46,6 +56,8 @@ function load(win, page, query) {
 // plugins: Chromium's own PDF viewer, for previews of delivered PDFs.
 const webPreferences = () => ({ preload: join(__dirname, '../preload/index.js'), contextIsolation: true, sandbox: true, plugins: true })
 
+// With no session on the machine, the app shows a window that says so; the
+// session list is otherwise a panel of the session window (R8.6).
 function createListWindow() {
   if (listWindow && !listWindow.isDestroyed()) return listWindow.focus()
   listWindow = new BrowserWindow({ width: 980, height: 760, title: 'garnet-scoping', backgroundColor: '#17181a', webPreferences: webPreferences() })
@@ -53,8 +65,22 @@ function createListWindow() {
   listWindow.on('closed', () => (listWindow = null))
 }
 
+// At start, and from File > Sessions: a window on the most recently active
+// session with the Sessions panel on, or the front window with the panel
+// turned on.
+async function showSessions() {
+  const front = BrowserWindow.getFocusedWindow() ?? [...windows.values()].find((w) => !w.win.isDestroyed())?.win
+  if (front && [...windows.values()].some((w) => w.win === front)) {
+    front.focus()
+    return front.webContents.send('panel:show', 'sessions')
+  }
+  known = await listSessions(PROJECTS)
+  if (!known.length) return createListWindow()
+  openSession(known[0], { sessions: true })
+}
+
 // A session's window: its Desk and its board.
-function openSession(info) {
+function openSession(info, { sessions = false } = {}) {
   const open = windows.get(info.id)
   if (open && !open.win.isDestroyed()) return open.win.focus()
   const win = new BrowserWindow({ width: 1400, height: 900, title: info.title ?? info.id, backgroundColor: '#17181a', webPreferences: webPreferences() })
@@ -80,13 +106,16 @@ function openSession(info) {
         onRequest: (r) => send('board:request', r),
         onExternal: (elements) => send('board:external', elements),
         onPending: () => send('board:pending'),
-        onState: (state) => send('board:state', state),
+        onState: (state) => {
+          send('board:state', state)
+          updateLive()
+        },
       })
       if (win.isDestroyed()) entry.board.close()
       return entry.board
     })
   windows.set(info.id, entry)
-  load(win, 'session', { id: info.id })
+  load(win, 'session', { id: info.id, ...(sessions ? { sessions: '1' } : {}) })
   // A link in rendered text opens in the system's browser; the window itself
   // never navigates away from the app's page.
   const openLink = (url) => /^https?:/i.test(url) && shell.openExternal(url)
@@ -126,7 +155,8 @@ function registerIpc() {
     for (const w of windows.values()) if (!w.win.isDestroyed()) w.win.webContents.send('settings:changed', settings)
     return settings
   })
-  ipcMain.handle('sessions:list', () => listSessions(PROJECTS))
+  ipcMain.handle('sessions:list', async () => (known = await listSessions(PROJECTS)))
+  ipcMain.handle('live:get', () => live)
   ipcMain.handle('sessions:open', (_e, info) => openSession(info))
   ipcMain.handle('session:view', async (e) => {
     const w = entryOf(e)
@@ -204,9 +234,45 @@ function watchProjects() {
   try {
     watch(PROJECTS, { recursive: true }, () => {
       clearTimeout(timer)
-      timer = setTimeout(() => listWindow?.webContents.send('sessions:changed'), 1500)
+      timer = setTimeout(() => {
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('sessions:changed')
+        updateLive()
+      }, 1500)
     })
   } catch {}
+}
+
+// Live state (R8): the facts from Claude Code, the transcript's tail of each
+// running session (why it waits, R8.4) and the board's hold, turned into a
+// state per listed session, sent to every window and counted on the Dock.
+async function holdOf(id) {
+  try {
+    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8'))).hold
+  } catch {
+    return 'off'
+  }
+}
+async function computeLive() {
+  if (!known.length) known = await listSessions(PROJECTS)
+  const states = {}
+  for (const s of known) {
+    const facts = liveFacts.bySession[s.id] ?? null
+    let tail = null
+    if (facts) tail = pendingFromTail(await readEdge(s.file, TAIL, true).catch(() => []))
+    states[s.id] = sessionState({ live: facts, available: liveFacts.available, hold: facts ? await holdOf(s.id) : 'off', tail })
+  }
+  live = { available: liveFacts.available, states }
+  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('live:changed', live)
+  const n = waitingCount(states)
+  app.setBadgeCount(n)
+}
+// At most twice a second, so that a change shows within R8.1's two seconds.
+function updateLive() {
+  if (liveTimer) return
+  liveTimer = setTimeout(() => {
+    liveTimer = null
+    computeLive().catch(() => {})
+  }, 500)
 }
 
 function buildMenu() {
@@ -226,7 +292,7 @@ function buildMenu() {
           ]
         : []),
       // Without macOS's app menu, Settings is in the File menu.
-      { label: 'File', submenu: [{ label: 'Sessions', accelerator: 'CmdOrCtrl+L', click: () => createListWindow() }, ...(isMac ? [] : [prefs]), { type: 'separator' }, isMac ? { role: 'close' } : { role: 'quit' }] },
+      { label: 'File', submenu: [{ label: 'Sessions', accelerator: 'CmdOrCtrl+L', click: () => showSessions() }, ...(isMac ? [] : [prefs]), { type: 'separator' }, isMac ? { role: 'close' } : { role: 'quit' }] },
       { role: 'editMenu' },
       { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
       { role: 'windowMenu' },
@@ -243,9 +309,13 @@ app.whenReady().then(() => {
   registerIpc()
   buildMenu()
   watchProjects()
-  createListWindow()
+  watchLive(LIVE_DIR, (facts) => {
+    liveFacts = facts
+    updateLive()
+  })
+  showSessions()
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createListWindow()
+    if (BrowserWindow.getAllWindows().length === 0) showSessions()
   })
 })
 

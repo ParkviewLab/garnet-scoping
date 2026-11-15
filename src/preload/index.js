@@ -6,6 +6,11 @@ contextBridge.exposeInMainWorld('garnet', {
   listSessions: () => ipcRenderer.invoke('sessions:list'),
   openSession: (info) => ipcRenderer.invoke('sessions:open', info),
   onSessionsChanged: (fn) => ipcRenderer.on('sessions:changed', () => fn()),
+  live: {
+    get: () => ipcRenderer.invoke('live:get'),
+    onChanged: (fn) => ipcRenderer.on('live:changed', (_e, l) => fn(l)),
+  },
+  onShowPanel: (fn) => ipcRenderer.on('panel:show', (_e, p) => fn(p)),
   view: () => ipcRenderer.invoke('session:view'),
   detail: (actionId) => ipcRenderer.invoke('session:detail', actionId),
   onChanged: (fn) => ipcRenderer.on('session:changed', () => fn()),
