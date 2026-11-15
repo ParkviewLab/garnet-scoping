@@ -17,7 +17,7 @@ import { follow } from './follower.js'
 import { openBoard, inheritBoard } from './board.js'
 import { openAboutWindow, openLicensesWindow } from './about.js'
 import { loadSettings, saveSettings, clean } from './settings.js'
-import { openSetupInfo, installChannel } from './setupInfo.js'
+import { openSetupInfo, installChannel, installedMatches } from './setupInfo.js'
 import { watchLive } from './live/index.js'
 import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
 import { readEdge, readFrom } from './transcript/reader.js'
@@ -191,6 +191,8 @@ function registerIpc() {
   })
   ipcMain.handle('sessions:list', async () => (known = await listSessions(PROJECTS)))
   ipcMain.handle('live:get', () => live)
+  ipcMain.handle('setup:check', () => installedMatches())
+  ipcMain.handle('setup:open', () => openSetupInfo())
   ipcMain.handle('sessions:open', (_e, info) => openSession(info))
   ipcMain.handle('session:view', async (e) => {
     const w = entryOf(e)

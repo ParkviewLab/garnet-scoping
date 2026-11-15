@@ -122,6 +122,10 @@ A question is kept in the board's state as a draft, with Editing ticked, until t
 
 **Away.** The header's Away button keeps `away` in the state (on, the time given for the return, when it began, when it ended). The watcher tells the agent when the person goes away (keep questions for their return, carry on with what does not need them, assume nothing) and when they come back (welcome them and take them through what is pending, one item at a time); the Sessions panel marks the session; on return, a line under the header counts what came while the person was away.
 
+## Installing for this build (P5)
+
+Set-up Info's text now also has Claude copy `setup/garnet-board` to `~/.claude/mods/garnet-board` and replace, rather than skip, an earlier "garnet-scoping signals" section in `~/.claude/CLAUDE.md`, whose rules now cover questions, notes, Away and the board tools. The app reads, and never writes, what is installed: each session window compares the installed hooks and extension with the ones it ships, byte for byte, and says when they are from an earlier version or missing, with a button to open Set-up Info.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.
