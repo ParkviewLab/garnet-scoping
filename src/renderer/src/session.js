@@ -109,6 +109,7 @@ function setMarks(state) {
     renderPresent()
     renderTrail()
     renderMemory()
+    renderSubagents()
   }
 }
 
@@ -242,7 +243,74 @@ function actionRow(a, { showAgo = false, panel = 'now' } = {}) {
   const li = el('li', `action${a.hasDetail ? ' detail' : ''}${a.isError ? ' error' : ''}${a.done ? '' : ' running'}`)
   li.append(el('span', 'text', a.text), el('span', 'when', showAgo ? ago(a.at) : clock(a.at)))
   if (a.target) li.title = a.target
+  // An action that started a subagent leads to its row (R9.3).
+  if (view?.subagents?.some((s) => s.id === a.id)) {
+    const link = el('button', 'to-subagent', 'Subagent')
+    link.type = 'button'
+    link.title = 'Show this subagent in the Subagents panel'
+    link.addEventListener('click', (e) => {
+      e.stopPropagation()
+      jumpTo({ panel: 'subagents', key: `subagent:${a.id}` })
+    })
+    li.append(link)
+  }
   return markable(li, { panel, key: `action:${a.id}`, text: a.text }, a.hasDetail ? () => showDetail(a) : null)
+}
+
+// ---- the subagents (R9) ----
+const openSubs = new Set()
+const subDetail = new Map() // agent id -> detail, once read
+const STATUS = { running: 'Running', finished: 'Finished', completed: 'Finished', stopped: 'Stopped without finishing', failed: 'Failed', killed: 'Stopped' }
+const tokens = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
+const duration = (ms) => (ms >= 60000 ? `${Math.round(ms / 60000)} min` : `${Math.max(1, Math.round(ms / 1000))} s`)
+
+function subagentRow(s, nested = false) {
+  const box = el('div', `subagent${openSubs.has(s.id) ? ' open' : ''}${nested ? ' nested' : ''}`)
+  const head = el('div', 'sub-head')
+  head.append(el('span', 'name', s.task), el('span', `state-badge ${s.status === 'running' ? 'working' : s.status === 'finished' || s.status === 'completed' ? 'idle' : 'waiting'}`, STATUS[s.status] ?? s.status))
+  const who = [s.type, [s.model, s.effort].filter(Boolean).join(', '), s.background ? 'background' : null].filter(Boolean).join(' · ')
+  const figs = [s.durationMs != null ? duration(s.durationMs) : s.status === 'running' ? `started ${ago(s.startedAt)}` : null, s.tokens != null ? `${tokens(s.tokens)} tokens` : null, s.toolCalls != null ? `${s.toolCalls} tool calls` : null].filter(Boolean).join(' · ')
+  head.append(el('span', 'meta', who), el('span', 'meta', figs))
+  box.append(head)
+  markable(head, { panel: 'subagents', key: `subagent:${s.id}`, text: `Subagent: ${s.task}` }, () => {
+    if (openSubs.has(s.id)) openSubs.delete(s.id)
+    else openSubs.add(s.id)
+    renderSubagents()
+  })
+  if (!openSubs.has(s.id)) return box
+  const body = el('div', 'sub-body')
+  const d = s.agentId ? subDetail.get(s.agentId) : null
+  if (s.agentId && !d) {
+    body.append(el('p', 'muted', 'Reading its transcript…'))
+    window.garnet.subagent(s.agentId).then((x) => {
+      subDetail.set(s.agentId, x ?? { actions: [], subagents: [] })
+      renderSubagents()
+    })
+  } else if (d) {
+    const ul = el('ul', 'actions')
+    for (const a of d.actions) ul.append(actionRow({ ...a, hasDetail: false }, { panel: 'subagents' }))
+    if (d.actions.length) body.append(ul)
+    else body.append(el('p', 'muted', 'No actions recorded.'))
+    for (const n of d.subagents ?? []) body.append(subagentRow(n, true))
+  }
+  if (s.report) {
+    const rep = el('div', 'sub-report')
+    rep.append(el('h3', null, 'Final report'), Object.assign(markdown(s.report), { className: 'markdown' }))
+    body.append(rep)
+  } else body.append(el('p', 'muted', s.status === 'running' ? 'No report yet: still running.' : 'No report.'))
+  if (!nested) {
+    const back = el('button', 'to-trail', 'Show in Trail')
+    back.type = 'button'
+    back.addEventListener('click', () => jumpTo({ panel: 'trail', key: `action:${s.id}` }))
+    body.append(back)
+  }
+  box.append(body)
+  return box
+}
+
+function renderSubagents() {
+  const list = view?.subagents ?? []
+  $('subagents').replaceChildren(...(list.length ? list.map((s) => subagentRow(s)) : [el('p', 'muted', 'This session has started no subagents.')]))
 }
 
 function pathList(entries, kind) {
@@ -410,6 +478,7 @@ function turnEl(t, i, isLast) {
     else if (it.type === 'mid-turn') body.append(el('div', 'item mid-turn', `Sent mid-turn: ${it.text}`))
     else if (it.type === 'notification') body.append(el('div', 'item notification', `Finished in the background: ${it.text}`))
     else if (it.type === 'interrupt') body.append(el('div', 'item muted', 'Interrupted by the person.'))
+    else if (it.type === 'compaction') body.append(compactionEl(it, i, j))
   }
   flush()
   if (t.recap) body.append(el('div', 'recap', t.recap))
@@ -418,6 +487,42 @@ function turnEl(t, i, isLast) {
   if (t.notes.length) body.append(el('h2', null, 'Memory notes'), pathList(t.notes, 'notes'))
   sec.append(body)
   return sec
+}
+
+// A compaction (R11): when, who started it, how much context it replaced; it
+// opens to the summary the agent continues from, its first paragraph and
+// then the whole.
+const compactionOpen = new Map() // key -> 'first' | 'all'
+function compactionEl(it, i, j) {
+  const key = `compaction:${i}:${j}`
+  const box = el('div', 'item compaction')
+  const who = it.trigger === 'manual' ? 'by you (/compact)' : it.trigger === 'auto' ? 'by Claude Code (the context was full)' : ''
+  const size = it.preTokens != null ? ` · ${tokens(it.preTokens)} tokens of context${it.postTokens != null ? ` replaced by a summary of ${tokens(it.postTokens)}` : ''}` : ''
+  const line = el('div', 'compaction-line', `Context compacted at ${clock(it.at)} ${who}${size}`)
+  box.append(line)
+  markable(line, { panel: 'trail', key, text: `Compaction at ${clock(it.at)}` }, () => {
+    compactionOpen.set(key, compactionOpen.has(key) ? undefined : 'first')
+    if (!compactionOpen.get(key)) compactionOpen.delete(key)
+    renderTrail()
+  })
+  const state = compactionOpen.get(key)
+  if (state && it.summary) {
+    const paras = it.summary.split(/\n\s*\n/)
+    const shown = state === 'all' ? it.summary : paras[0]
+    const sum = el('div', 'compaction-summary')
+    sum.append(el('h3', null, 'The summary the agent continues from'), Object.assign(markdown(shown), { className: 'markdown' }))
+    if (state !== 'all' && paras.length > 1) {
+      const more = el('button', 'show-earlier', `Show all (${it.summary.split(/\s+/).length} words)`)
+      more.type = 'button'
+      more.addEventListener('click', () => {
+        compactionOpen.set(key, 'all')
+        renderTrail()
+      })
+      sum.append(more)
+    }
+    box.append(sum)
+  } else if (state) box.append(el('p', 'muted', 'No summary was recorded.'))
+  return box
 }
 
 function renderTrail() {
@@ -509,10 +614,10 @@ function renderMemory() {
 // Which are on is remembered across windows; at least one stays on. The
 // board takes half the window, on the side set in Settings, or all of it
 // when it is the only panel on.
-const PANELS = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'board']
+const PANELS = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'subagents', 'board']
 const PANELS_KEY = 'garnet.panels'
-const DEFAULT_PANELS = { sessions: false, desk: true, trail: false, memory: false, discuss: false, board: true }
-const SIDE = ['sessions', 'desk', 'trail', 'memory', 'discuss'] // the panels that share the Desk's half
+const DEFAULT_PANELS = { sessions: false, desk: true, trail: false, memory: false, discuss: false, subagents: false, board: true }
+const SIDE = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'subagents'] // the panels that share the Desk's half
 
 function loadPanels() {
   try {
@@ -580,7 +685,7 @@ window.garnet.live.get().then(showMyState)
 // header's flag button. Choosing an entry shows its item in its own panel
 // (turned on, a Trail turn opened, as needed), scrolled into view, with a
 // highlight that fades over two seconds.
-const WHERE = { plan: 'Plan', now: 'Now', trail: 'Trail', memory: 'Memory', foryou: 'For you' }
+const WHERE = { plan: 'Plan', now: 'Now', trail: 'Trail', memory: 'Memory', foryou: 'For you', subagents: 'Subagents' }
 
 function discussEntries() {
   const open = marks.filter((m) => m.status === 'open').reverse()
@@ -651,6 +756,11 @@ function jumpTo(m) {
   } else if (m.panel === 'memory') {
     want.memory = true
     container = 'memory'
+  } else if (m.panel === 'subagents') {
+    want.subagents = true
+    container = 'subagents'
+    openSubs.add(key.slice(9))
+    renderSubagents()
   } else if (m.panel === 'foryou') {
     want.desk = true
     container = 'for-you'
@@ -709,6 +819,7 @@ async function refresh() {
   renderFacts()
   renderPresent()
   renderTrail()
+  renderSubagents()
   memory = await window.garnet.listMemory()
   renderMemory()
 }

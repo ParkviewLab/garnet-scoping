@@ -20,7 +20,9 @@ import { loadSettings, saveSettings, clean } from './settings.js'
 import { openSetupInfo, installChannel } from './setupInfo.js'
 import { watchLive } from './live/index.js'
 import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
-import { readEdge } from './transcript/reader.js'
+import { readEdge, readFrom } from './transcript/reader.js'
+import { createSession, snapshot } from './transcript/session.js'
+import { classify } from './transcript/records.js'
 import { boardPaths, cleanState } from './board.js'
 
 const CLAUDE = join(homedir(), '.claude')
@@ -131,6 +133,22 @@ function openSession(info, { sessions = false } = {}) {
   })
 }
 
+// A subagent's transcript: <session>/subagents/agent-<id>.jsonl beside the
+// session's own.
+const subagentFile = (sessionFile, agentId) => join(sessionFile.replace(/\.jsonl$/, ''), 'subagents', `agent-${agentId}.jsonl`)
+// Each subagent's effort and model, from the last records of its own
+// transcript (the session's records carry only the model).
+async function withEffort(sessionFile, subs) {
+  return Promise.all(
+    subs.map(async (s) => {
+      if (!s.agentId) return s
+      const tail = await readEdge(subagentFile(sessionFile, s.agentId), 16 * 1024, true).catch(() => [])
+      const last = tail.map(classify).filter((r) => r.kind === 'assistant').at(-1)
+      return { ...s, effort: last?.effort ?? null, model: s.model ?? last?.model ?? null }
+    }),
+  )
+}
+
 const entryOf = (e) => [...windows.values()].find((w) => w.win.webContents === e.sender)
 
 // A path inside a directory, or null.
@@ -166,7 +184,20 @@ function registerIpc() {
     // Each delivered file, with whether it still exists (scratch folders are
     // cleared in time).
     const deliveries = (v.deliveries ?? []).map((d) => ({ ...d, files: d.files.map((p) => ({ path: p, exists: existsSync(p) })) }))
-    return { ...v, deliveries, project: w.project }
+    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), project: w.project }
+  })
+  // A subagent's own work (R9.2): its actions, its own subagents and its
+  // report, read from its transcript beside the session's.
+  ipcMain.handle('subagent:detail', async (e, agentId) => {
+    const w = entryOf(e)
+    if (!w || typeof agentId !== 'string' || !/^[\w-]+$/.test(agentId)) return null
+    const file = subagentFile(w.file, agentId)
+    const { records } = await readFrom(file, 0).catch(() => ({ records: [] }))
+    const { state, apply } = createSession(agentId)
+    for (const r of records) apply(r)
+    const v = snapshot(state)
+    const actions = v.turns.flatMap((t) => t.items.filter((it) => it.type === 'action')).map(({ id, text, target, at, done, isError }) => ({ id, text, target, at, done, isError }))
+    return { actions, subagents: await withEffort(w.file, v.subagents), effort: v.facts.effort, model: v.facts.model }
   })
   ipcMain.handle('session:detail', (e, actionId) => entryOf(e)?.follower.detail(actionId) ?? null)
   ipcMain.handle('memory:list', (e) => {

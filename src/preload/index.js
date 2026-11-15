@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('garnet', {
   onShowPanel: (fn) => ipcRenderer.on('panel:show', (_e, p) => fn(p)),
   view: () => ipcRenderer.invoke('session:view'),
   detail: (actionId) => ipcRenderer.invoke('session:detail', actionId),
+  subagent: (agentId) => ipcRenderer.invoke('subagent:detail', agentId),
   onChanged: (fn) => ipcRenderer.on('session:changed', () => fn()),
   listMemory: () => ipcRenderer.invoke('memory:list'),
   readMemory: (path) => ipcRenderer.invoke('memory:read', path),
