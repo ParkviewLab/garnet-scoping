@@ -152,6 +152,12 @@ The mock-up the owner reviewed is [`manual-mockup.html`](manual-mockup.html): a 
 
 **What phonorheos provides.** phonorheos 0.10.0 renders speech to a file without playing it: `POST /render` returns the speech as WAV (24 kHz, mono, 16-bit) once complete, and `phonorheos say --to-file <path.wav>` writes it (phonorheos decision R1). It writes WAV only, since Opus would add a C library to its three signed builds; the compression to AAC is done here, by the script above.
 
+## Resizing panels (R19)
+
+`layout()` in `session.js` places a splitter element between each pair of visible neighbours each time the open panels change: between the Desk's sections in their order, and between the Desk and the board when both are shown. The stage sets each child's CSS `order` by the board's side, so the splitter between the Desk and the board sits between them on every side. A splitter's orientation follows its container's flex direction: the Desk is always a row, and the stage a column when the board is above or below.
+
+Sizes are kept as flex weights: one per Desk panel (defaults 2.4 Sessions, 3 Desk, 5 Trail, 2.2 Memory, 2.2 Discuss, 3 Subagents, the shares used before splitters) and the board's share of the stage (default 0.5). A drag moves weight between the two neighbours only, clamped so that neither falls below 90 px, using pointer capture so that the board's canvas beneath does not take the pointer. A double-click restores the two neighbours' defaults. The weights are stored in `localStorage` under `garnet.sizes`, beside `garnet.panels`; the manual window keeps them in memory, as it does the panels. The board is told to measure itself again after each change.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.
