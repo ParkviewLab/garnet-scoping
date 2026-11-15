@@ -72,7 +72,12 @@ export function parseNotification(text) {
     const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(text)
     return m ? m[1].trim() : null
   }
-  return { taskId: tag('task-id'), status: tag('status'), summary: tag('summary') }
+  const usage = tag('usage') ?? ''
+  const num = (name) => {
+    const m = new RegExp(`${name}:\\s*(\\d+)`).exec(usage)
+    return m ? Number(m[1]) : null
+  }
+  return { taskId: tag('task-id'), status: tag('status'), summary: tag('summary'), result: tag('result'), tokens: num('subagent_tokens') ?? num('total_tokens'), toolCalls: num('tool_uses'), durationMs: num('duration_ms') }
 }
 
 const common = (r) => ({
@@ -93,6 +98,9 @@ function classifyUser(r) {
   }
   const text = textOf(content)
   const images = imagesIn(content)
+  // The summary a compacted session continues from (R11): the session's
+  // work, recognised by its field, never by its wording (R11.3).
+  if (r.isCompactSummary) return { kind: 'compact-summary', text }
   const origin = r.origin?.kind
   if (origin === 'task-notification' || text.startsWith('<task-notification')) {
     return { kind: 'notification', ...parseNotification(text) }
@@ -168,7 +176,10 @@ export function classify(r) {
       rec = { kind: 'pr', number: r.prNumber, url: r.prUrl, repo: r.prRepository }
       break
     case 'system':
-      rec = { kind: 'system' }
+      if (r.subtype === 'compact_boundary') {
+        const m = r.compactMetadata ?? {}
+        rec = { kind: 'compaction', trigger: m.trigger === 'manual' ? 'manual' : 'auto', preTokens: Number.isFinite(m.preTokens) ? m.preTokens : null, postTokens: Number.isFinite(m.postTokens) ? m.postTokens : null }
+      } else rec = { kind: 'system' }
       break
     default:
       rec = IGNORED_TYPES.has(r.type) ? { kind: 'ignored' } : { kind: 'unknown', type: String(r.type) }

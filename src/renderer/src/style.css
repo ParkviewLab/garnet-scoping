@@ -307,6 +307,70 @@ input[type='search'] {
   color: var(--fg);
   background: var(--raised);
 }
+.desk > .subagents-col {
+  flex: 3 1 0;
+}
+.subagent {
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+}
+.subagent.nested {
+  margin-left: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  border-bottom: none;
+}
+.sub-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.sub-head:hover {
+  background: var(--raised);
+}
+.sub-head .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sub-head .meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.sub-body {
+  padding: 4px 6px 6px 16px;
+}
+.sub-report {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.to-subagent,
+.to-trail {
+  font-size: 11px;
+  padding: 0 6px;
+  margin-left: 6px;
+}
+.item.compaction {
+  border: 1px dashed var(--muted);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 8px 0;
+}
+.compaction-line {
+  cursor: pointer;
+  color: var(--warn);
+}
+.compaction-summary {
+  margin-top: 8px;
+  max-height: 420px;
+  overflow: auto;
+}
 .desk > .memory-col {
   flex: 2.2 1 0;
 }
