@@ -130,7 +130,7 @@ R7.9. A session that continues an earlier one under a new id (resumed or forked:
 
 ## Proposed: seeing more of what sessions do (2026-11-14)
 
-These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, R16 adds asides, R17 an Away toggle, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
+These requirements are proposed, not decided: they extend R1, R2, R3, R6 and R7, R13 and R14 add two ways of asking, R15 adds receipts for signals, R16 adds asides, R17 an Away toggle, and R18 a manual, and all of them await the owner's review. The owner ruled on the questions of display and communication on 2026-11-14 (listed under Rulings); how the data is read from Claude Code is set by the proposed defaults below, each with its reason, and any of it can still be overturned in review. Where one changes what exists now, it says so. Every new row a requirement adds to a session's window (a subagent, a waiting reason, a wake-up, a compaction marker) can be marked to discuss as R2.7 gives the rows of Plan, Now, Trail, Memory and For you; this extends R2.7's list, since the northstar asks each new view to offer a signal (intent 2). Such a mark stays with its row as R2.7's do, and a row that has gone (a waiting reason that has passed) is kept, marked as past, while a mark on it is open.
 
 ### R8. Live state
 
@@ -250,6 +250,16 @@ R17.3. On return (the toggle turned off, or the time passed, which the app shows
 
 R17.4. The state the agent reads also says whether this session's window is open and its board shown, worded as a fact about the window and not about the person's attention (northstar: nothing is inferred from silence).
 
+### R18. The manual
+
+Now: the app has no manual of its own; the README and Set-up Info describe installation, not use.
+
+R18.1. The app carries an animated manual made of short lessons, each teaching one task in under thirty seconds, played on the app's own interface with a moving pointer, captions and a voice-over.
+
+R18.2. A lesson is found where the person is: from a **?** on each panel, which lists that panel's lessons, and from a **How do I…** search over all of them. There is no course to follow from start to finish.
+
+R18.3. The manual works without a network connection: lessons, captions and voice-over ship inside the app.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -266,12 +276,13 @@ R17.4. The state the agent reads also says whether this session's window is open
 - **Receipts:** accepted (R15), demonstrated in a mock-up.
 - **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Away:** accepted (R17).
+- **Manual:** lessons with voice-over, found from each panel and by search (R18), built last, once the features it teaches exist.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
 
 ### Proposed defaults
 
 - P5. **Install:** the hooks and the extension these require are installed as the watcher is (R7.7): from text in the Set-up Info window, which the person pastes into a session and Claude carries out. R5.1 is restated accordingly: the app itself never writes in the Claude configuration directory; Claude writes there, at the person's request, from that text. The app says when the installed hooks or extension differ from those it ships, so that an update of the app does not leave them stale.
-- P6. **Order:** R8 first, then R9 and R11, then R10 and R12, each its own pull request.
+- P6. **Order:** R8 first, then R9 and R11, then R10 and R12, then R13 to R17, each its own pull request; R18, the manual, last.
 - P7. **Subagents:** R9 takes up what S5 left out of the first version.
 - P8. **Source of live state:** the app watches the files Claude Code writes per process (`~/.claude/sessions/<pid>.json`), which change the moment a session's state does, and treats a file whose process has gone as stale. Where those files are missing or unrecognised, it reads Claude Code's documented listing (`claude agents --json`) at a slower interval; only where both fail is the state Unknown. Reason: the files are undocumented but cost nothing to watch; the listing is documented and is the check on them. The listing is the only process the app runs; probed on 2.1.325, it wrote nothing under `~/.claude`, behaved identically with the network and writes there blocked, and took about 0.1 s. That probe is repeated whenever the checked Claude Code versions are raised.
 - P9. **What the hooks record:** in the app's own folder only; no raw command, prompt or tool input beyond what the session's transcript already holds; deleted when that session's transcript is.
@@ -279,6 +290,7 @@ R17.4. The state the agent reads also says whether this session's window is open
 - P11. **The compaction summary** is recognised by `isCompactSummary`, and the boundary by its `compact_boundary` record, which carries what R11.1 shows.
 - P12. **Receipts** are read from what the watcher already writes in the app's folder: `<session>.watcher.pid` (whether a watcher is running, checked against a live process) and `<session>.watched` (the signals it has delivered). The channel records what it delivers in the same way. Reason: both files exist today and nothing reads them (verified 2026-11-14).
 - P13. **Asides** are answered by a single tool-less completion over the session's own transcript, the prefix served from Claude Code's prompt cache where it is still warm (`$.model.fork`, in use in a mod on this machine). Whether the desktop app runs one while the agent is mid-turn is to be probed before design.
+- P14. **Voice-over** is spoken by phonorheos, the lab's local speech app, when the lessons are made, and the audio ships with the app; whether phonorheos can write its speech to a file, rather than only play it, is to be checked before then.
 
 ### Open questions
 
