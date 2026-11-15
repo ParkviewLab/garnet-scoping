@@ -135,6 +135,13 @@ input[type='search'] {
 .title-block {
   min-width: 0;
 }
+.title-block h1 {
+  display: inline;
+}
+.live-state .state-badge {
+  margin-left: 8px;
+  vertical-align: 2px;
+}
 .facts {
   color: var(--muted);
   font-size: 12px;
@@ -209,6 +216,96 @@ input[type='search'] {
 }
 .desk > .trail-col {
   flex: 5 1 0;
+}
+.desk > .sessions-col {
+  flex: 2.4 1 0;
+  overflow-x: hidden;
+}
+.sessions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sessions-head .views button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.sessions-head .views button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.sessions-filter {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0;
+}
+.sessions-group h3 {
+  margin: 12px 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.sessions-row {
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sessions-row:hover,
+.sessions-row:focus {
+  background: var(--raised);
+  outline: none;
+}
+.sessions-row.current {
+  background: var(--raised);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.sessions-row .head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sessions-row .name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sessions-row .sub {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sessions-row .why {
+  color: var(--warn);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.state-badge {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.state-badge.working {
+  color: #b5d4f4;
+  background: #0c3355;
+  border-color: transparent;
+}
+.state-badge.waiting {
+  color: #fac775;
+  background: #5c3d0a;
+  border-color: transparent;
+}
+.state-badge.idle {
+  color: var(--fg);
+  background: var(--raised);
 }
 .desk > .memory-col {
   flex: 2.2 1 0;

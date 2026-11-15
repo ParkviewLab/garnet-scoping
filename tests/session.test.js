@@ -37,6 +37,7 @@ describe('classify', () => {
   })
   it('counts an unknown record type instead of failing', () => {
     expect(classify(F.unknown('brand-new-kind'))).toMatchObject({ kind: 'unknown', type: 'brand-new-kind' })
+    for (const type of ['tools-used', 'dev-mods', 'session-owner']) expect(classify({ type, sessionId: 's1' }).kind).toBe('ignored')
   })
 })
 
