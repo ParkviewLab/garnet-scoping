@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.12.0] - 2026-11-15
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- Splitters between the open panels (#95)
+
 ## [v0.11.0] - 2026-11-15
 
 ### Highlights
