@@ -140,7 +140,7 @@ R8.1. Each session's state is one of: **Working**; **Idle** (with the time it be
 
 R8.2. A session is **Waiting for you** when it is stopped inside a turn on a permission request or on a question put through Claude Code's question tool (AskUserQuestion); when it is holding (R2.8); or when its turn ended with a question in the desktop app's next-step box (R2.4's "Asked"). A turn that simply ended is Idle, whether or not the agent's last message asks anything (R2.4). A background session (started with `claude --bg`) that waits is Waiting for you, labelled "background, attach to answer"; Claude Code does not record whether a terminal is attached (probed 2026-11-14), so the label is shown whenever a background session waits.
 
-R8.3. The list offers three views: **Most recent**, by project, the projects and the sessions in each ordered by last activity, most recent first; **By project name**, the projects in alphabetical order, the sessions in each most recent first; and **All, waiting first**, every session in one list with those waiting first. The number of sessions waiting for the person is shown on the Dock icon's badge on macOS (which needs the person's permission for notifications), and on Ubuntu on the dock icon where the system supports a count, and nowhere where it does not.
+R8.3. The list offers three views, in this order: **Waiting first**, every session in one list with those waiting first; **Recent first**, by project, the projects and the sessions in each ordered by last activity, most recent first; and **Alphabetical**, the projects in alphabetical order, the sessions in each most recent first. The number of sessions waiting for the person is shown on the Dock icon's badge on macOS (which needs the person's permission for notifications), and on Ubuntu on the dock icon where the system supports a count, and nowhere where it does not.
 
 R8.4. **Why it waits:** when a session is waiting for the person, the Desk says on what, and since when: a permission request, named by the tool and its one-line description as R5.2 names actions (never the raw command); a question put through the question tool, shown with its text and the labels of its options, which are the agent's words, not a tool's output (taken from the transcript where live state does not carry them); a hold; or a next-step question. A reason the app does not recognise is shown as Claude Code gives it, and counted as waiting. A waiting reason is removed when the session moves on, unless a Discuss mark on it is open.
 
@@ -267,7 +267,7 @@ R18.4. The manual is designed before any lesson is made: the list of lessons and
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
-- **Order:** three views, Most recent, By project name, and All, waiting first (R8.3), settled on seeing the panel built.
+- **Order:** three views, Waiting first, Recent first and Alphabetical (R8.3), settled on seeing the panel built.
 - **Sessions panel:** the session list is a panel of the window, not a window of its own; the app opens on the most recently active session with that panel on (R8.6).
 - **Background sessions waiting:** shown as Waiting for you, labelled "background, attach to answer" (R8.2).
 - **Questions:** a waiting question is shown with its text and option labels (R8.4).

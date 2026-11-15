@@ -83,7 +83,7 @@ The interface was settled with the owner through a clickable mock-up of the Sess
 **The Sessions panel (R8.6)** (`renderer/src/sessions-panel.js`) replaces the list window; the list page remains only for a machine with no session. It is a panel of the session window, beside Desk, Trail, Memory, Discuss and Board in the header's toggles (D9), and shows:
 
 - each session's title, folder, state badge and, when it waits, its reason and since when;
-- three views (R8.3): Most recent (by project, ordered by last activity), By project name (projects alphabetically) and All, waiting first;
+- three views (R8.3): Waiting first (all sessions, those waiting first), Recent first (by project, ordered by last activity) and Alphabetical (projects by name);
 - a click on a session opens its window, or brings it forward.
 
 At start the app opens a window on the most recently active session with the panel on. The Dock badge is `app.setBadgeCount` with the number of sessions waiting; on Ubuntu it shows where the `.deb`'s desktop file lets the dock count it (Q8's ruling).
