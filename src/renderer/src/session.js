@@ -813,8 +813,138 @@ function layout() {
     $(`tog-${p}`).setAttribute('aria-pressed', String(panels[p]))
   }
   if (panels.board) mountBoardOnce()
+  placeSplitters()
   // The editor measures its container; it is told when that changes.
   requestAnimationFrame(() => boardModule?.refreshBoard())
+}
+
+// ---- the splitters (R19) ----
+// A splitter sits between each pair of neighbouring panels; a drag moves
+// space between those two only, never below MIN_PX, and a double-click
+// gives them their default sizes back. Sizes are flex weights for the
+// Desk's panels and the board's share of the stage, remembered as the
+// panels are.
+const SIZES_KEY = 'garnet.sizes'
+const MIN_PX = 90
+const GRIP_PX = 7
+const DEFAULT_WEIGHTS = { sessions: 2.4, desk: 3, trail: 5, memory: 2.2, discuss: 2.2, subagents: 3 }
+const DEFAULT_BOARD = 0.5
+function loadSizes() {
+  const out = { weights: { ...DEFAULT_WEIGHTS }, board: DEFAULT_BOARD }
+  try {
+    const saved = JSON.parse(localStorage.getItem(SIZES_KEY))
+    for (const p of SIDE) {
+      const w = saved?.weights?.[p]
+      if (typeof w === 'number' && Number.isFinite(w) && w > 0) out.weights[p] = w
+    }
+    const b = saved?.board
+    if (typeof b === 'number' && b > 0 && b < 1) out.board = b
+  } catch {}
+  return out
+}
+const sizes = loadSizes()
+function saveSizes() {
+  try {
+    localStorage.setItem(SIZES_KEY, JSON.stringify(sizes))
+  } catch {}
+}
+function applySizes() {
+  for (const p of SIDE) $(`pane-${p}`).style.flex = `${sizes.weights[p]} 1 0`
+  const split = !$('desk').hidden && !$('board').hidden
+  $('board').style.flex = split ? `0 0 calc(${(sizes.board * 100).toFixed(3)}% - ${GRIP_PX / 2}px)` : ''
+  $('desk').style.flex = split ? '1 1 0' : ''
+}
+
+function splitter(across, major) {
+  const el = document.createElement('div')
+  el.className = `splitter${across ? ' across' : ''}${major ? ' major' : ''}`
+  el.dataset.ui = major ? 'splitter-board' : 'splitter' // data-ui: splitter, splitter-board
+  el.setAttribute('role', 'separator')
+  el.setAttribute('aria-orientation', across ? 'horizontal' : 'vertical')
+  return el
+}
+
+// Lets the splitter `el` move the boundary between a and b (a first), along
+// y when `across`, else along x; `move` is given a's new size in pixels,
+// clamped so that neither falls below MIN_PX, and the two sizes' sum.
+function dragWith(el, across, a, b, move) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    el.setPointerCapture(e.pointerId)
+    el.classList.add('dragging')
+    document.body.classList.add('resizing', across ? 'rows' : 'cols')
+    const size = (n) => (across ? n.getBoundingClientRect().height : n.getBoundingClientRect().width)
+    const sa = size(a)
+    const sb = size(b)
+    const start = across ? e.clientY : e.clientX
+    const onMove = (ev) => {
+      if (sa + sb < 2 * MIN_PX) return
+      const d = (across ? ev.clientY : ev.clientX) - start
+      move(Math.max(MIN_PX, Math.min(sa + sb - MIN_PX, sa + d)), sa + sb)
+      boardModule?.refreshBoard()
+    }
+    const onUp = () => {
+      el.classList.remove('dragging')
+      document.body.classList.remove('resizing', 'rows', 'cols')
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('pointercancel', onUp)
+      saveSizes()
+      requestAnimationFrame(() => boardModule?.refreshBoard())
+    }
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onUp)
+  })
+}
+
+function placeSplitters() {
+  for (const old of document.querySelectorAll('.splitter')) old.remove()
+  // Between the Desk's open panels, in the order they stand.
+  const open = SIDE.map((p) => $(`pane-${p}`)).filter((n) => !n.hidden)
+  open.sort((x, y) => (x.compareDocumentPosition(y) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+  for (let i = 0; i + 1 < open.length; i++) {
+    const a = open[i]
+    const b = open[i + 1]
+    const pa = a.id.slice('pane-'.length)
+    const pb = b.id.slice('pane-'.length)
+    const el = splitter(false, false)
+    a.after(el)
+    dragWith(el, false, a, b, (na, total) => {
+      const sum = sizes.weights[pa] + sizes.weights[pb]
+      sizes.weights[pa] = (sum * na) / total
+      sizes.weights[pb] = sum - sizes.weights[pa]
+      applySizes()
+    })
+    el.addEventListener('dblclick', () => {
+      sizes.weights[pa] = DEFAULT_WEIGHTS[pa]
+      sizes.weights[pb] = DEFAULT_WEIGHTS[pb]
+      applySizes()
+      saveSizes()
+    })
+  }
+  // Between the Desk and the board, on the board's side.
+  const desk = $('desk')
+  const board = $('board')
+  if (!desk.hidden && !board.hidden) {
+    const across = boardSide === 'top' || boardSide === 'bottom'
+    const boardFirst = boardSide === 'left' || boardSide === 'top'
+    const el = splitter(across, true)
+    desk.after(el)
+    const [a, b] = boardFirst ? [board, desk] : [desk, board]
+    dragWith(el, across, a, b, (na, total) => {
+      sizes.board = ((boardFirst ? na : total - na) + GRIP_PX / 2) / (total + GRIP_PX)
+      applySizes()
+    })
+    el.addEventListener('dblclick', () => {
+      sizes.board = DEFAULT_BOARD
+      applySizes()
+      saveSizes()
+      requestAnimationFrame(() => boardModule?.refreshBoard())
+    })
+  }
+  applySizes()
 }
 
 function setPanels(next) {

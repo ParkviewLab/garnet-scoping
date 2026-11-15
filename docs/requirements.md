@@ -25,7 +25,7 @@ These were ruled before this document was written.
 - D6. The app is named garnet-scoping; "Desk" names a part of its window (since D9, one of the window's panels), not the app.
 - D7. Changes to the details are expected to follow from use: the first version is the starting point, not a fixed design.
 - D8. Each session has one window, holding its Desk and its board (R7); the board is a shared whiteboard of shapes with text, lines and arrows.
-- D9. The window's panels, Desk (the present state), Trail, Memory, Discuss (R2.7) and Board, are each turned on and off. When the board is shown beside other panels it takes half the window, on the side (left, right, top or bottom) set in Settings; the other panels share the remaining half.
+- D9. The window's panels, Desk (the present state), Trail, Memory, Discuss (R2.7) and Board, are each turned on and off. When the board is shown beside other panels it takes half the window until the person moves the divider (R19), on the side (left, right, top or bottom) set in Settings; the other panels share the remaining half.
 
 ## Settled under the go-ahead
 
@@ -284,6 +284,18 @@ R18.10. A lesson is found from a **?** at the right of each panel's header, whic
 
 R18.11. A lesson stays correct as the interface changes: a check fails when an element a lesson acts on no longer exists, so a lesson cannot silently show what the app no longer has.
 
+### R19. Resizing panels
+
+R19.1. Open panels are separated by splitters: a divider between each pair of neighbouring panels that the person drags to move the space between them. A divider between panels side by side is vertical and drags left and right; the divider between the Desk's panels and the board, when the board is above or below them (D9), is horizontal and drags up and down.
+
+R19.2. A drag changes only the two panels either side of the divider, and neither is made smaller than 90 px.
+
+R19.3. A divider thickens and shows the resize cursor while hovered or dragged. The divider between the Desk's panels and the board is drawn stronger than those between the Desk's panels.
+
+R19.4. A double-click on a divider gives its two panels their default sizes back: the board half the window (D9), and the Desk's panels their usual shares.
+
+R19.5. The sizes are remembered as the open panels are, across windows and restarts.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -302,6 +314,7 @@ R18.11. A lesson stays correct as the interface changes: a check fails when an e
 - **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
 - **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
+- **Resizing panels:** splitters between open panels, vertical or horizontal as the panels lie, with a 90 px minimum and a double-click reset (R19); demonstrated in a mock-up on 2026-11-15.
 - **The manual's design**, ruled 2026-11-14 and 2026-11-15 on mock-ups: a manual window of its own with a demo session (R18.5); each lesson played, then tried on the demo, with a skip (R18.6); the controls of R18.7, without speed; the voice bf_emma, chosen by ear from five (R18.8); the 28 lessons of R18.9; the entry points of R18.10.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation); pins re-given to the agent after a compaction (what must survive a compaction is kept on disk, in memory notes, the board and the repository, which the agent can read again).
 
