@@ -146,6 +146,8 @@ R8.4. **Why it waits:** when a session is waiting for the person, the Desk says 
 
 R8.5. Where the source of live state is missing or reads nothing the app recognises (P8), the app falls back to what it shows now (R1.1, R2.4), shows the state as Unknown, and says that live state is unavailable, as R6 requires of format drift.
 
+R8.6. **The Sessions panel:** the session list (R1.1, with R8.1 to R8.3) is a panel of the session window, turned on and off like the others; this adds it to D9's list and replaces the separate list window. Choosing a session in it opens that session's window, or brings it forward if open. The app opens on a window for the most recently active session, with the Sessions panel on.
+
 ### R9. Subagents
 
 Now: a subagent appears as the action that started it, in Now and the Trail (R2.2, R3.1), and that action's output, shown on request (R5.2), is its final report; one started in the background is also listed in Waiting while it runs (R2.3), and its completion notice appears in the Trail. Its own actions are not shown (S5).
@@ -266,6 +268,7 @@ R18.4. The manual is designed before any lesson is made: the list of lessons and
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
 - **Order:** waiting first within each project's group, and a flat view with waiting first (R8.3).
+- **Sessions panel:** the session list is a panel of the window, not a window of its own; the app opens on the most recently active session with that panel on (R8.6).
 - **Background sessions waiting:** shown as Waiting for you, labelled "background, attach to answer" (R8.2).
 - **Questions:** a waiting question is shown with its text and option labels (R8.4).
 - **The panel:** named Subagents, listing subagents only; background sessions stay rows of their own (R9.1).
