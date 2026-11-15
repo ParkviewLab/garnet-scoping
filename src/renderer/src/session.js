@@ -11,6 +11,16 @@ import { ago, clock, fileUrl, fromFile, since } from './util.js'
 import { mountSessions, badge as stateBadge } from './sessions-panel.js'
 
 const $ = (id) => document.getElementById(id)
+// The manual's window keeps its layout, views and marks in memory only: every
+// window of the app shares one store, and a lesson must neither change the
+// person's own windows nor find them changed (R18.5).
+if (new URLSearchParams(location.search).get('manual') === '1') {
+  const mem = new Map()
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) },
+  })
+}
 // A lesson of the manual (R18) names the element it acts on by this, so that its
 // script survives a change of wording or layout; tests check that each name exists.
 const ui = (e, name) => ((e.dataset.ui = name), e)

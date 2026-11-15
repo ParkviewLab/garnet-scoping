@@ -1,0 +1,42 @@
+{
+  "n": 13,
+  "title": "Check the work running in the background and the wake-ups",
+  "group": "Following the agent",
+  "panels": [
+    "panel-waiting"
+  ],
+  "done": "That is it: the agent is asked about that work when its current step ends.",
+  "steps": [
+    {
+      "target": [
+        "panel-waiting",
+        "row"
+      ],
+      "action": "point",
+      "caption": "Waiting lists the work the agent left running: here, the parser's tests."
+    },
+    {
+      "target": [
+        "panel-waiting"
+      ],
+      "action": "point",
+      "caption": "Below it, a wake-up the agent set: when it fires, and why."
+    },
+    {
+      "target": [
+        "panel-waiting"
+      ],
+      "action": "point",
+      "caption": "Neither stops the agent: it carries on, and is told when each ends or fires."
+    },
+    {
+      "target": [
+        "panel-waiting",
+        "row"
+      ],
+      "action": "dblclick",
+      "try": true,
+      "caption": "Your turn: double-click the running work to ask the agent about it."
+    }
+  ]
+}

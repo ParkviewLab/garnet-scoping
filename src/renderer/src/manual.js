@@ -31,6 +31,18 @@ export function find(target, root = document) {
   return scope === root ? null : scope
 }
 
+// Whether an element is, or is inside, an element with the step's named path;
+// read when the person acts, since the Desk redraws its rows as it updates.
+export function within(node, target) {
+  let at = node?.closest?.(`[data-ui="${CSS.escape(target.at(-1))}"]`)
+  if (!at) return false
+  for (const name of target.slice(0, -1).reverse()) {
+    at = at.parentElement?.closest(`[data-ui="${CSS.escape(name)}"]`)
+    if (!at) return false
+  }
+  return true
+}
+
 // How long a step stays: its voice, or its caption read at an even pace.
 export const stepMs = (caption, audioMs = 0) => Math.max(STEP_MIN_MS, audioMs, caption.length * PER_CHAR_MS)
 
@@ -46,6 +58,8 @@ function act(step, node) {
   const r = node.getBoundingClientRect()
   const opts = { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, view: window }
   if (step.action === 'click') node.click()
+  // A panel's toggle, pressed only where the panel is off.
+  else if (step.action === 'show') node.getAttribute('aria-pressed') !== 'true' && node.click()
   else if (step.action === 'dblclick') node.dispatchEvent(new MouseEvent('dblclick', opts))
   else if (step.action === 'menu') node.dispatchEvent(new MouseEvent('contextmenu', { ...opts, button: 2 }))
   else if (step.action === 'type' && 'value' in node) {
@@ -195,12 +209,8 @@ export function startManual({ lesson: wanted, step: from }) {
   function armTry(step) {
     pointer.hidden = true
     say(step.caption)
-    const node = find(step.target)
-    const kind = step.action === 'point' ? 'click' : step.action === 'menu' ? 'contextmenu' : step.action
-    const done = (e) => {
-      if (!node || !(e.target === node || node.contains(e.target))) return
-      finish(lesson.done)
-    }
+    const kind = step.action === 'point' || step.action === 'show' ? 'click' : step.action === 'menu' ? 'contextmenu' : step.action
+    const done = (e) => within(e.target, step.target) && finish(lesson.done)
     trying = { kind, done }
     document.addEventListener(kind, done, true)
     controls()

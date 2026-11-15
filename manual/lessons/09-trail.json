@@ -1,0 +1,13 @@
+{
+  "n": 9,
+  "title": "Follow the Trail turn by turn",
+  "group": "Following the agent",
+  "panels": ["pane-trail"],
+  "done": "That is it: a turn opens and closes with a click.",
+  "steps": [
+    { "target": ["tog-trail"], "action": "show", "caption": "The Trail is the whole session, one turn at a time." },
+    { "target": ["pane-trail", "row"], "action": "point", "caption": "Each turn begins with your message." },
+    { "target": ["pane-trail", "row"], "action": "click", "caption": "Click a turn to open it: every step the agent took, in order." },
+    { "target": ["pane-trail", "row"], "action": "click", "try": true, "caption": "Your turn: click the turn to close it again." }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "n": 8,
+  "title": "See why a session is waiting",
+  "group": "Following the agent",
+  "panels": ["pane-sessions", "panel-last-word"],
+  "done": "That is it: waiting sessions come first, each with its reason.",
+  "steps": [
+    { "target": ["tog-sessions"], "action": "show", "caption": "The Sessions panel lists every session, with its state." },
+    { "target": ["hold"], "action": "click", "caption": "Here the demo is put on Hold, so that it waits for you." },
+    { "target": ["pane-sessions", "session-row"], "action": "point", "caption": "Under the session, the reason it waits: a question, a permission, or your own Hold." },
+    { "target": ["hold"], "action": "click", "caption": "Released, it is at work again, and the reason goes." },
+    { "target": ["view-waiting"], "action": "click", "try": true, "caption": "Your turn: choose Waiting first, so that the sessions waiting for you come to the top." }
+  ]
+}

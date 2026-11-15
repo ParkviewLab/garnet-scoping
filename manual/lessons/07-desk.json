@@ -1,0 +1,15 @@
+{
+  "n": 7,
+  "title": "Read the Desk at a glance",
+  "group": "Following the agent",
+  "panels": ["panel-plan", "panel-now", "panel-waiting", "panel-last-word", "panel-for-you", "panel-touched"],
+  "done": "That is it: each row of the Desk opens to show what lies behind it.",
+  "steps": [
+    { "target": ["panel-plan"], "action": "point", "caption": "Plan is the agent's own task list. The step in progress is lit." },
+    { "target": ["panel-now"], "action": "point", "caption": "Now lists what the agent did last, newest first, with how long ago." },
+    { "target": ["panel-waiting"], "action": "point", "caption": "Waiting shows work left running in the background, and wake-ups the agent set." },
+    { "target": ["panel-last-word"], "action": "point", "caption": "Last word is the agent's closing message, or says that it is still at work." },
+    { "target": ["panel-for-you"], "action": "point", "caption": "For you holds the files the agent sent you." },
+    { "target": ["panel-now", "row"], "action": "click", "try": true, "caption": "Your turn: click a row in Now to see what lies behind it." }
+  ]
+}
