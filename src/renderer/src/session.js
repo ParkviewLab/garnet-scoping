@@ -333,15 +333,42 @@ function renderPresent() {
 
   $('now').replaceChildren(...(view.now.length ? view.now.map((a) => actionRow(a, { showAgo: true })) : [el('li', 'muted', 'No actions yet.')]))
 
-  $('waiting').replaceChildren(
-    ...(view.waiting.length
-      ? view.waiting.map((w) => {
-          const li = el('li', 'action running')
-          li.append(el('span', 'text', w.text), el('span', 'when', since(w.startedAt)))
-          return li
-        })
-      : [el('li', 'muted', 'Nothing running in the background.')]),
-  )
+  // Waiting (R10): background work from the transcript at once, and from
+  // Claude Code's end-of-turn report, which also gives the scheduled jobs;
+  // the session's own wake-ups from the transcript.
+  const work = view.work
+  const rows = []
+  const seen = new Set()
+  for (const w of view.waiting) {
+    seen.add(w.id)
+    const li = el('li', 'action running')
+    li.append(el('span', 'text', w.text), el('span', 'when', since(w.startedAt)))
+    rows.push(li)
+  }
+  for (const t of work?.tasks ?? []) {
+    if (seen.has(t.id) || t.status !== 'running') continue
+    const li = el('li', 'action running')
+    li.append(el('span', 'text', t.text), el('span', 'when', 'running'))
+    rows.push(li)
+  }
+  const fmtPrompt = (p) => (p.split('\n')[0] || '').slice(0, 160)
+  const wakeRow = (when, recurring, prompt, full, key) => {
+    const li = el('li', 'action wakeup')
+    const text = el('span', 'text', `${recurring ? 'Recurs' : 'Wakes'} ${when}: ${fmtPrompt(prompt)}`)
+    li.append(text)
+    li.title = 'Click to show the whole prompt'
+    let whole = false
+    const toggle = () => {
+      whole = !whole
+      text.textContent = `${recurring ? 'Recurs' : 'Wakes'} ${when}: ${whole ? full : fmtPrompt(prompt)}`
+    }
+    return markable(li, { panel: 'now', key, text: `Wake-up ${when}` }, toggle)
+  }
+  for (const c of work?.crons ?? []) rows.push(wakeRow(c.next ? `at ${clock(c.next)}` : `on "${c.schedule}"`, c.recurring, c.prompt, c.prompt, `cron:${c.id}`))
+  for (const w of view.wakeups ?? []) if (w.at > Date.now()) rows.push(wakeRow(`at ${clock(w.at)}`, false, w.reason || w.prompt, w.prompt || w.reason, `wake:${w.setAt}`))
+  if (!rows.length) rows.push(el('li', 'muted', 'Nothing running in the background, and no wake-up set.'))
+  rows.push(el('li', 'muted small', work ? `Claude Code's last report: ${ago(work.at)}.` : 'No end-of-turn report from Claude Code yet (the watcher hook writes it); shown from the transcript.'))
+  $('waiting').replaceChildren(...rows)
 
   const lw = view.lastWord
   const box = $('last-word')

@@ -23,7 +23,8 @@ import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
 import { readEdge, readFrom } from './transcript/reader.js'
 import { createSession, snapshot } from './transcript/session.js'
 import { classify } from './transcript/records.js'
-import { boardPaths, cleanState } from './board.js'
+import { boardPaths, cleanState, BOARDS } from './board.js'
+import { parseWork, nextRun } from './work.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
@@ -149,6 +150,20 @@ async function withEffort(sessionFile, subs) {
   )
 }
 
+// Claude Code's end-of-turn report of the session's background work and
+// scheduled jobs (R10), as the watcher's hook keeps it; null where absent.
+async function readWork(id) {
+  const file = join(BOARDS, `${id}.work.json`)
+  try {
+    const [text, st] = await Promise.all([readFile(file, 'utf8'), stat(file)])
+    const work = parseWork(JSON.parse(text), st.mtimeMs)
+    if (work) for (const c of work.crons) c.next = nextRun(c.schedule)
+    return work
+  } catch {
+    return null
+  }
+}
+
 const entryOf = (e) => [...windows.values()].find((w) => w.win.webContents === e.sender)
 
 // A path inside a directory, or null.
@@ -184,7 +199,7 @@ function registerIpc() {
     // Each delivered file, with whether it still exists (scratch folders are
     // cleared in time).
     const deliveries = (v.deliveries ?? []).map((d) => ({ ...d, files: d.files.map((p) => ({ path: p, exists: existsSync(p) })) }))
-    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), project: w.project }
+    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), work: await readWork(v.id), project: w.project }
   })
   // A subagent's own work (R9.2): its actions, its own subagents and its
   // report, read from its transcript beside the session's.
