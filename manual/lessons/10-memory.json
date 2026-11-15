@@ -1,0 +1,12 @@
+{
+  "n": 10,
+  "title": "Read what the agent keeps in Memory",
+  "group": "Following the agent",
+  "panels": ["pane-memory"],
+  "done": "That is it: the note opens to be read; close it when you are done.",
+  "steps": [
+    { "target": ["tog-memory"], "action": "show", "caption": "Memory lists the notes the agent keeps for this project, which outlast the session." },
+    { "target": ["pane-memory", "row"], "action": "point", "caption": "Each note has a name, a kind and a line saying what it holds." },
+    { "target": ["pane-memory", "row"], "action": "click", "try": true, "caption": "Your turn: click the note to read it." }
+  ]
+}

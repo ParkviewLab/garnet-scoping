@@ -61,7 +61,7 @@ describe('the player', () => {
 // names made from their labels (menu-<label>, board-menu-<label>).
 describe('every element a lesson names', () => {
   const sources = ['session.html', 'settings.html', 'src/session.js', 'src/board.js', 'src/sessions-panel.js', 'src/manual.js'].map((f) => readFileSync(join(ROOT, 'src', 'renderer', f), 'utf8')).join('\n')
-  const named = new Set([...sources.matchAll(/data-ui="([^"]+)"|dataset\.ui = '([^']+)'|ui\([^;]*?, '([^']+)'\)/g)].map((m) => m[1] ?? m[2] ?? m[3]))
+  const named = new Set([...sources.matchAll(/data-ui="([^"]+)"|dataset\.ui = '([^']+)'|ui\([^;]*?, '([a-z0-9-]+)'\)/g)].map((m) => m[1] ?? m[2] ?? m[3]))
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   const labels = new Set([...sources.matchAll(/\['([^']+)', \(\)/g)].map((m) => slug(m[1])))
   const exists = (name) => named.has(name) || (name.startsWith('menu-') && labels.has(name.slice(5))) || (name.startsWith('board-menu-') && labels.has(name.slice(11)))

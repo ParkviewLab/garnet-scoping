@@ -23,7 +23,7 @@ export function cleanLesson(raw) {
     .filter((s) => s && typeof s.caption === 'string')
     .map((s) => ({
       target: Array.isArray(s.target) ? s.target.map(String) : s.target ? [String(s.target)] : [],
-      action: ['point', 'click', 'menu', 'dblclick', 'type', 'wait'].includes(s.action) ? s.action : 'point',
+      action: ['point', 'click', 'show', 'menu', 'dblclick', 'type', 'wait'].includes(s.action) ? s.action : 'point',
       text: typeof s.text === 'string' ? s.text : null,
       caption: s.caption,
       try: Boolean(s.try),
