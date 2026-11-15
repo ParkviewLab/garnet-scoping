@@ -10,6 +10,8 @@
 import type { Register } from 'claude-code'
 
 const WAIT_MS = 4000
+const ASIDE_MS = 1500
+const asked = new Set() // asides this session has already sent to a copy
 // The boards folder, as garnet-scoping keeps it: GARNET_SCOPING_BOARDS, or
 // ~/.garnet-scoping/boards.
 let base = ''
@@ -46,10 +48,42 @@ async function send($: any, base: string, id: string, request: Record<string, un
   return describe(null)
 }
 
+// Answers the person's asides (R16): each one by a single completion over
+// this session's own transcript, with no tools, so that the agent itself is
+// not interrupted; the answer goes to <session>.asides.json for the app.
+async function answerAsides($: any) {
+  if (!base) return
+  const id = await $.session.id()
+  let state: any
+  try {
+    state = JSON.parse(String(await $.fs.read(`${base}/${id}.state.json`)))
+  } catch {
+    return
+  }
+  const waiting = (state.asides ?? []).filter((a: any) => !a.answeredAt && !asked.has(a.id))
+  for (const a of waiting) {
+    asked.add(a.id)
+    const prompt = `An aside from the person, who is watching your work in garnet-scoping. They ask about this item of your work: "${a.text}". Their question: "${a.question}". Answer in at most four plain sentences, from what you have done so far in this session. You cannot act or check anything now; say so if the answer needs checking.`
+    let reply: any
+    try {
+      reply = await $.model.fork({ prompt, effort: 'low' })
+    } catch (err) {
+      reply = { isAnswered: false, reason: String(err) }
+    }
+    let answers: any = {}
+    try {
+      answers = JSON.parse(String(await $.fs.read(`${base}/${id}.asides.json`)))
+    } catch {}
+    answers[a.id] = reply?.isAnswered ? { answer: String(reply.text) } : { error: `No answer: ${reply?.reason ?? 'unknown'}` }
+    await $.fs.write(`${base}/${id}.asides.json`, JSON.stringify(answers))
+  }
+}
+
 export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     const r = await $.process.run(['/bin/sh', '-c', 'printf %s "${GARNET_SCOPING_BOARDS:-$HOME/.garnet-scoping/boards}"']).catch(() => null)
     base = String(r?.stdout ?? '')
+    $.clock.every(ASIDE_MS, () => answerAsides($))
     await $.tool.register({ name: 'board_read', description: "Reads this session's garnet-scoping board as text: every shape with its id, kind, text and position, the connections, and the person's signals (review, Discuss, hold).", inputSchema: { type: 'object' }, isDeferred: false })
     await $.tool.register({
       name: 'board_change',

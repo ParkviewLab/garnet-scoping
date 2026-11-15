@@ -25,6 +25,7 @@ export function badge(st) {
   let text = LABEL[s]
   if (s === 'idle' && st.since) text = `Idle since ${clock(st.since)}`
   if (s === 'idle' && st.yourTurn) text += ' · your turn'
+  if (st?.away) text += ' · you are away'
   return el('span', `state-badge ${s}`, text)
 }
 

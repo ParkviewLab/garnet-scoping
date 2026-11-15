@@ -60,6 +60,7 @@ window.addEventListener('keydown', (e) => e.key === 'Escape' && ($('viewer').hid
 // file, where the agent's watcher sees them; the agent answers them there.
 let marks = []
 let notes = [] // the agent's notes (R14)
+let asides = [] // the person's asides (R16)
 let boardStateNow = null
 let delivery = { watching: true, delivered: [] } // receipts (R15)
 // The Discuss badge: lit while a request to discuss, outlined when turned
@@ -108,6 +109,8 @@ function setMarks(state) {
   showHold(state)
   marks = state?.discuss ?? []
   notes = state?.notes ?? []
+  asides = state?.asides ?? []
+  showAway(state)
   boardStateNow = state ?? boardStateNow
   renderDiscuss()
   if (view) {
@@ -149,6 +152,81 @@ function askNote(row) {
   area.focus()
 }
 
+// ---- Away (R17) ----
+function showAway(state) {
+  const a = state?.away ?? { on: false }
+  const btn = $('away')
+  btn.classList.toggle('active', a.on)
+  btn.setAttribute('aria-pressed', String(a.on))
+  btn.textContent = a.on ? `Away${a.until ? ` until ${a.until}` : ''}` : 'Away'
+  btn.title = a.on ? 'The agent knows you are away. Click when you are back: it will take you through what is pending, one item at a time.' : 'Tell the agent you are away: it keeps its questions for your return and carries on with what does not need you.'
+  // What happened while the person was away (R17.3), until dismissed.
+  const box = $('back-summary')
+  let seen = null
+  try {
+    seen = localStorage.getItem('garnet.back-seen')
+  } catch {}
+  if (!a.on && a.at && a.backAt && seen !== a.backAt) {
+    const within = (ts) => ts && ts >= a.at && ts <= a.backAt
+    const n = (state.notes ?? []).filter((x) => within(x.at)).length
+    const q = (state.questions ?? []).filter((x) => within(x.answeredAt)).length
+    const s = (state.asides ?? []).filter((x) => within(x.answeredAt)).length
+    box.replaceChildren(el('span', null, `While you were away (${clock(a.at)} to ${clock(a.backAt)}): ${n} note${n === 1 ? '' : 's'} from the agent, ${q} answer${q === 1 ? '' : 's'} on the board${s ? `, ${s} aside${s === 1 ? '' : 's'} answered` : ''}. The agent takes you through what is pending in the conversation.`))
+    const ok = el('button', null, 'Dismiss')
+    ok.type = 'button'
+    ok.addEventListener('click', () => {
+      try {
+        localStorage.setItem('garnet.back-seen', a.backAt)
+      } catch {}
+      box.hidden = true
+    })
+    box.append(ok)
+    box.hidden = false
+  } else box.hidden = true
+}
+$('away').addEventListener('click', () => {
+  const now = new Date().toISOString().replace(/\.\d+Z$/, 'Z')
+  const a = boardStateNow?.away ?? { on: false }
+  if (a.on) return window.garnet.board.setState({ away: { ...a, on: false, backAt: now } }).then(setMarks)
+  const body = el('div', 'note-form')
+  const until = el('input')
+  until.type = 'time'
+  const go = el('button', 'primary', 'I am away')
+  go.type = 'button'
+  go.addEventListener('click', () => {
+    $('viewer').hidden = true
+    window.garnet.board.setState({ away: { on: true, until: until.value || null, at: now, backAt: null } }).then(setMarks)
+  })
+  body.append(el('div', 'muted', 'Back about (optional):'), until, el('div', 'muted small', 'The agent keeps its questions for your return, carries on with work that does not need you, and assumes nothing in your place. When you click Away again, it takes you through what is pending, one item at a time.'), go)
+  showViewer('Away', body)
+})
+
+// An aside (R16): a quick question about a row, answered at once by a copy
+// of the session with no tools, while the agent works on undisturbed.
+function askAside(row) {
+  const body = el('div', 'note-form')
+  const area = el('textarea')
+  area.rows = 3
+  area.value = `Why "${row.text.slice(0, 80)}"?`
+  const go = el('button', 'primary', 'Ask aside')
+  go.type = 'button'
+  const send = () => {
+    const question = area.value.trim()
+    if (!question) return
+    $('viewer').hidden = true
+    const a = { id: `s${Date.now().toString(36)}`, panel: row.panel, key: row.key, text: row.text, question, at: new Date().toISOString().replace(/\.\d+Z$/, 'Z') }
+    window.garnet.board.setState({ asides: [...asides, a] }).then(setMarks)
+  }
+  go.addEventListener('click', send)
+  area.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) (e.preventDefault(), send())
+  })
+  body.append(el('div', 'muted', row.text), area, el('div', 'muted small', 'Answered at once by a copy of the session, which has no tools: it explains from what the session has done and can be wrong. It uses tokens. The agent is not interrupted.'), go)
+  showViewer('Ask aside', body)
+  area.focus()
+  area.select()
+}
+
 const menu = $('ctx-menu')
 function closeMenu() {
   menu.hidden = true
@@ -158,6 +236,7 @@ function showMenu(e, row, extra = []) {
   const items = [
     ['Discuss', () => mark(row)],
     ['Discuss, with a note…', () => askNote(row)],
+    ['Ask aside…', () => askAside(row)],
   ]
   const m = openMark(row.key)
   if (m) items.push(['Withdraw the discussion', () => withdraw(m.id)])
@@ -229,6 +308,20 @@ function markable(node, row, onClick = null, extra = []) {
   }
   const done = answeredMark(row.key)
   if (done?.answer) node.append(el('div', 'discuss-answer', `Answered: ${done.answer}`))
+  const aside = [...asides].reverse().find((a) => a.key === row.key)
+  if (aside) {
+    const box = el('div', 'aside-answer')
+    box.append(el('div', 'aside-q', `Aside: ${aside.question}`))
+    if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-board extension inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
+    else if (aside.answer) {
+      box.append(el('div', null, aside.answer), el('div', 'muted small', 'Answered by a copy of the session, with no tools: it can explain, not check. The agent was not interrupted.'))
+      const ask = el('button', 'aside-escalate', 'Ask the agent instead')
+      ask.type = 'button'
+      ask.addEventListener('click', (e) => (e.stopPropagation(), mark(row, aside.question)))
+      box.append(ask)
+    } else box.append(el('div', 'muted small', aside.error ?? 'No answer. Is the garnet-board extension installed (Set-up Info)?'))
+    node.append(box)
+  }
   return node
 }
 
