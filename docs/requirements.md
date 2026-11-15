@@ -277,7 +277,7 @@ R18.3. The manual works without a network connection: lessons, captions and voic
 - **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
 - **Manual:** lessons with voice-over, found from each panel and by search (R18), built last, once the features it teaches exist.
-- **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation).
+- **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation); pins re-given to the agent after a compaction (what must survive a compaction is kept on disk, in memory notes, the board and the repository, which the agent can read again).
 
 ### Proposed defaults
 
