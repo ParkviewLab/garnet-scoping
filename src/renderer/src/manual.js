@@ -75,6 +75,8 @@ export function matches(lesson, query) {
 function act(step, node) {
   // The agent's side, written to the demo's board as the agent would.
   if (step.action === 'agent') return step.request && window.garnet.manual.agent(step.request)
+  // One of the app's own windows, which a lesson cannot reach from its menu.
+  if (step.action === 'window') return window.garnet.manual.window(step.text)
   if (!node) return
   const at = pointOf(step, node)
   const opts = { bubbles: true, cancelable: true, clientX: at.x, clientY: at.y, view: window }
@@ -203,7 +205,8 @@ export function startManual({ lesson: wanted, step: from }) {
     stop()
     i = k
     const step = lesson.steps[i]
-    if (!step) return
+    // A lesson whose steps all lie outside this window has no try, and ends here.
+    if (!step) return finish(lesson.done)
     if (step.try) return armTry(step)
     controls()
     const node = step.target.length ? find(step.target) : null
