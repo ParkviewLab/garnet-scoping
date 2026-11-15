@@ -23,6 +23,7 @@ function describe(o: any) {
   if (o.relabelled) parts.push(`relabelled ${o.relabelled}`)
   if (o.removed) parts.push(`removed ${o.removed}`)
   if (o.reviewed) parts.push('marked the review done')
+  if (o.answered) parts.push(`placed ${o.answered} answer${o.answered === 1 ? '' : 's'} on the board`)
   if (o.discussed) parts.push(`recorded ${o.discussed} Discuss answer${o.discussed === 1 ? '' : 's'}`)
   if (o.holding) parts.push('confirmed the hold')
   if (o.holdIgnored) parts.push('ignored "holding": no hold was requested')
@@ -57,19 +58,21 @@ export const register: Register = (on) => {
           add: { type: 'array', description: 'Items: { id?, kind: rectangle|ellipse|diamond|text|image|arrow|line, text?, x?, y?, path? (image), width?, from?, to? (arrow, line) }', items: { type: 'object' } },
           relabel: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } } } },
           remove: { type: 'array', items: { type: 'string' } },
+          removeExchange: { type: 'array', description: 'Exchange ids (x…) of settled questions to remove from the board, with every balloon, answer and link in them; say in the conversation which and why.', items: { type: 'string' } },
         },
       },
       isDeferred: false,
     })
     await $.tool.register({
       name: 'board_answer',
-      description: "Answers the person's signals: discussed (a one-line answer to each Discuss mark by its id), reviewed (the board has been read), holding (stopped at a requested hold).",
+      description: "Answers the person's signals: answers (to questions on the board), discussed (a one-line answer to each Discuss mark by its id), reviewed (the board has been read), holding (stopped at a requested hold).",
       inputSchema: {
         type: 'object',
         properties: {
           discussed: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, answer: { type: 'string' } } } },
           reviewed: { type: 'boolean' },
           holding: { type: 'boolean' },
+          answers: { type: 'array', description: 'Answers to questions asked on the board, by question id (q…): a few lines each, placed as a note joined to the question.', items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } } } },
         },
       },
       isDeferred: false,
@@ -85,11 +88,11 @@ export const register: Register = (on) => {
     }
   })
   on('tool.call', { tool: 'mcp__garnet-board__board_change' }, async ($, e: any) => {
-    const { add, relabel, remove } = e
-    return { result: await send($, base, await $.session.id(), { ...(add ? { add } : {}), ...(relabel ? { relabel } : {}), ...(remove ? { remove } : {}) }) }
+    const { add, relabel, remove, removeExchange } = e
+    return { result: await send($, base, await $.session.id(), { ...(add ? { add } : {}), ...(relabel ? { relabel } : {}), ...(remove ? { remove } : {}), ...(removeExchange ? { removeExchange } : {}) }) }
   })
   on('tool.call', { tool: 'mcp__garnet-board__board_answer' }, async ($, e: any) => {
-    const { discussed, reviewed, holding } = e
-    return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}) }) }
+    const { discussed, reviewed, holding, answers } = e
+    return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}), ...(answers ? { answers } : {}) }) }
   })
 }
