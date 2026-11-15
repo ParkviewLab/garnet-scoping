@@ -4,6 +4,28 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.9.0] - 2026-11-14
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- Live state for every session in a Sessions panel (#69)
+
+### Bug fixes
+
+- Ignore the new record types of Claude Code 2.1.325 (#70)
+
+### Docs
+
+- Propose live state, dispatches, wake-ups, compaction and board tools (#63)
+- Propose board questions, agent notes, receipts, asides, Away and the manual (#65)
+- Record the results of the four probes (#66)
+- Make the session list a Sessions panel (#67)
+- Propose live state and the Sessions panel (#68)
+
 ## [v0.8.5] - 2026-11-14
 
 ### Highlights
