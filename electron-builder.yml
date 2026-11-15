@@ -59,10 +59,12 @@ extraResources:
   - from: channel
     to: channel
     filter: ['*.mjs']
-  # What Set-up Info has Claude install: the watcher, its hook and the rule.
+  # What Set-up Info has Claude install: the watcher, its hooks, the rule and
+  # the garnet-board extension. The whole folder ships: a narrower filter left
+  # garnet-board out of v0.10.0 (tests/package.test.js holds it to this).
   - from: setup
     to: setup
-    filter: ['*.sh', '*.md']
+    filter: ['**/*']
 publish:
   provider: github
   owner: garycoding
