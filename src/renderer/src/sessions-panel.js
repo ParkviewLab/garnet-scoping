@@ -4,8 +4,8 @@
 // The Sessions panel (R8.6): every session with its live state (R8.1), why a
 // waiting one waits (R8.4), in two views (R8.3): by project, or all sessions
 // with those waiting first. A click opens the
-// session's window or brings it forward. By project, the groups and the
-// sessions in each are ordered by last activity, most recent first.
+// session's window or brings it forward. Within each project, sessions are
+// ordered by last activity, most recent first.
 
 import { ago, clock } from './util.js'
 
@@ -49,7 +49,8 @@ export function mountSessions(root, currentId) {
   let live = { available: true, states: {} }
   let view = 'project'
   try {
-    view = localStorage.getItem(VIEW_KEY) === 'waiting' ? 'waiting' : 'project'
+    const saved = localStorage.getItem(VIEW_KEY)
+    view = ['project', 'name', 'waiting'].includes(saved) ? saved : 'project'
   } catch {}
 
   const waitingFirst = (a, b) => (live.states[a.id]?.state === 'waiting' ? 0 : 1) - (live.states[b.id]?.state === 'waiting' ? 0 : 1)
@@ -83,8 +84,12 @@ export function mountSessions(root, currentId) {
       if (!groups.has(key)) groups.set(key, [])
       groups.get(key).push(s)
     }
+    const ordered = [...groups]
+    // By project name: the groups in alphabetical order of the folder's name.
+    const nameOf = (folder) => String(folder).split('/').filter(Boolean).at(-1)?.toLowerCase() ?? ''
+    if (view === 'name') ordered.sort(([a], [b]) => nameOf(a).localeCompare(nameOf(b)))
     listEl.replaceChildren(
-      ...[...groups].map(([folder, list]) => {
+      ...ordered.map(([folder, list]) => {
         const g = el('section', 'sessions-group')
         g.append(el('h3', null, folder), ...list.map(row))
         return g
