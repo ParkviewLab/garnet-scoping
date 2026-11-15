@@ -34,7 +34,8 @@ signals() {
       const out = []
       const where = { plan: "Plan", now: "Now", trail: "Trail", memory: "Memory", foryou: "For you" }
       const one = (t) => String(t ?? "").replace(/\s+/g, " ").slice(0, 300)
-      if (s.review) out.push("review " + s.reviewAt + "\tReview: read the board now.")
+      const asked = (s.questions || []).filter((q) => q.status === "open").length
+      if (s.review) out.push("review " + s.reviewAt + "\tReview: read the board now." + (asked ? " It holds " + asked + " question" + (asked === 1 ? "" : "s") + " for you (under \"## Questions\"); answer each with \"answers\" in a request, or the board_answer tool." : ""))
       if (s.hold === "requested") out.push("hold " + s.holdAt + "\tHold: finish the step in progress, start no other, and wait.")
       for (const m of s.discuss || []) if (m.status === "open")
         out.push("discuss " + m.id + " " + m.at + "\tDiscuss (" + (where[m.panel] || m.panel) + ", id " + m.id + "): \"" + one(m.text) + "\"" + (m.note ? " Note: \"" + one(m.note) + "\"" : ""))

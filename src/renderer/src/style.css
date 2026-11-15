@@ -1028,3 +1028,58 @@ input[type='search'] {
 .muted.small {
   font-size: 12px;
 }
+
+/* ---- questions on the board (R13) ---- */
+.board-canvas {
+  position: relative;
+}
+.board-menu {
+  position: absolute;
+  z-index: 20;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+}
+.board-menu[hidden] {
+  display: none;
+}
+.board-menu button {
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+}
+.board-menu button:hover {
+  background: var(--panel);
+}
+.question-typing {
+  position: absolute;
+  z-index: 20;
+  width: 240px;
+  height: 70px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 2px solid #1d9e75;
+  background: #e1f5ee;
+  color: #085041;
+  font: 15px Helvetica, Arial, sans-serif;
+  resize: none;
+}
+
+.question-typing-arm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 19;
+}
+.question-typing-arm path {
+  fill: #e1f5ee;
+  stroke: #1d9e75;
+  stroke-width: 2;
+}

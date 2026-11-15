@@ -161,8 +161,8 @@ describe('the board on disk', () => {
   })
 
   it('cleans a state read from disk', () => {
-    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null })
-    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null })
+    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [] })
+    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [] })
     const marks = cleanState({ discuss: [{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', status: 'open', answer: 'x' }, { id: 'd2', panel: 'elsewhere', key: 'k' }, null] }).discuss
     expect(marks).toEqual([{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', note: null, at: null, status: 'open', answer: null, answeredAt: null }])
   })

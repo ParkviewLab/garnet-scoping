@@ -240,6 +240,7 @@ function registerIpc() {
   ipcMain.handle('board:save', (e, scene) => entryOf(e)?.boardReady.then((b) => b.save(scene)))
   ipcMain.handle('board:ready', (e) => entryOf(e)?.boardReady.then((b) => b.ready()))
   ipcMain.handle('board:outcome', (e, o) => entryOf(e)?.boardReady.then((b) => b.outcome(o)))
+  ipcMain.handle('board:picture', (e, qid, bytes) => entryOf(e)?.boardReady.then((b) => b.picture(qid, bytes)))
   // Files the agent delivered in this session: opened with their default
   // app, or read for the in-app preview. Only delivered files are served.
   const delivered = (e, p) => {
@@ -309,7 +310,11 @@ async function computeLive() {
     states[s.id] = sessionState({ live: facts, available: liveFacts.available, hold: facts ? await holdOf(s.id) : 'off', tail })
   }
   live = { available: liveFacts.available, states }
-  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('live:changed', live)
+  for (const w of BrowserWindow.getAllWindows()) {
+    try {
+      if (!w.isDestroyed() && !w.webContents.isDestroyed()) w.webContents.send('live:changed', live)
+    } catch {} // a window closing as the update goes out
+  }
   const n = waitingCount(states)
   app.setBadgeCount(n)
 }
