@@ -110,6 +110,12 @@ A right-click on the board opens the app's own menu (Add question, Remove this e
 
 A question is kept in the board's state as a draft, with Editing ticked, until the person presses Review, which sends every draft at once; the watcher's Review signal says how many questions it holds. Each question records what its arm points at and a picture of the area round it (`<session>.q-<id>.png`, from the editor's own export). The agent answers with `answers` in a request, or the board tool; the window places each answer as a note in the agent's colour, joined to its question, and a right-click on the note asks a follow-up whose arm points at it. Remove this exchange, deleting a question or an answer, or the agent's `removeExchange` removes every piece of the exchange at once. The rendition lists the exchanges under "## Questions", and leaves their pieces out of the shapes.
 
+## Notes from the agent and receipts (R14, R15)
+
+**Notes.** The agent pins a one-line note with `notes` in a request or the board tool, naming its item as `plan:<step>`, `file:<path>`, `shape:<id>` or `last-message`; the board's state keeps it. The Desk shows an open note on its item, in the agent's colour, and lists every note at the head of the Discuss panel, where the person confirms it, corrects it with a line, or dismisses it. The watcher reports each answer as a signal; the agent never waits for it.
+
+**Receipts.** The watcher already records the signals it has delivered (`<session>.watched`) and its own process (`<session>.watcher.pid`). The app reads both, whenever they change, and shows each request to discuss as Sent, Delivered (the watcher woke the session with it, labelled as not meaning read) and Answered, the Hold button's title likewise; and a warning under the header whenever no watcher is running for the session, with the number of signals waiting and how they will next be delivered.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

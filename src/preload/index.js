@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('garnet', {
     save: (scene) => ipcRenderer.invoke('board:save', scene),
     ready: () => ipcRenderer.invoke('board:ready'),
     outcome: (o) => ipcRenderer.invoke('board:outcome', o),
+    delivery: () => ipcRenderer.invoke('board:delivery'),
+    onDelivery: (fn) => ipcRenderer.on('board:delivery', (_e, d) => fn(d)),
     picture: (qid, bytes) => ipcRenderer.invoke('board:picture', qid, bytes),
     onRequest: (fn) => ipcRenderer.on('board:request', (_e, r) => fn(r)),
     onExternal: (fn) => ipcRenderer.on('board:external', (_e, els) => fn(els)),

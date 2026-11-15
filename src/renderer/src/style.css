@@ -1083,3 +1083,55 @@ input[type='search'] {
   stroke: #1d9e75;
   stroke-width: 2;
 }
+
+/* ---- notes from the agent (R14) and receipts (R15) ---- */
+.note-badge {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #5c3d0a;
+  color: #fac775;
+  font-size: 12px;
+}
+.note-from {
+  color: #fac775;
+  font-size: 11px;
+}
+.note-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.note-actions button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.note-correction {
+  width: 100%;
+  margin-top: 6px;
+}
+.note-count {
+  margin-left: 6px;
+  color: #fac775;
+  font-size: 11px;
+}
+.receipt {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+.receipt .step {
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.receipt .step.on {
+  color: var(--fg);
+  background: var(--raised);
+}
+.receipt .step.bad {
+  color: var(--error);
+  border-color: var(--error);
+}

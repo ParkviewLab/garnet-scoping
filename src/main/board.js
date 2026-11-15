@@ -53,7 +53,7 @@ export async function readImage(path) {
 // the rows of the Desk they want to discuss (R2.7), and a hold (R2.8): the
 // person asks the agent to stop after its current step ("requested"), the
 // agent confirms it has stopped ("holding"), and the person releases it.
-export const NO_STATE = { editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [] }
+export const NO_STATE = { editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [] }
 const HOLDS = new Set(['off', 'requested', 'holding'])
 const PANELS = new Set(['plan', 'now', 'trail', 'memory', 'foryou', 'subagents'])
 const str = (v, max = 2000) => (typeof v === 'string' ? v.slice(0, max) : null)
@@ -96,6 +96,33 @@ function cleanQuestion(q) {
     answeredAt: status === 'answered' ? str(q.answeredAt, 40) : null,
   }
 }
+// A note the agent pinned to an item (R14): what it is pinned to, its one
+// line, and the person's answer (confirmed, corrected with a line, or
+// dismissed).
+const NOTE_PANELS = new Set(['plan', 'foryou', 'board', 'lastword'])
+function cleanNote(n) {
+  if (!n || typeof n.id !== 'string' || !NOTE_PANELS.has(n.on?.panel)) return null
+  const status = ['open', 'confirmed', 'corrected', 'dismissed'].includes(n.status) ? n.status : 'open'
+  return {
+    id: n.id.slice(0, 40),
+    on: { panel: n.on.panel, key: str(n.on.key, 400) ?? '' },
+    text: (str(n.text, 300) ?? '').replace(/\s+/g, ' '),
+    at: str(n.at, 40),
+    status,
+    reply: status === 'corrected' ? str(n.reply, 300) : null,
+    answeredAt: status === 'open' ? null : str(n.answeredAt, 40),
+  }
+}
+// The agent's way of naming an item: "plan:<step>", "file:<path>",
+// "shape:<id>" or "last-message".
+export function noteTarget(on) {
+  const s = String(on ?? '')
+  if (s.startsWith('plan:')) return { panel: 'plan', key: s }
+  if (s.startsWith('file:')) return { panel: 'foryou', key: s }
+  if (s.startsWith('shape:')) return { panel: 'board', key: s.slice(6) }
+  if (s === 'last-message') return { panel: 'lastword', key: 'lastword' }
+  return null
+}
 export function cleanState(raw) {
   const review = raw?.review === true
   return {
@@ -106,6 +133,7 @@ export function cleanState(raw) {
     hold: HOLDS.has(raw?.hold) ? raw.hold : 'off',
     holdAt: HOLDS.has(raw?.hold) && raw.hold !== 'off' ? str(raw.holdAt, 40) : null,
     questions: (Array.isArray(raw?.questions) ? raw.questions : []).map(cleanQuestion).filter(Boolean).slice(-200),
+    notes: (Array.isArray(raw?.notes) ? raw.notes : []).map(cleanNote).filter(Boolean).slice(-100),
   }
 }
 const now = () => new Date().toISOString().replace(/\.\d+Z$/, 'Z')
@@ -153,6 +181,11 @@ export function rendition(elements, { title = null, requestPath = '', statePath 
       const open = (state.discuss ?? []).filter((m) => m.status === 'open')
       return open.length ? `${open.length} open (rows of the Desk the person wants to talk about; listed under "discuss" in ${statePath || '<id>.state.json'})` : 'nothing open'
     })()}`,
+    `Notes you pinned: ${(() => {
+      const ns = state.notes ?? []
+      const answered = ns.filter((n) => n.status !== 'open').length
+      return ns.length ? `${ns.length - answered} awaiting the person, ${answered} answered (listed under "## Notes" below)` : 'none'
+    })()}`,
     `Questions: ${(() => {
       const open = (state.questions ?? []).filter((q) => q.status === 'open')
       return open.length ? `${open.length} open (asked on the board; listed under "## Questions" below)` : 'nothing open'
@@ -169,6 +202,7 @@ export function rendition(elements, { title = null, requestPath = '', statePath 
     'For each open "discuss" item, answer the person in the conversation, then include "discussed": [ { "id": "…", "answer": "a line shown on the Desk" } ].',
     'When a hold is requested, finish the step you are in, start no other, include "holding": true, and wait until the Hold line reads "no".',
     'For each open question, answer on the board: "answers": [ { "id": "q…", "text": "a few lines" } ] (the app places your answer as a note joined to the question); for a longer answer, answer in the conversation and say so in the note.',
+    'To pin a one-line note to an item instead of stopping to ask (an assumption you made, or something you want looked at), include "notes": [ { "on": "plan:<step text>" | "file:<path>" | "shape:<id>" | "last-message", "text": "Assumed: …" } ]; carry on without waiting for the answer.',
     'To remove an exchange the person and you have settled, include "removeExchange": [ "x…" ], and say in the conversation which one and why.',
     '',
     '## Shapes',
@@ -199,6 +233,9 @@ export function rendition(elements, { title = null, requestPath = '', statePath 
   const other = live.filter((e) => !SHAPES.has(e.type) && e.type !== 'text' && e.type !== 'arrow' && e.type !== 'line' && e.type !== 'image')
   if (other.length) lines.push('', `## Other`, `- ${other.length} element(s) of other kinds (${[...new Set(other.map((e) => e.type))].join(', ')}), not described here.`)
   // Questions not yet sent are the person's still.
+  lines.push('', '## Notes')
+  for (const n of state.notes ?? []) lines.push(`- [${n.id}] on ${n.on.panel} ${n.on.key}: "${n.text}" (${n.status}${n.reply ? `: "${n.reply}"` : ''})`)
+  if (!(state.notes ?? []).length) lines.push('- (none)')
   const qs = (state.questions ?? []).filter((q) => q.status !== 'draft')
   lines.push('', '## Questions')
   for (const q of qs) {
@@ -265,7 +302,7 @@ export async function inheritBoard(id, ancestors, dir = BOARDS) {
 }
 
 // One session's board: load, save, and watch for requests and outside edits.
-export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExternal, onPending, onState }) {
+export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExternal, onPending, onState, onDelivery }) {
   const p = boardPaths(id, dir)
   let lastWritten = null
   // The elements the rendition was last written from, and the board's state.
@@ -380,6 +417,31 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
   }
 
   let pendingReported
+  async function readDelivery() {
+    let watching = false
+    try {
+      const pid = Number((await readFile(join(dir, `${id}.watcher.pid`), 'utf8')).trim())
+      if (Number.isInteger(pid) && pid > 0) {
+        try {
+          process.kill(pid, 0)
+          watching = true
+        } catch (e) {
+          watching = e.code === 'EPERM'
+        }
+      }
+    } catch {}
+    const delivered = (await readFile(join(dir, `${id}.watched`), 'utf8').catch(() => '')).split('\n').filter(Boolean)
+    return { watching, delivered }
+  }
+  let lastDelivery = ''
+  async function checkDelivery() {
+    const d = await readDelivery()
+    const sig = JSON.stringify(d)
+    if (sig !== lastDelivery) {
+      lastDelivery = sig
+      onDelivery?.(d)
+    }
+  }
   const writeOutcome = (o) => writeFile(p.outcome, JSON.stringify({ ...o, at: now() })).catch(() => {})
 
   // The agent's answers to the person's questions (R13.3).
@@ -420,16 +482,18 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
     // "holding" confirms a requested hold; it cannot start one.
     const holding = req?.holding === true && state.hold === 'requested'
     const answers = Array.isArray(req?.answers) ? req.answers : null
-    if (req?.reviewed === true || Array.isArray(req?.discussed) || holding || answers) {
+    const pinned = Array.isArray(req?.notes) ? req.notes.map((n) => ({ on: noteTarget(n?.on), text: n?.text })).filter((n) => n.on && typeof n.text === 'string' && n.text.trim()) : null
+    if (req?.reviewed === true || Array.isArray(req?.discussed) || holding || answers || pinned) {
       await stateLoaded
       await setState({
         ...(req.reviewed === true ? { review: false } : {}),
         ...(Array.isArray(req.discussed) ? { discuss: answered(req.discussed) } : {}),
         ...(holding ? { hold: 'holding' } : {}),
         ...(answers ? { questions: answerQuestions(answers) } : {}),
+        ...(pinned ? { notes: [...state.notes, ...pinned.map((n, i) => ({ id: `n${Date.now().toString(36)}${i}`, on: n.on, text: n.text, at: now(), status: 'open' }))] } : {}),
       })
     }
-    if (!changes) await writeOutcome({ requestId: req?.requestId ?? null, ok: true, reviewed: req?.reviewed === true, discussed: Array.isArray(req?.discussed) ? req.discussed.length : 0, answered: answers ? answers.length : 0, holding, holdIgnored: req?.holding === true && !holding })
+    if (!changes) await writeOutcome({ requestId: req?.requestId ?? null, ok: true, reviewed: req?.reviewed === true, discussed: Array.isArray(req?.discussed) ? req.discussed.length : 0, answered: answers ? answers.length : 0, pinned: pinned ? pinned.length : 0, notesRefused: Array.isArray(req?.notes) ? req.notes.length - (pinned?.length ?? 0) : 0, holding, holdIgnored: req?.holding === true && !holding })
     if (changes) {
       // An image the agent adds by path is read here and passed on as data.
       if (Array.isArray(req.add)) {
@@ -469,6 +533,7 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
         if (!name || !name.startsWith(id)) return
         clearTimeout(timer)
         timer = setTimeout(() => {
+          checkDelivery()
           checkRequest()
           if (ready) checkBoard()
         }, 150)
@@ -478,12 +543,18 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
   })
   // File events can be missed, so a waiting request is also looked for every
   // two seconds.
-  const poll = setInterval(() => checkRequest(), POLL_MS)
+  const poll = setInterval(() => {
+    checkRequest()
+    checkDelivery()
+  }, POLL_MS)
 
   return {
     paths: p,
     // The window reports what it did with a request's changes.
     outcome: (o) => writeOutcome({ ok: !(o?.problems?.length), ...o }),
+    // Receipts (R15): whether a watcher is running for the session, and the
+    // signals it has delivered, as the watcher itself records them.
+    delivery: () => readDelivery(),
     // The picture of the area a question points at (R13.2), beside the board.
     async picture(qid, bytes) {
       if (typeof qid !== 'string' || !/^[\w-]{1,40}$/.test(qid) || !(bytes instanceof Uint8Array)) return null

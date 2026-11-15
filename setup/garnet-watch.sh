@@ -37,6 +37,8 @@ signals() {
       const asked = (s.questions || []).filter((q) => q.status === "open").length
       if (s.review) out.push("review " + s.reviewAt + "\tReview: read the board now." + (asked ? " It holds " + asked + " question" + (asked === 1 ? "" : "s") + " for you (under \"## Questions\"); answer each with \"answers\" in a request, or the board_answer tool." : ""))
       if (s.hold === "requested") out.push("hold " + s.holdAt + "\tHold: finish the step in progress, start no other, and wait.")
+      for (const n of s.notes || []) if (n.status !== "open" && n.answeredAt)
+        out.push("note " + n.id + " " + n.answeredAt + "\tThe person answered your note (id " + n.id + ", \"" + one(n.text) + "\"): " + (n.status === "corrected" ? "corrected: \"" + one(n.reply) + "\"" : n.status) + ".")
       for (const m of s.discuss || []) if (m.status === "open")
         out.push("discuss " + m.id + " " + m.at + "\tDiscuss (" + (where[m.panel] || m.panel) + ", id " + m.id + "): \"" + one(m.text) + "\"" + (m.note ? " Note: \"" + one(m.note) + "\"" : ""))
       console.log(out.join("\n"))' "$state" 2>/dev/null); then

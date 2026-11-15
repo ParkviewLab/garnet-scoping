@@ -43,6 +43,21 @@ describe('merging', () => {
   })
 })
 
+describe('notes from the agent (R14)', () => {
+  it('reads where a note is pinned', async () => {
+    const { noteTarget } = await import('../src/main/board.js')
+    expect(noteTarget('plan:Write tests')).toEqual({ panel: 'plan', key: 'plan:Write tests' })
+    expect(noteTarget('file:/tmp/a.png')).toEqual({ panel: 'foryou', key: 'file:/tmp/a.png' })
+    expect(noteTarget('shape:abc')).toEqual({ panel: 'board', key: 'abc' })
+    expect(noteTarget('last-message')).toEqual({ panel: 'lastword', key: 'lastword' })
+    expect(noteTarget('somewhere')).toBeNull()
+  })
+  it('keeps a pinned note and the person’s answer', () => {
+    const s = cleanState({ notes: [{ id: 'n1', on: { panel: 'plan', key: 'plan:A' }, text: 'Assumed:  by date', status: 'corrected', reply: 'by name', answeredAt: 'T' }, { id: 'n2', on: { panel: 'nowhere' } }] })
+    expect(s.notes).toEqual([{ id: 'n1', on: { panel: 'plan', key: 'plan:A' }, text: 'Assumed: by date', at: null, status: 'corrected', reply: 'by name', answeredAt: 'T' }])
+  })
+})
+
 describe('the board on disk', () => {
   let dir
   beforeEach(async () => {
@@ -161,8 +176,8 @@ describe('the board on disk', () => {
   })
 
   it('cleans a state read from disk', () => {
-    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [] })
-    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [] })
+    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [] })
+    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [] })
     const marks = cleanState({ discuss: [{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', status: 'open', answer: 'x' }, { id: 'd2', panel: 'elsewhere', key: 'k' }, null] }).discuss
     expect(marks).toEqual([{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', note: null, at: null, status: 'open', answer: null, answeredAt: null }])
   })
