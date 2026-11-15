@@ -90,6 +90,12 @@ At start the app opens a window on the most recently active session with the pan
 
 **Tests** use synthetic session files and synthetic `claude agents` output, never the machine's own.
 
+## Subagents and compaction (R9, R11)
+
+**Subagents.** The session model (`transcript/session.js`) records each Agent call as a subagent: its type and task from the call, its id, model and (for a foreground one) duration, tokens and tool calls from the call's result, and for a background one the same figures and its report from the completion notice. The main process adds each one's effort from the last records of its own transcript, `<session>/subagents/agent-<id>.jsonl`, and reads that transcript whole when the person opens the row (`subagent:detail`), for its actions and its own subagents. The Subagents panel lists them newest first; a row opens to the actions, the nested subagents and the final report; "Show in Trail" and the action's "Subagent" button lead each to the other.
+
+**Compaction.** `records.js` recognises the boundary record (`system`, subtype `compact_boundary`, with `compactMetadata.trigger`, `preTokens` and `postTokens`) and the summary record by `isCompactSummary`, never by its wording. The model places a compaction item in the Trail where it happened, carrying the summary; the Trail shows it as a marker that opens to the summary's first paragraph and then the whole.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.
