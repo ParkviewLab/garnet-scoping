@@ -260,6 +260,8 @@ R18.2. A lesson is found where the person is: from a **?** on each panel, which 
 
 R18.3. The manual works without a network connection: lessons, captions and voice-over ship inside the app.
 
+R18.4. The manual is designed before any lesson is made: the list of lessons and where each is offered, the script of each, how its animation is produced and kept current as the interface changes, and the voice. That design is put to the owner, as every design is.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -276,7 +278,7 @@ R18.3. The manual works without a network connection: lessons, captions and voic
 - **Receipts:** accepted (R15), demonstrated in a mock-up.
 - **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
-- **Manual:** lessons with voice-over, found from each panel and by search (R18), built last, once the features it teaches exist.
+- **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation); pins re-given to the agent after a compaction (what must survive a compaction is kept on disk, in memory notes, the board and the repository, which the agent can read again).
 
 ### Proposed defaults
