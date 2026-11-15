@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('garnet', {
     lessons: () => ipcRenderer.invoke('manual:lessons'),
     open: (lesson) => ipcRenderer.invoke('manual:open', lesson),
     reset: (lesson, step) => ipcRenderer.invoke('manual:reset', lesson, step),
+    agent: (request) => ipcRenderer.invoke('manual:agent', request),
     onShow: (fn) => ipcRenderer.on('manual:show', (_e, m) => fn(m)),
   },
   setup: { check: () => ipcRenderer.invoke('setup:check'), open: () => ipcRenderer.invoke('setup:open') },

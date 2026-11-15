@@ -17,8 +17,8 @@ describe('a lesson file', () => {
   it('is read with its steps, and refused without a number, title or steps', () => {
     const l = cleanLesson({ n: 3, title: 'T', panels: ['panel-now'], steps: [{ target: 'hold', action: 'click', caption: 'c' }, { target: ['a', 'b'], action: 'odd', caption: 'd', try: true }] })
     expect(l.steps).toEqual([
-      { target: ['hold'], action: 'click', text: null, caption: 'c', try: false },
-      { target: ['a', 'b'], action: 'point', text: null, caption: 'd', try: true },
+      { target: ['hold'], action: 'click', text: null, request: null, caption: 'c', try: false },
+      { target: ['a', 'b'], action: 'point', text: null, request: null, caption: 'd', try: true },
     ])
     expect(cleanLesson({ title: 'T', steps: [{ caption: 'c' }] })).toBeNull()
     expect(cleanLesson({ n: 1, title: 'T', steps: [] })).toBeNull()

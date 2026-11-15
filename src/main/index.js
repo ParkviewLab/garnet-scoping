@@ -25,7 +25,7 @@ import { createSession, snapshot } from './transcript/session.js'
 import { classify } from './transcript/records.js'
 import { boardPaths, cleanState, BOARDS } from './board.js'
 import { parseWork, nextRun } from './work.js'
-import { DEMO_ID, listLessons, prepareDemo } from './manual.js'
+import { DEMO_ID, listLessons, prepareDemo, agentStep } from './manual.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
@@ -239,6 +239,10 @@ function registerIpc() {
   })
   ipcMain.handle('manual:lessons', () => listLessons(MANUAL_SRC()))
   ipcMain.handle('manual:open', (e, lesson) => openManual({ lesson: Number.isInteger(lesson) ? lesson : null, from: BrowserWindow.fromWebContents(e.sender) }))
+  ipcMain.handle('manual:agent', (e, request) => {
+    const w = entryOf(e)
+    if (w?.demo && request && typeof request === 'object') return agentStep(w.dirs.boards, request)
+  })
   ipcMain.handle('manual:reset', (e, lesson, step) => {
     if (entryOf(e)?.demo && Number.isInteger(lesson) && Number.isInteger(step)) return resetManual(lesson, step)
   })

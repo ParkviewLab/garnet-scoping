@@ -23,8 +23,10 @@ export function cleanLesson(raw) {
     .filter((s) => s && typeof s.caption === 'string')
     .map((s) => ({
       target: Array.isArray(s.target) ? s.target.map(String) : s.target ? [String(s.target)] : [],
-      action: ['point', 'click', 'show', 'menu', 'dblclick', 'type', 'wait'].includes(s.action) ? s.action : 'point',
+      action: ['point', 'click', 'show', 'menu', 'dblclick', 'type', 'wait', 'agent'].includes(s.action) ? s.action : 'point',
       text: typeof s.text === 'string' ? s.text : null,
+      // For an `agent` step: what the agent writes, as its request to the board.
+      request: s.request && typeof s.request === 'object' ? s.request : null,
       caption: s.caption,
       try: Boolean(s.try),
     }))
@@ -73,6 +75,21 @@ export function rebase(text, dir, now = Date.now()) {
       })
       .join('\n') + '\n'
   )
+}
+
+// What an `agent` step writes into the demo's copy, as the agent would: a
+// request to its board, or an answer to the person's last aside. `$last` in
+// "discussed" stands for the last request still open.
+export async function agentStep(boards, request) {
+  const state = JSON.parse(await readFile(join(boards, `${DEMO_ID}.state.json`), 'utf8').catch(() => '{}'))
+  if (typeof request.aside === 'string') {
+    const last = (state.asides ?? []).filter((a) => !a.answeredAt).at(-1)
+    if (last) await writeFile(join(boards, `${DEMO_ID}.asides.json`), JSON.stringify({ [last.id]: { answer: request.aside } }))
+    return
+  }
+  const open = (state.discuss ?? []).filter((m) => m.status === 'open')
+  const discussed = Array.isArray(request.discussed) ? request.discussed.map((d) => (d.id === '$last' ? { ...d, id: open.at(-1)?.id ?? null } : d)).filter((d) => d.id) : undefined
+  await writeFile(join(boards, `${DEMO_ID}.request.json`), JSON.stringify({ ...request, ...(discussed ? { discussed } : {}) }))
 }
 
 // A fresh copy of the demo in `to`: the session the manual window shows.

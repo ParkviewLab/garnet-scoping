@@ -1,0 +1,53 @@
+{
+  "n": 18,
+  "title": "Answer a note the agent pinned for you",
+  "group": "Talking to the agent",
+  "panels": [
+    "pane-discuss",
+    "panel-plan"
+  ],
+  "done": "That is it: the agent is told, and goes on as it assumed.",
+  "steps": [
+    {
+      "action": "agent",
+      "request": {
+        "notes": [
+          {
+            "on": "plan:Run the tests",
+            "text": "Assumed: the slow fixtures can wait for the wake-up."
+          }
+        ]
+      },
+      "caption": "Instead of stopping to ask, the agent can pin a note to what it concerns, and carry on."
+    },
+    {
+      "target": [
+        "tog-discuss"
+      ],
+      "action": "show",
+      "caption": "Notes appear in Discuss, with the place they are pinned to."
+    },
+    {
+      "target": [
+        "note"
+      ],
+      "action": "point",
+      "caption": "Each says what the agent assumed. Confirm it, correct it, or dismiss it."
+    },
+    {
+      "target": [
+        "note-correct"
+      ],
+      "action": "point",
+      "caption": "Correct lets you write what is right instead; the agent reads it at its next step."
+    },
+    {
+      "target": [
+        "note-confirm"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: confirm the note."
+    }
+  ]
+}
