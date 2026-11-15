@@ -119,6 +119,16 @@ export function startManual({ lesson: wanted, step: from }) {
     clearTimeout(timer)
     audio.pause()
   }
+  // Plays a voice-over file; resolves when it ends, at once where there is
+  // none, or the sound is off.
+  const voice = (src) =>
+    new Promise((done) => {
+      if (!src || !sound) return done()
+      audio.src = src
+      audio.onended = done
+      audio.onerror = done
+      audio.play().catch(done)
+    })
   const say = (text) => {
     caption.textContent = text
     caption.hidden = !captions || !text
@@ -207,7 +217,7 @@ export function startManual({ lesson: wanted, step: from }) {
     const step = lesson.steps[i]
     // A lesson whose steps all lie outside this window has no try, and ends here.
     if (!step) return finish(lesson.done)
-    if (step.try) return armTry(step)
+    if (step.try) return armTry(step), voice(step.audio)
     controls()
     const node = step.target.length ? find(step.target) : null
     node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
@@ -216,20 +226,20 @@ export function startManual({ lesson: wanted, step: from }) {
     document.scrollingElement.scrollLeft = 0
     movePointer(node, step)
     say(step.caption)
-    let audioMs = 0
-    if (step.audio && sound) {
-      audio.src = step.audio
-      audio.play().catch(() => {})
-      audioMs = Number.isFinite(audio.duration) ? audio.duration * 1000 : 0
-    }
-    timer = setTimeout(() => {
+    // The step's voice; the next step waits for it to end, and for the
+    // caption's reading time, whichever is longer.
+    const spoken = voice(step.audio)
+    const shown = new Promise((r) => (timer = setTimeout(r, POINTER_MS)))
+    shown.then(() => {
+      if (!playing || lesson?.steps[i] !== step) return
       if (step.action !== 'point') {
         pointer.classList.add('press')
         setTimeout(() => pointer.classList.remove('press'), 250)
         act(step, node)
       }
-      timer = setTimeout(() => playing && play(i + 1), stepMs(step.caption, audioMs))
-    }, POINTER_MS)
+      const read = new Promise((r) => (timer = setTimeout(r, stepMs(step.caption))))
+      Promise.all([read, spoken]).then(() => playing && lesson?.steps[i] === step && play(i + 1))
+    })
   }
 
   // The person's try: the pointer leaves, and the step's own action on its
@@ -252,6 +262,7 @@ export function startManual({ lesson: wanted, step: from }) {
     playing = false
     i = lesson.steps.length
     say(text)
+    if (text === lesson.done) voice(lesson.doneAudio)
     controls()
   }
 
