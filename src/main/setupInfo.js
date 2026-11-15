@@ -46,12 +46,32 @@ export function setupTexts() {
    - SessionStart, matcher "resume" (not "startup"): bash ~/.claude/hooks/garnet-rewake.sh, with "asyncRewake": true and "timeout": 86400
    - Stop: bash ~/.claude/hooks/garnet-rewake.sh, with "asyncRewake": true and "timeout": 86400
    The last two make Claude Code itself run the watcher, at the end of every turn and when a session is resumed, and wake the session when a signal arrives. Never run garnet-rewake.sh at "startup": at a new session's start Claude Code waits for SessionStart hooks to finish, asyncRewake or not, and the session would not start.
-3. Append the section in ${join(setup, 'claude-md-section.md')} to ~/.claude/CLAUDE.md, unless a section "garnet-scoping signals" is already there.
+3. Put the section in ${join(setup, 'claude-md-section.md')} into ~/.claude/CLAUDE.md, replacing an earlier section "garnet-scoping signals" if there is one, else appending it.
 4. Write ${mcpPath} with this content, for the channel (used only by terminal sessions started with it):
 ${mcp}
+5. Copy the folder ${join(setup, 'garnet-board')} to ~/.claude/mods/garnet-board, replacing an earlier copy: the extension that gives sessions the board tools and answers the person's asides. Claude Code loads it in sessions started from then on.
 Nothing needs starting by hand: from the end of this turn on, Claude Code runs the watcher in every session.`
   const command = `claude --mcp-config ${mcpPath} --dangerously-load-development-channels server:garnet`
   return { prompt, mcp, mcpPath, command }
+}
+
+// Whether what Claude installed from this text matches what this version of
+// the app ships (P5): the hooks and the extension, compared byte for byte.
+// Read only; nothing in the Claude configuration directory is written.
+export async function installedMatches() {
+  const { readFile } = await import('node:fs/promises')
+  const setup = join(resources(), 'setup')
+  const claude = join(homedir(), '.claude')
+  const pairs = [
+    ...['garnet-watch.sh', 'garnet-rewake.sh', 'garnet-session-start.sh'].map((f) => [join(setup, f), join(claude, 'hooks', f)]),
+    [join(setup, 'garnet-board', 'hooks', 'register.ts'), join(claude, 'mods', 'garnet-board', 'hooks', 'register.ts')],
+  ]
+  const stale = []
+  for (const [shipped, installed] of pairs) {
+    const [a, b] = await Promise.all([readFile(shipped).catch(() => null), readFile(installed).catch(() => null)])
+    if (a && (!b || !a.equals(b))) stale.push(installed.replace(homedir(), '~'))
+  }
+  return { ok: !stale.length, stale }
 }
 
 let win = null
@@ -76,8 +96,8 @@ export function openSetupInfo() {
 </style><main>
 <h1>Set-up Info</h1>
 <p>garnet-scoping shows each session; these steps let your signals (Review on the board, Discuss on a row, Hold) reach Claude even when you send no message.</p>
-<h2>1. Set up the watcher (once)</h2>
-<p>Paste this into any Claude Code session. Claude installs the watcher, the hook that starts it in every new session, and the rule in your <code>~/.claude/CLAUDE.md</code> that says how to answer each signal.</p>
+<h2>1. Set up the watcher and the board tools (once, and after each update)</h2>
+<p>Paste this into any Claude Code session. Claude installs the watcher, the hook that starts it in every new session, the rule in your <code>~/.claude/CLAUDE.md</code> that says how to answer each signal, and the garnet-board extension that gives sessions the board tools and answers your asides. When the app says these are from an earlier version, paste it again.</p>
 ${block('prompt', t.prompt)}
 <h2>2. The channel, for terminal sessions (optional)</h2>
 <p>A channel delivers the signals at once, without the watcher. Claude Code supports channels only in the terminal for now, as a research preview; the desktop app does not load them yet. Step 1 writes this configuration to <code>${esc(t.mcpPath)}</code>:</p>

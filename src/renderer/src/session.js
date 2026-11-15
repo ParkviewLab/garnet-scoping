@@ -912,6 +912,16 @@ function showDelivery(d) {
   warn.textContent = `No watcher is running for this session, so your signals are not reaching it${waiting ? ` (${waiting} waiting)` : ''}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
   renderDiscuss()
 }
+// What Claude installed from Set-up Info is from an earlier version (P5).
+window.garnet.setup.check().then((r) => {
+  if (!r || r.ok) return
+  const box = $('setup-stale')
+  const open = el('button', null, 'Open Set-up Info')
+  open.type = 'button'
+  open.addEventListener('click', () => window.garnet.setup.open())
+  box.replaceChildren(el('span', null, `garnet-scoping's hooks or extension in Claude Code are from an earlier version, or missing (${r.stale.join(', ')}); some features need them. Paste the text in Set-up Info into a session to update them. `), open)
+  box.hidden = false
+})
 window.garnet.board.onDelivery(showDelivery)
 window.garnet.board.delivery().then((d) => d && showDelivery(d))
 

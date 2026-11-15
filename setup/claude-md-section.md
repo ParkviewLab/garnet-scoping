@@ -1,10 +1,15 @@
 ## garnet-scoping signals
 
-garnet-scoping (the desktop app showing each Claude Code session's Desk and board) lets the person signal a session in three ways, all kept in `~/.garnet-scoping/boards/<session-id>.state.json` and summarised at the head of `<session-id>.board.md`:
+garnet-scoping (the desktop app showing each Claude Code session's Desk and board) lets the person signal a session in several ways, all kept in `~/.garnet-scoping/boards/<session-id>.state.json` and summarised at the head of `<session-id>.board.md`:
 
 - **Review** on the board: read the board now. Answer on the board or in the conversation, then send `{"reviewed": true}` to `<session-id>.request.json`.
 - **Discuss** on a row of the Desk (with an optional note): answer about that row in the conversation, then send `{"discussed": [{"id": "…", "answer": "one line"}]}`.
 - **Hold**: finish the step in progress, start no other, send `{"holding": true}`, and wait until the hold is released (`"hold": "off"`).
+- **Questions on the board** arrive with a Review: answer each under "## Questions" with `{"answers": [{"id": "q…", "text": "a few lines"}]}`; the app places the answer as a note joined to the question. For a longer answer, answer in the conversation and say so in the note. Remove an exchange the person and you have settled with `{"removeExchange": ["x…"]}`, and say which and why.
+- **Notes:** instead of stopping to ask, pin a one-line note to the item it concerns with `{"notes": [{"on": "plan:<step>" | "file:<path>" | "shape:<id>" | "last-message", "text": "Assumed: …"}]}` and carry on; the person's answer (confirmed, corrected, dismissed) arrives as a signal.
+- **Away**: while the person is away, keep your questions for their return and carry on with work that does not need them; assume nothing in their place. When they come **back**, welcome them, then take them through what you did and what is pending (your kept questions first), one item at a time, waiting for each answer.
+- **Asides** are answered by a copy of you without interrupting you; they are listed in the rendition for you to read when it helps.
+- **Board tools:** where the garnet-board extension is loaded, the tools `board_read`, `board_change` and `board_answer` do all of the above and answer at once with what became of each call; the request file still works everywhere.
 - **Images for the person:** when you make an image for the person (a design, a chart, a mock-up, a screenshot), also place it on the session's board with an image request (`{"add": [{"kind": "image", "path": "…"}]}`), near the shapes it concerns, so that it can be pointed at, marked and reviewed there. Give each draft its own file name, so that earlier drafts stay as they were.
 
 Every session watches for these, so that a signal reaches the agent even when the person sends no message. Claude Code runs the watcher itself, as an `asyncRewake` hook at the end of each turn and when a session is resumed, and wakes the session when a signal arrives (a new session is watched from the end of its first turn); do not start a watcher yourself. When a garnet-scoping channel is connected to the session (its instructions are in your context), the channel delivers the signals instead, and the watcher is not needed. Handle a signal when its notice arrives, before the next step of the plan in hand.

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('garnet', {
     get: () => ipcRenderer.invoke('live:get'),
     onChanged: (fn) => ipcRenderer.on('live:changed', (_e, l) => fn(l)),
   },
+  setup: { check: () => ipcRenderer.invoke('setup:check'), open: () => ipcRenderer.invoke('setup:open') },
   onShowPanel: (fn) => ipcRenderer.on('panel:show', (_e, p) => fn(p)),
   view: () => ipcRenderer.invoke('session:view'),
   detail: (actionId) => ipcRenderer.invoke('session:detail', actionId),
