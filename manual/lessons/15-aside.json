@@ -1,0 +1,73 @@
+{
+  "n": 15,
+  "title": "Ask an aside without interrupting",
+  "group": "Talking to the agent",
+  "panels": [
+    "panel-now",
+    "panel-plan",
+    "pane-trail"
+  ],
+  "done": "That is it: the question becomes a Discuss request, which the agent answers when its current step ends.",
+  "steps": [
+    {
+      "target": [
+        "panel-now",
+        "row"
+      ],
+      "action": "point",
+      "caption": "An aside is a quick question about a row, answered by a copy of the agent while the agent works on."
+    },
+    {
+      "target": [
+        "panel-now",
+        "row"
+      ],
+      "action": "menu",
+      "caption": "Right-click the row you are asking about."
+    },
+    {
+      "target": [
+        "menu-ask-aside"
+      ],
+      "action": "click",
+      "caption": "Choose Ask aside."
+    },
+    {
+      "target": [
+        "aside-text"
+      ],
+      "action": "type",
+      "text": "Why run the tests in the background?",
+      "caption": "Type your question."
+    },
+    {
+      "target": [
+        "aside-go"
+      ],
+      "action": "click",
+      "caption": "Press Ask aside. The agent itself is not interrupted."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "aside": "So that the agent can check the code style while the tests run; it is told when they finish."
+      },
+      "caption": "A copy of the session answers in a few seconds."
+    },
+    {
+      "target": [
+        "aside-answer"
+      ],
+      "action": "point",
+      "caption": "The answer shows under the row. The copy has no tools, so it explains rather than checks."
+    },
+    {
+      "target": [
+        "aside-escalate"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: press Ask the agent instead, to put the same question to the agent itself."
+    }
+  ]
+}

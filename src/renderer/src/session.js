@@ -207,7 +207,7 @@ $('away').addEventListener('click', () => {
   const a = boardStateNow?.away ?? { on: false }
   if (a.on) return window.garnet.board.setState({ away: { ...a, on: false, backAt: now } }).then(setMarks)
   const body = el('div', 'note-form')
-  const until = el('input')
+  const until = ui(el('input'), 'away-until')
   until.type = 'time'
   const go = ui(el('button', 'primary', 'I am away'), 'away-go')
   go.type = 'button'
@@ -223,7 +223,7 @@ $('away').addEventListener('click', () => {
 // of the session with no tools, while the agent works on undisturbed.
 function askAside(row) {
   const body = el('div', 'note-form')
-  const area = el('textarea')
+  const area = ui(el('textarea'), 'aside-text')
   area.rows = 3
   area.value = `Why "${row.text.slice(0, 80)}"?`
   const go = ui(el('button', 'primary', 'Ask aside'), 'aside-go')
@@ -329,7 +329,7 @@ function markable(node, row, onClick = null, extra = []) {
   if (done?.answer) node.append(el('div', 'discuss-answer', `Answered: ${done.answer}`))
   const aside = [...asides].reverse().find((a) => a.key === row.key)
   if (aside) {
-    const box = el('div', 'aside-answer')
+    const box = ui(el('div', 'aside-answer'), 'aside-answer')
     box.append(el('div', 'aside-q', `Aside: ${aside.question}`))
     if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-board extension inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
     else if (aside.answer) {
@@ -876,7 +876,7 @@ function answerNote(n, status, reply = null) {
   window.garnet.board.setState({ notes: next }).then(setMarks)
 }
 function noteItem(n) {
-  const item = el('div', `discuss-item note ${n.status}`)
+  const item = ui(el('div', `discuss-item note ${n.status}`), 'note')
   const body = el('div', 'discuss-body')
   body.append(el('div', 'note-from', 'From the agent'), el('div', 'discuss-what', n.text))
   body.append(el('div', 'discuss-meta', [NOTE_WHERE[n.on.panel] ?? n.on.panel, n.on.panel === 'plan' ? n.on.key.slice(5) : n.on.panel === 'foryou' ? basename(n.on.key.slice(5)) : null, n.at ? ago(n.at) : null].filter(Boolean).join(' · ')))

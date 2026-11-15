@@ -54,6 +54,8 @@ export function matches(lesson, query) {
 }
 
 function act(step, node) {
+  // The agent's side, written to the demo's board as the agent would.
+  if (step.action === 'agent') return step.request && window.garnet.manual.agent(step.request)
   if (!node) return
   const r = node.getBoundingClientRect()
   const opts = { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, view: window }
@@ -184,7 +186,7 @@ export function startManual({ lesson: wanted, step: from }) {
     if (!step) return
     if (step.try) return armTry(step)
     controls()
-    const node = find(step.target)
+    const node = step.target.length ? find(step.target) : null
     node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
     movePointer(node)
     say(step.caption)
@@ -240,7 +242,7 @@ export function startManual({ lesson: wanted, step: from }) {
     for (let k = 0; k < skip; k++) {
       const s = lesson.steps[k]
       if (s.try || s.action === 'point') continue
-      act(s, find(s.target))
+      act(s, s.target.length ? find(s.target) : null)
       await new Promise((r) => setTimeout(r, REPLAY_GAP_MS))
     }
     playing = true
