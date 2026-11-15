@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.10.2] - 2026-11-14
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Bug fixes
+
+- Say signals wait for the turn's end while the agent works (#82)
+
 ## [v0.10.1] - 2026-11-14
 
 ### Highlights
