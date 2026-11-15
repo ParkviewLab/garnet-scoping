@@ -25,6 +25,8 @@ export const boardPaths = (id, dir = BOARDS) => ({
   rendition: join(dir, `${id}.board.md`),
   request: join(dir, `${id}.request.json`),
   state: join(dir, `${id}.state.json`),
+  // What became of the agent's last request (R12.1): written by the app.
+  outcome: join(dir, `${id}.outcome.json`),
   files: join(dir, `${id}.files`),
 })
 
@@ -336,6 +338,9 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
     return state.discuss.map((m) => (byId.has(m.id) && m.status === 'open' ? { ...m, status: 'answered', answer: byId.get(m.id), answeredAt: now() } : m))
   }
 
+  let pendingReported
+  const writeOutcome = (o) => writeFile(p.outcome, JSON.stringify({ ...o, at: now() })).catch(() => {})
+
   async function checkRequest() {
     let text
     try {
@@ -347,13 +352,23 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
     try {
       req = JSON.parse(text)
     } catch (err) {
-      if (ready) onRequest({ error: `The request is not valid JSON: ${err.message}` })
+      // A request that is not JSON is reported and removed (R7.4).
+      const error = `The request is not valid JSON: ${err.message}`
+      await unlink(p.request).catch(() => {})
+      await writeOutcome({ requestId: null, ok: false, error })
+      if (ready) onRequest({ error })
       return
     }
     const changes = ['add', 'relabel', 'remove'].some((k) => Array.isArray(req?.[k]) && req[k].length)
     // A request with changes waits until the board is ready to apply them;
     // "reviewed" and "discussed" need no board and are applied at once.
-    if (changes && !ready) return onPending?.()
+    if (changes && !ready) {
+      if (req.requestId !== pendingReported) {
+        pendingReported = req.requestId
+        await writeOutcome({ requestId: req.requestId ?? null, ok: true, queued: true, note: 'The board is not open in the window; the change waits and is applied when it opens.' })
+      }
+      return onPending?.()
+    }
     await unlink(p.request).catch(() => {})
     // "holding" confirms a requested hold; it cannot start one.
     const holding = req?.holding === true && state.hold === 'requested'
@@ -365,6 +380,7 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
         ...(holding ? { hold: 'holding' } : {}),
       })
     }
+    if (!changes) await writeOutcome({ requestId: req?.requestId ?? null, ok: true, reviewed: req?.reviewed === true, discussed: Array.isArray(req?.discussed) ? req.discussed.length : 0, holding, holdIgnored: req?.holding === true && !holding })
     if (changes) {
       // An image the agent adds by path is read here and passed on as data.
       if (Array.isArray(req.add)) {
@@ -417,6 +433,8 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
 
   return {
     paths: p,
+    // The window reports what it did with a request's changes.
+    outcome: (o) => writeOutcome({ ok: !(o?.problems?.length), ...o }),
     load,
     save,
     setState,

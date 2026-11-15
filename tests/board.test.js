@@ -13,7 +13,7 @@ const shape = (id, type, text, extra = {}) => [
 // Waits until cond() holds, or fails after ms.
 async function until(cond, ms = 5000) {
   const end = Date.now() + ms
-  while (!cond()) {
+  while (!(await cond())) {
     if (Date.now() > end) throw new Error('timed out waiting')
     await new Promise((r) => setTimeout(r, 25))
   }
@@ -77,6 +77,21 @@ describe('the board on disk', () => {
     b.close()
   })
 
+  it('writes the outcome of each request for the board tools (R12.1)', async () => {
+    const b = openBoard('s5', { dir, onRequest() {}, onExternal() {} })
+    await new Promise((r) => setTimeout(r, 50))
+    await writeFile(b.paths.request, JSON.stringify({ requestId: 'q1', add: [{ kind: 'rectangle', text: 'Q' }] }))
+    await until(async () => (await readFile(b.paths.outcome, 'utf8').catch(() => '')).includes('q1'))
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q1', queued: true })
+    b.ready()
+    await b.outcome({ requestId: 'q1', added: 1, problems: [] })
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q1', ok: true, added: 1 })
+    await writeFile(b.paths.request, JSON.stringify({ requestId: 'q2', reviewed: true }))
+    await until(async () => (await readFile(b.paths.outcome, 'utf8').catch(() => '')).includes('q2'))
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q2', reviewed: true })
+    b.close()
+  })
+
   it('reports a request that is not valid JSON', async () => {
     const got = []
     const b = openBoard('s3', { dir, onRequest: (r) => got.push(r), onExternal() {} })
@@ -84,6 +99,9 @@ describe('the board on disk', () => {
     await writeFile(b.paths.request, '{ not json')
     await until(() => got.length > 0)
     expect(got[0].error).toMatch(/not valid JSON/)
+    // It is removed, and its outcome says why (R7.4).
+    await expect(readFile(b.paths.request)).rejects.toThrow()
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8')).error).toMatch(/not valid JSON/)
     b.close()
   })
 

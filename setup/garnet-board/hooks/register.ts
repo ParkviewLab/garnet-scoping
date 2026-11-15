@@ -1,0 +1,95 @@
+// SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+// garnet-scoping's board tools (R12): an extension Claude Code loads, so that
+// the agent reads and changes the board, and answers the person's signals,
+// by calling tools, each answering at once with what became of the call.
+// The tools write the same request file the agent can write by hand (R7.4);
+// garnet-scoping applies it and writes the outcome beside it.
+
+import type { Register } from 'claude-code'
+
+const WAIT_MS = 4000
+// The boards folder, as garnet-scoping keeps it: GARNET_SCOPING_BOARDS, or
+// ~/.garnet-scoping/boards.
+let base = ''
+
+function describe(o: any) {
+  if (!o) return 'Sent. garnet-scoping has not answered within four seconds: it may not be running. The request stays on disk and is applied when the app reads it.'
+  if (o.error) return `Refused: ${o.error}`
+  if (o.queued) return `Queued: ${o.note}`
+  const parts = []
+  if (o.added) parts.push(`added ${o.added}`)
+  if (o.relabelled) parts.push(`relabelled ${o.relabelled}`)
+  if (o.removed) parts.push(`removed ${o.removed}`)
+  if (o.reviewed) parts.push('marked the review done')
+  if (o.discussed) parts.push(`recorded ${o.discussed} Discuss answer${o.discussed === 1 ? '' : 's'}`)
+  if (o.holding) parts.push('confirmed the hold')
+  if (o.holdIgnored) parts.push('ignored "holding": no hold was requested')
+  const did = parts.length ? `Done: ${parts.join(', ')}.` : 'Nothing changed.'
+  return o.problems?.length ? `${did} Problems: ${o.problems.join('; ')}.` : did
+}
+
+async function send($: any, base: string, id: string, request: Record<string, unknown>) {
+  const requestId = `r${Date.now().toString(36)}`
+  await $.fs.write(`${base}/${id}.request.json`, JSON.stringify({ ...request, requestId }))
+  for (let waited = 0; waited < WAIT_MS; waited += 200) {
+    await $.clock.sleep(200)
+    try {
+      const o = JSON.parse(String(await $.fs.read(`${base}/${id}.outcome.json`)))
+      if (o.requestId === requestId) return describe(o)
+    } catch {}
+  }
+  return describe(null)
+}
+
+export const register: Register = (on) => {
+  on('session.start', async ($, e, next) => {
+    const r = await $.process.run(['/bin/sh', '-c', 'printf %s "${GARNET_SCOPING_BOARDS:-$HOME/.garnet-scoping/boards}"']).catch(() => null)
+    base = String(r?.stdout ?? '')
+    await $.tool.register({ name: 'board_read', description: "Reads this session's garnet-scoping board as text: every shape with its id, kind, text and position, the connections, and the person's signals (review, Discuss, hold).", inputSchema: { type: 'object' }, isDeferred: false })
+    await $.tool.register({
+      name: 'board_change',
+      description: 'Changes the board: add shapes, text, images and connections; relabel or remove shapes by id. Answers with what changed, why something was refused, or that the change waits until the board is open.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          add: { type: 'array', description: 'Items: { id?, kind: rectangle|ellipse|diamond|text|image|arrow|line, text?, x?, y?, path? (image), width?, from?, to? (arrow, line) }', items: { type: 'object' } },
+          relabel: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } } } },
+          remove: { type: 'array', items: { type: 'string' } },
+        },
+      },
+      isDeferred: false,
+    })
+    await $.tool.register({
+      name: 'board_answer',
+      description: "Answers the person's signals: discussed (a one-line answer to each Discuss mark by its id), reviewed (the board has been read), holding (stopped at a requested hold).",
+      inputSchema: {
+        type: 'object',
+        properties: {
+          discussed: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, answer: { type: 'string' } } } },
+          reviewed: { type: 'boolean' },
+          holding: { type: 'boolean' },
+        },
+      },
+      isDeferred: false,
+    })
+    return next(e)
+  })
+  on('tool.call', { tool: 'mcp__garnet-board__board_read' }, async ($) => {
+    const id = await $.session.id()
+    try {
+      return { result: String(await $.fs.read(`${base}/${id}.board.md`)) }
+    } catch {
+      return { result: 'This session has no board yet: open its window in garnet-scoping.' }
+    }
+  })
+  on('tool.call', { tool: 'mcp__garnet-board__board_change' }, async ($, e: any) => {
+    const { add, relabel, remove } = e
+    return { result: await send($, base, await $.session.id(), { ...(add ? { add } : {}), ...(relabel ? { relabel } : {}), ...(remove ? { remove } : {}) }) }
+  })
+  on('tool.call', { tool: 'mcp__garnet-board__board_answer' }, async ($, e: any) => {
+    const { discussed, reviewed, holding } = e
+    return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}) }) }
+  })
+}
