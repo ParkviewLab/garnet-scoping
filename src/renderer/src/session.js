@@ -1069,3 +1069,48 @@ window.garnet.discuss({ op: 'get' }).then(setMarks)
 window.garnet.board.onState(setMarks)
 setInterval(() => view && renderPresent(), 15_000) // keep the waiting times current
 refresh()
+
+// The manual (R18): in its own window, the lesson's bar and player; in every
+// other window, a ? on each panel that lists the panel's lessons (R18.10).
+const query = new URLSearchParams(location.search)
+if (query.get('manual') === '1') {
+  const n = query.get('lesson')
+  import('./manual.js').then((m) => m.startManual({ lesson: n == null ? null : Number(n), step: Number(query.get('step') ?? 0) }))
+} else {
+  window.garnet.manual.lessons().then((lessons) => {
+    for (const panel of document.querySelectorAll('[data-ui^="panel-"], [data-ui^="pane-"]')) {
+      const name = panel.dataset.ui
+      const mine = lessons.filter((l) => l.panels.includes(name))
+      const head = panel.querySelector(':scope > h2')
+      if (!mine.length || !head) continue
+      const q = el('button', 'lesson-q', '?')
+      q.type = 'button'
+      q.title = 'Lessons for this panel'
+      q.dataset.ui = `lessons-${name}`
+      q.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const open = document.querySelector('.lesson-drop')
+        open?.remove()
+        if (open?.dataset.for === name) return
+        const drop = el('div', 'lesson-drop')
+        drop.dataset.for = name
+        drop.append(el('div', 'muted small', 'Lessons for this panel'))
+        for (const l of mine) {
+          const b = el('button', 'lesson-item')
+          b.type = 'button'
+          b.append(el('span', null, l.title), el('span', 'lesson-play', 'Play'))
+          b.addEventListener('click', () => (drop.remove(), window.garnet.manual.open(l.n)))
+          drop.append(b)
+        }
+        const all = el('button', 'lesson-item muted')
+        all.type = 'button'
+        all.textContent = 'All lessons, How do I…'
+        all.addEventListener('click', () => (drop.remove(), window.garnet.manual.open(null)))
+        drop.append(all)
+        head.append(drop)
+      })
+      head.append(q)
+    }
+    document.addEventListener('click', (e) => !e.target.closest('.lesson-drop') && document.querySelector('.lesson-drop')?.remove())
+  })
+}

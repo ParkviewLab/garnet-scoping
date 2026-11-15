@@ -65,6 +65,11 @@ extraResources:
   - from: setup
     to: setup
     filter: ['**/*']
+  # The manual (R18): its lessons, the demo session they play on, and their
+  # voice-over.
+  - from: manual
+    to: manual
+    filter: ['**/*']
 publish:
   provider: github
   owner: garycoding

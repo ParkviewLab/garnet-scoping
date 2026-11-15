@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('garnet', {
     get: () => ipcRenderer.invoke('live:get'),
     onChanged: (fn) => ipcRenderer.on('live:changed', (_e, l) => fn(l)),
   },
+  manual: {
+    lessons: () => ipcRenderer.invoke('manual:lessons'),
+    open: (lesson) => ipcRenderer.invoke('manual:open', lesson),
+    reset: (lesson, step) => ipcRenderer.invoke('manual:reset', lesson, step),
+    onShow: (fn) => ipcRenderer.on('manual:show', (_e, m) => fn(m)),
+  },
   setup: { check: () => ipcRenderer.invoke('setup:check'), open: () => ipcRenderer.invoke('setup:open') },
   onShowPanel: (fn) => ipcRenderer.on('panel:show', (_e, p) => fn(p)),
   view: () => ipcRenderer.invoke('session:view'),

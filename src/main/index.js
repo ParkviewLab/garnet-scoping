@@ -25,6 +25,7 @@ import { createSession, snapshot } from './transcript/session.js'
 import { classify } from './transcript/records.js'
 import { boardPaths, cleanState, BOARDS } from './board.js'
 import { parseWork, nextRun } from './work.js'
+import { DEMO_ID, listLessons, prepareDemo } from './manual.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
@@ -43,6 +44,10 @@ let known = [] // the session list, as listSessions gives it
 let liveFacts = { available: true, bySession: {} }
 let live = { available: true, states: {} }
 let liveTimer = null
+// The manual's lessons and demo (R18): shipped in the app's resources, and
+// copied for each lesson into the app's own folder.
+const MANUAL_SRC = () => (app.isPackaged ? join(process.resourcesPath, 'manual') : join(__dirname, '../../manual'))
+const DEMO_DIR = () => join(app.getPath('userData'), 'manual-demo')
 
 function pageUrl(page, query = {}) {
   const q = new URLSearchParams(query).toString()
@@ -83,10 +88,12 @@ async function showSessions() {
 }
 
 // A session's window: its Desk and its board.
-function openSession(info, { sessions = false } = {}) {
+// The manual's window is such a window on a copy of the demo session (`demo`),
+// whose board, memory and work files are in that copy (`info.dirs`).
+function openSession(info, { sessions = false, demo = false, query = {}, bounds = null } = {}) {
   const open = windows.get(info.id)
   if (open && !open.win.isDestroyed()) return open.win.focus()
-  const win = new BrowserWindow({ width: 1400, height: 900, title: info.title ?? info.id, backgroundColor: '#17181a', webPreferences: webPreferences() })
+  const win = new BrowserWindow({ width: 1400, height: 900, ...(bounds ?? {}), title: info.title ?? info.id, backgroundColor: '#17181a', webPreferences: webPreferences() })
   let timer = null
   const push = () => {
     if (timer) return
@@ -97,15 +104,17 @@ function openSession(info, { sessions = false } = {}) {
   }
   const follower = follow(info.id, info.file, push)
   const send = (channel, payload) => !win.isDestroyed() && win.webContents.send(channel, payload)
-  const entry = { win, follower, board: null, project: info.project, file: info.file }
+  const dirs = info.dirs ?? { boards: BOARDS, memory: join(PROJECTS, info.project ?? '', 'memory') }
+  const entry = { win, follower, board: null, project: info.project, file: info.file, dirs, demo }
   // A session that continues an earlier one takes over its board first
   // (inheritBoard); the board is opened once that is settled.
   entry.boardReady = follower.ready
-    .then(() => inheritBoard(info.id, follower.view().lineage))
+    .then(() => (demo ? null : inheritBoard(info.id, follower.view().lineage)))
     .catch(() => null)
     .then(() => {
       entry.board = openBoard(info.id, {
         title: info.title,
+        dir: dirs.boards,
         onRequest: (r) => send('board:request', r),
         onExternal: (elements) => send('board:external', elements),
         onPending: () => send('board:pending'),
@@ -119,7 +128,7 @@ function openSession(info, { sessions = false } = {}) {
       return entry.board
     })
   windows.set(info.id, entry)
-  load(win, 'session', { id: info.id, ...(sessions ? { sessions: '1' } : {}) })
+  load(win, 'session', { id: info.id, ...(sessions ? { sessions: '1' } : {}), ...query })
   // A link in rendered text opens in the system's browser; the window itself
   // never navigates away from the app's page.
   const openLink = (url) => /^https?:/i.test(url) && shell.openExternal(url)
@@ -132,7 +141,39 @@ function openSession(info, { sessions = false } = {}) {
     entry.board?.close()
     follower.close()
     windows.delete(info.id)
+    entry.onClosed?.()
   })
+  return entry
+}
+
+// The manual's window (R18.5), beside the window it was called from: a lesson
+// to play, or none for the list and the search (R18.10).
+async function openManual({ lesson = null, from = null } = {}) {
+  const open = windows.get(DEMO_ID)
+  if (open && !open.win.isDestroyed()) {
+    open.win.focus()
+    return open.win.webContents.send('manual:show', { lesson })
+  }
+  const info = await prepareDemo(MANUAL_SRC(), DEMO_DIR())
+  const near = from?.getBounds?.()
+  const bounds = near ? { x: near.x + 60, y: near.y + 40, width: 1200, height: 820 } : { width: 1200, height: 820 }
+  openSession(info, { demo: true, bounds, query: { manual: '1', ...(lesson != null ? { lesson: String(lesson) } : {}) } })
+  updateLive()
+}
+
+// A lesson's Replay or Back a step: a fresh copy of the demo, in a new window
+// where the old one was, which plays the lesson's earlier steps at once.
+async function resetManual(lesson, step) {
+  const old = windows.get(DEMO_ID)
+  const bounds = old && !old.win.isDestroyed() ? old.win.getBounds() : null
+  if (old && !old.win.isDestroyed()) {
+    await new Promise((done) => {
+      old.onClosed = done
+      old.win.destroy()
+    })
+  }
+  const info = await prepareDemo(MANUAL_SRC(), DEMO_DIR())
+  openSession(info, { demo: true, bounds, query: { manual: '1', lesson: String(lesson), step: String(step) } })
 }
 
 // A subagent's transcript: <session>/subagents/agent-<id>.jsonl beside the
@@ -153,8 +194,8 @@ async function withEffort(sessionFile, subs) {
 
 // Claude Code's end-of-turn report of the session's background work and
 // scheduled jobs (R10), as the watcher's hook keeps it; null where absent.
-async function readWork(id) {
-  const file = join(BOARDS, `${id}.work.json`)
+async function readWork(id, dir = BOARDS) {
+  const file = join(dir, `${id}.work.json`)
   try {
     const [text, st] = await Promise.all([readFile(file, 'utf8'), stat(file)])
     const work = parseWork(JSON.parse(text), st.mtimeMs)
@@ -189,7 +230,18 @@ function registerIpc() {
     for (const w of windows.values()) if (!w.win.isDestroyed()) w.win.webContents.send('settings:changed', settings)
     return settings
   })
-  ipcMain.handle('sessions:list', async () => (known = await listSessions(PROJECTS)))
+  // The manual's window lists the demo alone, so that a lesson never opens a
+  // real session.
+  ipcMain.handle('sessions:list', async (e) => {
+    const w = entryOf(e)
+    if (w?.demo) return [{ id: DEMO_ID, title: 'Demo: a CSV parser', cwd: join(DEMO_DIR(), 'csv-parser'), project: 'demo', file: w.file, modified: Date.now() }]
+    return (known = await listSessions(PROJECTS))
+  })
+  ipcMain.handle('manual:lessons', () => listLessons(MANUAL_SRC()))
+  ipcMain.handle('manual:open', (e, lesson) => openManual({ lesson: Number.isInteger(lesson) ? lesson : null, from: BrowserWindow.fromWebContents(e.sender) }))
+  ipcMain.handle('manual:reset', (e, lesson, step) => {
+    if (entryOf(e)?.demo && Number.isInteger(lesson) && Number.isInteger(step)) return resetManual(lesson, step)
+  })
   ipcMain.handle('live:get', () => live)
   ipcMain.handle('setup:check', () => installedMatches())
   ipcMain.handle('setup:open', () => openSetupInfo())
@@ -202,7 +254,7 @@ function registerIpc() {
     // Each delivered file, with whether it still exists (scratch folders are
     // cleared in time).
     const deliveries = (v.deliveries ?? []).map((d) => ({ ...d, files: d.files.map((p) => ({ path: p, exists: existsSync(p) })) }))
-    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), work: await readWork(v.id), project: w.project }
+    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), work: await readWork(v.id, w.dirs.boards), project: w.project, demo: w.demo }
   })
   // A subagent's own work (R9.2): its actions, its own subagents and its
   // report, read from its transcript beside the session's.
@@ -220,11 +272,11 @@ function registerIpc() {
   ipcMain.handle('session:detail', (e, actionId) => entryOf(e)?.follower.detail(actionId) ?? null)
   ipcMain.handle('memory:list', (e) => {
     const w = entryOf(e)
-    return w ? listMemory(join(PROJECTS, w.project, 'memory')) : null
+    return w ? listMemory(w.dirs.memory) : null
   })
   ipcMain.handle('memory:read', async (e, path) => {
     const w = entryOf(e)
-    const full = w && inside(join(PROJECTS, w.project, 'memory'), path)
+    const full = w && inside(w.dirs.memory, path)
     return full && full.endsWith('.md') ? readFile(full, 'utf8') : null
   })
   ipcMain.handle('board:open', async (e) => {
@@ -297,9 +349,9 @@ function watchProjects() {
 // Live state (R8): the facts from Claude Code, the transcript's tail of each
 // running session (why it waits, R8.4) and the board's hold, turned into a
 // state per listed session, sent to every window and counted on the Dock.
-async function boardStateOf(id) {
+async function boardStateOf(id, dir = BOARDS) {
   try {
-    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8')))
+    return cleanState(JSON.parse(await readFile(boardPaths(id, dir).state, 'utf8')))
   } catch {
     return null
   }
@@ -314,13 +366,20 @@ async function computeLive() {
     const board = facts ? await boardStateOf(s.id) : null
     states[s.id] = { ...sessionState({ live: facts, available: liveFacts.available, hold: board?.hold ?? 'off', tail }), away: Boolean(board?.away?.on) }
   }
+  const n = waitingCount(states)
+  // The manual's demo is always at work, and waits only on its own Hold; it is
+  // never counted on the Dock.
+  const demo = windows.get(DEMO_ID)
+  if (demo && !demo.win.isDestroyed()) {
+    const board = await boardStateOf(DEMO_ID, demo.dirs.boards)
+    states[DEMO_ID] = { ...sessionState({ live: { status: 'busy', since: Date.now() - 60_000 }, hold: board?.hold ?? 'off' }), away: Boolean(board?.away?.on) }
+  }
   live = { available: liveFacts.available, states }
   for (const w of BrowserWindow.getAllWindows()) {
     try {
       if (!w.isDestroyed() && !w.webContents.isDestroyed()) w.webContents.send('live:changed', live)
     } catch {} // a window closing as the update goes out
   }
-  const n = waitingCount(states)
   app.setBadgeCount(n)
 }
 // At most twice a second, so that a change shows within R8.1's two seconds.
@@ -338,6 +397,8 @@ function buildMenu() {
   const licenses = { label: 'Open Source Licenses…', click: () => openLicensesWindow() }
   const prefs = { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: () => openSettings() }
   const setupInfo = { label: 'Set-up Info…', click: () => openSetupInfo() }
+  // How do I… (R18.10): ⌘? on macOS, F1 on Ubuntu.
+  const howDoI = { label: 'How do I…', accelerator: isMac ? 'Cmd+Shift+/' : 'F1', click: () => openManual({ from: BrowserWindow.getFocusedWindow() }) }
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
       ...(isMac
@@ -353,7 +414,7 @@ function buildMenu() {
       { role: 'editMenu' },
       { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
       { role: 'windowMenu' },
-      { role: 'help', submenu: [setupInfo, about, licenses] },
+      { role: 'help', submenu: [howDoI, { type: 'separator' }, setupInfo, about, licenses] },
     ]),
   )
 }
