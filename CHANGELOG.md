@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.10.1] - 2026-11-14
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Bug fixes
+
+- Ship the garnet-board extension in the package (#80)
+
 ## [v0.10.0] - 2026-11-14
 
 ### Highlights
