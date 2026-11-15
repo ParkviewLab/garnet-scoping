@@ -275,6 +275,15 @@ function toScene(cx, cy) {
   const r = holderEl.getBoundingClientRect()
   return { x: (cx - r.left) / s.zoom.value - s.scrollX, y: (cy - r.top) / s.zoom.value - s.scrollY }
 }
+// For the manual's lessons (R18): where on screen the last element of a role
+// (question, answer, image) is drawn, at its centre; null where there is none.
+window.garnetBoardLocate = (role) => {
+  const e = live().findLast((x) => (role === 'image' ? x.type === 'image' : tag(x)?.role === role))
+  if (!e) return null
+  const c = toClient({ x: e.x + (e.width ?? 0) / 2, y: e.y + (e.height ?? 0) / 2 })
+  return { x: c.x, y: c.y }
+}
+
 function toClient(p) {
   const s = api.getAppState()
   const r = holderEl.getBoundingClientRect()
@@ -417,6 +426,7 @@ function typeQuestion(p, target, follow) {
   const r = overlayEl.getBoundingClientRect()
   const box = document.createElement('textarea')
   box.className = 'question-typing'
+  box.dataset.ui = 'question-typing'
   box.placeholder = follow ? 'Your follow-up, then Enter' : 'Your question, then Enter'
   box.style.left = `${at.x - r.left}px`
   box.style.top = `${at.y - r.top}px`
@@ -597,6 +607,7 @@ export async function mountBoard(container) {
   window.garnet.board.onState(showState)
   const holder = document.createElement('div')
   holder.className = 'board-canvas'
+  holder.dataset.ui = 'board-canvas'
   holderEl = holder
   overlayEl = container
   container.style.position = 'relative'

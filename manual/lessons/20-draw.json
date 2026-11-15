@@ -1,0 +1,61 @@
+{
+  "n": 20,
+  "title": "Draw shapes and connect them",
+  "group": "Working on the board",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: drag on the board to draw; the agent reads each shape and its text.",
+  "steps": [
+    {
+      "target": [
+        "board-canvas"
+      ],
+      "action": "point",
+      "caption": "The board is shared: you and the agent both draw on it, and the agent reads it as plain text."
+    },
+    {
+      "target": [
+        "testid:toolbar-rectangle"
+      ],
+      "action": "point",
+      "caption": "Choose a shape from the toolbar, then drag on the board to draw it. Double-click it to give it text."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "add": [
+          {
+            "id": "cache",
+            "kind": "rectangle",
+            "text": "cache",
+            "x": 0,
+            "y": 360
+          },
+          {
+            "kind": "arrow",
+            "from": "cache",
+            "to": "parser",
+            "text": "reads"
+          }
+        ]
+      },
+      "caption": "Here a shape is added below the reader, and joined to the parser."
+    },
+    {
+      "target": [
+        "testid:toolbar-arrow"
+      ],
+      "action": "point",
+      "caption": "To connect two shapes, draw an arrow from one to the other. It stays attached when they move."
+    },
+    {
+      "target": [
+        "testid:toolbar-rectangle"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: choose the rectangle tool, then drag on the board to draw one."
+    }
+  ]
+}

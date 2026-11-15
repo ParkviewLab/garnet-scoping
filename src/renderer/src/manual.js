@@ -20,24 +20,43 @@ const STEP_MIN_MS = 1600
 const PER_CHAR_MS = 55
 const REPLAY_GAP_MS = 700
 
-// The element a step names: each name a data-ui inside the one before it.
+// How a name is looked for: a data-ui name, or `testid:<id>` for the board
+// editor's own controls, which carry its data-testid.
+const selector = (name) => (name.startsWith('testid:') ? `[data-testid="${CSS.escape(name.slice(7))}"]` : `[data-ui="${CSS.escape(name)}"]`)
+
+// The element a step names: each name inside the one before it. `scene:<role>`
+// is an item drawn on the board (the last question, answer or image): the
+// board's surface, at that item's place.
 export function find(target, root = document) {
+  if (target[0]?.startsWith('scene:')) {
+    const at = window.garnetBoardLocate?.(target[0].slice(6))
+    const canvas = root.querySelector('[data-ui="board-canvas"]')
+    return at && canvas ? Object.assign(canvas, { manualAt: at }) : null
+  }
   let scope = root
   for (const name of target) {
-    const found = scope.querySelector(`[data-ui="${CSS.escape(name)}"]`)
+    const found = scope.querySelector(selector(name))
     if (!found) return null
     scope = found
   }
   return scope === root ? null : scope
 }
 
+// The point a step acts at: a board item's place, or the element's centre.
+function pointOf(step, node) {
+  if (step.target[0]?.startsWith('scene:') && node.manualAt) return node.manualAt
+  const r = node.getBoundingClientRect()
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+}
+
 // Whether an element is, or is inside, an element with the step's named path;
 // read when the person acts, since the Desk redraws its rows as it updates.
 export function within(node, target) {
-  let at = node?.closest?.(`[data-ui="${CSS.escape(target.at(-1))}"]`)
+  if (target[0]?.startsWith('scene:')) return Boolean(node?.closest?.('[data-ui="board-canvas"]'))
+  let at = node?.closest?.(selector(target.at(-1)))
   if (!at) return false
   for (const name of target.slice(0, -1).reverse()) {
-    at = at.parentElement?.closest(`[data-ui="${CSS.escape(name)}"]`)
+    at = at.parentElement?.closest(selector(name))
     if (!at) return false
   }
   return true
@@ -57,13 +76,14 @@ function act(step, node) {
   // The agent's side, written to the demo's board as the agent would.
   if (step.action === 'agent') return step.request && window.garnet.manual.agent(step.request)
   if (!node) return
-  const r = node.getBoundingClientRect()
-  const opts = { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, view: window }
+  const at = pointOf(step, node)
+  const opts = { bubbles: true, cancelable: true, clientX: at.x, clientY: at.y, view: window }
   if (step.action === 'click') node.click()
   // A panel's toggle, pressed only where the panel is off.
   else if (step.action === 'show') node.getAttribute('aria-pressed') !== 'true' && node.click()
   else if (step.action === 'dblclick') node.dispatchEvent(new MouseEvent('dblclick', opts))
   else if (step.action === 'menu') node.dispatchEvent(new MouseEvent('contextmenu', { ...opts, button: 2 }))
+  else if (step.action === 'key') node.dispatchEvent(new KeyboardEvent('keydown', { key: step.text ?? 'Enter', bubbles: true, cancelable: true }))
   else if (step.action === 'type' && 'value' in node) {
     node.focus()
     node.value = step.text ?? ''
@@ -171,12 +191,12 @@ export function startManual({ lesson: wanted, step: from }) {
     play(i)
   }
 
-  function movePointer(node) {
+  function movePointer(node, step) {
     if (!node) return (pointer.hidden = true)
-    const r = node.getBoundingClientRect()
+    const at = pointOf(step, node)
     pointer.hidden = false
-    pointer.style.left = `${r.left + r.width / 2 - 8}px`
-    pointer.style.top = `${r.top + r.height / 2 - 8}px`
+    pointer.style.left = `${at.x - 8}px`
+    pointer.style.top = `${at.y - 8}px`
   }
 
   function play(k) {
@@ -188,7 +208,10 @@ export function startManual({ lesson: wanted, step: from }) {
     controls()
     const node = step.target.length ? find(step.target) : null
     node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-    movePointer(node)
+    // The page itself never scrolls sideways: a menu at the board's edge would
+    // otherwise slide the whole window's content.
+    document.scrollingElement.scrollLeft = 0
+    movePointer(node, step)
     say(step.caption)
     let audioMs = 0
     if (step.audio && sound) {

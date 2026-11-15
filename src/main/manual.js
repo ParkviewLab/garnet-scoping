@@ -7,7 +7,7 @@
 // session (R18.5).
 
 import { readdir, readFile, writeFile, rm, cp } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
 
 export const DEMO_ID = '00000000-0000-4000-8000-00000000de30'
 
@@ -23,7 +23,7 @@ export function cleanLesson(raw) {
     .filter((s) => s && typeof s.caption === 'string')
     .map((s) => ({
       target: Array.isArray(s.target) ? s.target.map(String) : s.target ? [String(s.target)] : [],
-      action: ['point', 'click', 'show', 'menu', 'dblclick', 'type', 'wait', 'agent'].includes(s.action) ? s.action : 'point',
+      action: ['point', 'click', 'show', 'menu', 'dblclick', 'type', 'key', 'wait', 'agent'].includes(s.action) ? s.action : 'point',
       text: typeof s.text === 'string' ? s.text : null,
       // For an `agent` step: what the agent writes, as its request to the board.
       request: s.request && typeof s.request === 'object' ? s.request : null,
@@ -79,7 +79,8 @@ export function rebase(text, dir, now = Date.now(), age = LAST_AGE_MS) {
 
 // What an `agent` step writes into the demo's copy, as the agent would: a
 // request to its board, or an answer to the person's last aside. `$last` in
-// "discussed" stands for the last request still open.
+// "discussed" stands for the last request still open, and `$lastQuestion` in
+// "answers" for the last question still open.
 export async function agentStep(boards, request) {
   const state = JSON.parse(await readFile(join(boards, `${DEMO_ID}.state.json`), 'utf8').catch(() => '{}'))
   if (typeof request.aside === 'string') {
@@ -89,7 +90,12 @@ export async function agentStep(boards, request) {
   }
   const open = (state.discuss ?? []).filter((m) => m.status === 'open')
   const discussed = Array.isArray(request.discussed) ? request.discussed.map((d) => (d.id === '$last' ? { ...d, id: open.at(-1)?.id ?? null } : d)).filter((d) => d.id) : undefined
-  await writeFile(join(boards, `${DEMO_ID}.request.json`), JSON.stringify({ ...request, ...(discussed ? { discussed } : {}) }))
+  // __DEMO__ in a request (an image's path) is the copy's folder.
+  // `$lastQuestion` in "answers" stands for the last question still open.
+  const question = (state.questions ?? []).filter((q) => q.status === 'open').at(-1)
+  const answers = Array.isArray(request.answers) ? request.answers.map((a) => (a.id === '$lastQuestion' ? { ...a, id: question?.id ?? null } : a)).filter((a) => a.id) : undefined
+  const text = JSON.stringify({ ...request, ...(discussed ? { discussed } : {}), ...(answers ? { answers } : {}) }).replaceAll('__DEMO__', dirname(boards))
+  await writeFile(join(boards, `${DEMO_ID}.request.json`), text)
 }
 
 // A fresh copy of the demo in `to`: the session the manual window shows.

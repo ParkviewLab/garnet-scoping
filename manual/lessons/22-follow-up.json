@@ -1,0 +1,83 @@
+{
+  "n": 22,
+  "title": "Follow up and remove an exchange",
+  "group": "Working on the board",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: a follow-up joins the chain; Remove this exchange takes the whole chain away.",
+  "steps": [
+    {
+      "target": [
+        "board-canvas"
+      ],
+      "action": "menu",
+      "caption": "Here a question is asked on the board."
+    },
+    {
+      "target": [
+        "board-menu-add-question"
+      ],
+      "action": "click",
+      "caption": "Add question."
+    },
+    {
+      "target": [
+        "question-typing"
+      ],
+      "action": "type",
+      "text": "Why is the parser separate from the reader?",
+      "caption": "The question is typed…"
+    },
+    {
+      "target": [
+        "question-typing"
+      ],
+      "action": "key",
+      "text": "Enter",
+      "caption": "…and sent with Review."
+    },
+    {
+      "target": [
+        "board-review"
+      ],
+      "action": "click",
+      "caption": "Review sends it to the agent."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "answers": [
+          {
+            "id": "$lastQuestion",
+            "text": "So that the reader can serve other formats; the parser only splits fields."
+          }
+        ],
+        "reviewed": true
+      },
+      "caption": "The agent answers on the board, in a note joined to the question."
+    },
+    {
+      "target": [
+        "scene:answer"
+      ],
+      "action": "menu",
+      "caption": "Right-click the answer to follow up: the new question joins the same chain."
+    },
+    {
+      "target": [
+        "board-menu-remove-this-exchange"
+      ],
+      "action": "point",
+      "caption": "Remove this exchange takes away the question, the answers and the follow-ups together."
+    },
+    {
+      "target": [
+        "scene:answer"
+      ],
+      "action": "menu",
+      "try": true,
+      "caption": "Your turn: right-click the answer, to follow up or to remove the exchange."
+    }
+  ]
+}

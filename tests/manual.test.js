@@ -66,7 +66,9 @@ describe('every element a lesson names', () => {
   for (const m of sources.matchAll(/data-ui: ([a-z0-9, -]+)/g)) for (const n of m[1].split(',')) named.add(n.trim())
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   const labels = new Set([...sources.matchAll(/\['([^']+)', \(\)/g)].map((m) => slug(m[1])))
-  const exists = (name) => named.has(name) || (name.startsWith('menu-') && labels.has(name.slice(5))) || (name.startsWith('board-menu-') && labels.has(name.slice(11)))
+  // testid: names are the board editor's own controls, and scene: names items
+  // drawn on the board; neither is set by this app's code.
+  const exists = (name) => name.startsWith('testid:') || name.startsWith('scene:') || named.has(name) || (name.startsWith('menu-') && labels.has(name.slice(5))) || (name.startsWith('board-menu-') && labels.has(name.slice(11)))
   for (const f of readdirSync(join(MANUAL, 'lessons'))) {
     const l = cleanLesson(JSON.parse(readFileSync(join(MANUAL, 'lessons', f), 'utf8')))
     it(`exists for lesson ${f}`, () => {

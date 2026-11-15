@@ -1,0 +1,47 @@
+{
+  "n": 23,
+  "title": "Ask the agent to review the board",
+  "group": "Working on the board",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: Review stays lit until the agent has read the board.",
+  "steps": [
+    {
+      "target": [
+        "board-editing"
+      ],
+      "action": "point",
+      "caption": "While you draw, Editing is ticked: it tells the agent you are still changing the board."
+    },
+    {
+      "target": [
+        "board-review"
+      ],
+      "action": "point",
+      "caption": "When you are done, Review asks the agent to read the board now. It ends Editing, and sends your questions."
+    },
+    {
+      "target": [
+        "board-review"
+      ],
+      "action": "click",
+      "caption": "Review stays lit until the agent has read it."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "reviewed": true
+      },
+      "caption": "Here the agent has read it, and Review turns off."
+    },
+    {
+      "target": [
+        "board-review"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: press Review."
+    }
+  ]
+}
