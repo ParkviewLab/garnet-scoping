@@ -4,8 +4,9 @@
 
 A desktop app for macOS and Ubuntu that shows what a Claude Code session is doing, for the person working with it, and gives the person and the agent a board on which to draw together.
 
-It reads each session's transcript, the file Claude Code writes as the session runs, and lists the sessions on the machine, the most recent first. Opening one shows its window:
+It reads each session's transcript, the file Claude Code writes as the session runs, and opens on the most recently active session. Each session's window shows:
 
+- **Sessions:** every session on the machine with its live state (Working, Idle, Waiting for you, Not running), and, for one waiting, what it waits on and since when; by project, or all with those waiting first. The Dock icon counts the sessions waiting for you. Click a session to open its window.
 - **Desk:** the agent's plan and the step it is on, what it is doing now, what it is waiting on, the files it has read and changed, the project's memory notes, its last word and any question it has not had answered, and beneath them the session's trail, turn by turn.
 - **For you:** the files the agent has sent you in the session, newest first, with thumbnails for images. Click one to preview it in the app; right-click for Discuss and for opening it in its default app.
 - **Board:** an Excalidraw whiteboard for that session. The person drops shapes onto it, writes in them and connects them with lines and arrows; the agent reads the board as text and changes it by writing a request file.

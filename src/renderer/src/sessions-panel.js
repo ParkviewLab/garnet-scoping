@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // The Sessions panel (R8.6): every session with its live state (R8.1), why a
-// waiting one waits (R8.4), in two views (R8.3): by project, waiting first
-// in each group, or all sessions with those waiting first. A click opens the
-// session's window or brings it forward.
+// waiting one waits (R8.4), in two views (R8.3): by project, or all sessions
+// with those waiting first. A click opens the
+// session's window or brings it forward. By project, the groups and the
+// sessions in each are ordered by last activity, most recent first.
 
 import { ago, clock } from './util.js'
 
+const byTime = (a, b) => b.modified - a.modified
 const VIEW_KEY = 'garnet.sessions.view'
 const LABEL = { working: 'Working', idle: 'Idle', waiting: 'Waiting for you', 'not-running': 'Not running', unknown: 'Unknown' }
 
@@ -73,7 +75,8 @@ export function mountSessions(root, currentId) {
     const q = filterEl.value.trim().toLowerCase()
     const shown = sessions.filter((s) => !q || [s.title, s.cwd, s.firstMessage, s.project].some((v) => v && v.toLowerCase().includes(q)))
     if (!shown.length) return listEl.replaceChildren(el('p', 'muted', sessions.length ? 'No session matches.' : 'No Claude Code sessions found on this machine.'))
-    if (view === 'waiting') return listEl.replaceChildren(...[...shown].sort(waitingFirst).map(row))
+    if (view === 'waiting') return listEl.replaceChildren(...[...shown].sort(byTime).sort(waitingFirst).map(row))
+    shown.sort(byTime)
     const groups = new Map()
     for (const s of shown) {
       const key = s.cwd ?? s.project
@@ -83,7 +86,7 @@ export function mountSessions(root, currentId) {
     listEl.replaceChildren(
       ...[...groups].map(([folder, list]) => {
         const g = el('section', 'sessions-group')
-        g.append(el('h3', null, folder), ...[...list].sort(waitingFirst).map(row))
+        g.append(el('h3', null, folder), ...list.map(row))
         return g
       }),
     )
