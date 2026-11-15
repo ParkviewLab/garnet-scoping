@@ -59,6 +59,10 @@ window.addEventListener('keydown', (e) => e.key === 'Escape' && ($('viewer').hid
 // menu marks it with or without a note. Marks live in the session's state
 // file, where the agent's watcher sees them; the agent answers them there.
 let marks = []
+let notes = [] // the agent's notes (R14)
+let asides = [] // the person's asides (R16)
+let boardStateNow = null
+let delivery = { watching: true, delivered: [] } // receipts (R15)
 // The Discuss badge: lit while a request to discuss, outlined when turned
 // off or answered; a click toggles it.
 function badge(m, title) {
@@ -104,11 +108,16 @@ $('hold').addEventListener('click', () => {
 function setMarks(state) {
   showHold(state)
   marks = state?.discuss ?? []
+  notes = state?.notes ?? []
+  asides = state?.asides ?? []
+  showAway(state)
+  boardStateNow = state ?? boardStateNow
   renderDiscuss()
   if (view) {
     renderPresent()
     renderTrail()
     renderMemory()
+    renderSubagents()
   }
 }
 
@@ -143,6 +152,81 @@ function askNote(row) {
   area.focus()
 }
 
+// ---- Away (R17) ----
+function showAway(state) {
+  const a = state?.away ?? { on: false }
+  const btn = $('away')
+  btn.classList.toggle('active', a.on)
+  btn.setAttribute('aria-pressed', String(a.on))
+  btn.textContent = a.on ? `Away${a.until ? ` until ${a.until}` : ''}` : 'Away'
+  btn.title = a.on ? 'The agent knows you are away. Click when you are back: it will take you through what is pending, one item at a time.' : 'Tell the agent you are away: it keeps its questions for your return and carries on with what does not need you.'
+  // What happened while the person was away (R17.3), until dismissed.
+  const box = $('back-summary')
+  let seen = null
+  try {
+    seen = localStorage.getItem('garnet.back-seen')
+  } catch {}
+  if (!a.on && a.at && a.backAt && seen !== a.backAt) {
+    const within = (ts) => ts && ts >= a.at && ts <= a.backAt
+    const n = (state.notes ?? []).filter((x) => within(x.at)).length
+    const q = (state.questions ?? []).filter((x) => within(x.answeredAt)).length
+    const s = (state.asides ?? []).filter((x) => within(x.answeredAt)).length
+    box.replaceChildren(el('span', null, `While you were away (${clock(a.at)} to ${clock(a.backAt)}): ${n} note${n === 1 ? '' : 's'} from the agent, ${q} answer${q === 1 ? '' : 's'} on the board${s ? `, ${s} aside${s === 1 ? '' : 's'} answered` : ''}. The agent takes you through what is pending in the conversation.`))
+    const ok = el('button', null, 'Dismiss')
+    ok.type = 'button'
+    ok.addEventListener('click', () => {
+      try {
+        localStorage.setItem('garnet.back-seen', a.backAt)
+      } catch {}
+      box.hidden = true
+    })
+    box.append(ok)
+    box.hidden = false
+  } else box.hidden = true
+}
+$('away').addEventListener('click', () => {
+  const now = new Date().toISOString().replace(/\.\d+Z$/, 'Z')
+  const a = boardStateNow?.away ?? { on: false }
+  if (a.on) return window.garnet.board.setState({ away: { ...a, on: false, backAt: now } }).then(setMarks)
+  const body = el('div', 'note-form')
+  const until = el('input')
+  until.type = 'time'
+  const go = el('button', 'primary', 'I am away')
+  go.type = 'button'
+  go.addEventListener('click', () => {
+    $('viewer').hidden = true
+    window.garnet.board.setState({ away: { on: true, until: until.value || null, at: now, backAt: null } }).then(setMarks)
+  })
+  body.append(el('div', 'muted', 'Back about (optional):'), until, el('div', 'muted small', 'The agent keeps its questions for your return, carries on with work that does not need you, and assumes nothing in your place. When you click Away again, it takes you through what is pending, one item at a time.'), go)
+  showViewer('Away', body)
+})
+
+// An aside (R16): a quick question about a row, answered at once by a copy
+// of the session with no tools, while the agent works on undisturbed.
+function askAside(row) {
+  const body = el('div', 'note-form')
+  const area = el('textarea')
+  area.rows = 3
+  area.value = `Why "${row.text.slice(0, 80)}"?`
+  const go = el('button', 'primary', 'Ask aside')
+  go.type = 'button'
+  const send = () => {
+    const question = area.value.trim()
+    if (!question) return
+    $('viewer').hidden = true
+    const a = { id: `s${Date.now().toString(36)}`, panel: row.panel, key: row.key, text: row.text, question, at: new Date().toISOString().replace(/\.\d+Z$/, 'Z') }
+    window.garnet.board.setState({ asides: [...asides, a] }).then(setMarks)
+  }
+  go.addEventListener('click', send)
+  area.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) (e.preventDefault(), send())
+  })
+  body.append(el('div', 'muted', row.text), area, el('div', 'muted small', 'Answered at once by a copy of the session, which has no tools: it explains from what the session has done and can be wrong. It uses tokens. The agent is not interrupted.'), go)
+  showViewer('Ask aside', body)
+  area.focus()
+  area.select()
+}
+
 const menu = $('ctx-menu')
 function closeMenu() {
   menu.hidden = true
@@ -152,6 +236,7 @@ function showMenu(e, row, extra = []) {
   const items = [
     ['Discuss', () => mark(row)],
     ['Discuss, with a note…', () => askNote(row)],
+    ['Ask aside…', () => askAside(row)],
   ]
   const m = openMark(row.key)
   if (m) items.push(['Withdraw the discussion', () => withdraw(m.id)])
@@ -223,6 +308,20 @@ function markable(node, row, onClick = null, extra = []) {
   }
   const done = answeredMark(row.key)
   if (done?.answer) node.append(el('div', 'discuss-answer', `Answered: ${done.answer}`))
+  const aside = [...asides].reverse().find((a) => a.key === row.key)
+  if (aside) {
+    const box = el('div', 'aside-answer')
+    box.append(el('div', 'aside-q', `Aside: ${aside.question}`))
+    if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-board extension inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
+    else if (aside.answer) {
+      box.append(el('div', null, aside.answer), el('div', 'muted small', 'Answered by a copy of the session, with no tools: it can explain, not check. The agent was not interrupted.'))
+      const ask = el('button', 'aside-escalate', 'Ask the agent instead')
+      ask.type = 'button'
+      ask.addEventListener('click', (e) => (e.stopPropagation(), mark(row, aside.question)))
+      box.append(ask)
+    } else box.append(el('div', 'muted small', aside.error ?? 'No answer. Is the garnet-board extension installed (Set-up Info)?'))
+    node.append(box)
+  }
   return node
 }
 
@@ -242,7 +341,74 @@ function actionRow(a, { showAgo = false, panel = 'now' } = {}) {
   const li = el('li', `action${a.hasDetail ? ' detail' : ''}${a.isError ? ' error' : ''}${a.done ? '' : ' running'}`)
   li.append(el('span', 'text', a.text), el('span', 'when', showAgo ? ago(a.at) : clock(a.at)))
   if (a.target) li.title = a.target
+  // An action that started a subagent leads to its row (R9.3).
+  if (view?.subagents?.some((s) => s.id === a.id)) {
+    const link = el('button', 'to-subagent', 'Subagent')
+    link.type = 'button'
+    link.title = 'Show this subagent in the Subagents panel'
+    link.addEventListener('click', (e) => {
+      e.stopPropagation()
+      jumpTo({ panel: 'subagents', key: `subagent:${a.id}` })
+    })
+    li.append(link)
+  }
   return markable(li, { panel, key: `action:${a.id}`, text: a.text }, a.hasDetail ? () => showDetail(a) : null)
+}
+
+// ---- the subagents (R9) ----
+const openSubs = new Set()
+const subDetail = new Map() // agent id -> detail, once read
+const STATUS = { running: 'Running', finished: 'Finished', completed: 'Finished', stopped: 'Stopped without finishing', failed: 'Failed', killed: 'Stopped' }
+const tokens = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n))
+const duration = (ms) => (ms >= 60000 ? `${Math.round(ms / 60000)} min` : `${Math.max(1, Math.round(ms / 1000))} s`)
+
+function subagentRow(s, nested = false) {
+  const box = el('div', `subagent${openSubs.has(s.id) ? ' open' : ''}${nested ? ' nested' : ''}`)
+  const head = el('div', 'sub-head')
+  head.append(el('span', 'name', s.task), el('span', `state-badge ${s.status === 'running' ? 'working' : s.status === 'finished' || s.status === 'completed' ? 'idle' : 'waiting'}`, STATUS[s.status] ?? s.status))
+  const who = [s.type, [s.model, s.effort].filter(Boolean).join(', '), s.background ? 'background' : null].filter(Boolean).join(' · ')
+  const figs = [s.durationMs != null ? duration(s.durationMs) : s.status === 'running' ? `started ${ago(s.startedAt)}` : null, s.tokens != null ? `${tokens(s.tokens)} tokens` : null, s.toolCalls != null ? `${s.toolCalls} tool calls` : null].filter(Boolean).join(' · ')
+  head.append(el('span', 'meta', who), el('span', 'meta', figs))
+  box.append(head)
+  markable(head, { panel: 'subagents', key: `subagent:${s.id}`, text: `Subagent: ${s.task}` }, () => {
+    if (openSubs.has(s.id)) openSubs.delete(s.id)
+    else openSubs.add(s.id)
+    renderSubagents()
+  })
+  if (!openSubs.has(s.id)) return box
+  const body = el('div', 'sub-body')
+  const d = s.agentId ? subDetail.get(s.agentId) : null
+  if (s.agentId && !d) {
+    body.append(el('p', 'muted', 'Reading its transcript…'))
+    window.garnet.subagent(s.agentId).then((x) => {
+      subDetail.set(s.agentId, x ?? { actions: [], subagents: [] })
+      renderSubagents()
+    })
+  } else if (d) {
+    const ul = el('ul', 'actions')
+    for (const a of d.actions) ul.append(actionRow({ ...a, hasDetail: false }, { panel: 'subagents' }))
+    if (d.actions.length) body.append(ul)
+    else body.append(el('p', 'muted', 'No actions recorded.'))
+    for (const n of d.subagents ?? []) body.append(subagentRow(n, true))
+  }
+  if (s.report) {
+    const rep = el('div', 'sub-report')
+    rep.append(el('h3', null, 'Final report'), Object.assign(markdown(s.report), { className: 'markdown' }))
+    body.append(rep)
+  } else body.append(el('p', 'muted', s.status === 'running' ? 'No report yet: still running.' : 'No report.'))
+  if (!nested) {
+    const back = el('button', 'to-trail', 'Show in Trail')
+    back.type = 'button'
+    back.addEventListener('click', () => jumpTo({ panel: 'trail', key: `action:${s.id}` }))
+    body.append(back)
+  }
+  box.append(body)
+  return box
+}
+
+function renderSubagents() {
+  const list = view?.subagents ?? []
+  $('subagents').replaceChildren(...(list.length ? list.map((s) => subagentRow(s)) : [el('p', 'muted', 'This session has started no subagents.')]))
 }
 
 function pathList(entries, kind) {
@@ -260,20 +426,54 @@ function pathList(entries, kind) {
 // ---- the present state (R2) ----
 function renderPresent() {
   const plan = $('plan')
-  plan.replaceChildren(...view.plan.items.map((it) => markable(el('li', it.status, it.content), { panel: 'plan', key: `plan:${it.content}`, text: it.content })))
+  // A note the agent pinned to an item shows on the item (R14.2).
+  const noteOn = (panel, key) => notes.find((n) => n.status === 'open' && n.on.panel === panel && n.on.key === key)
+  const withNote = (node, panel, key) => {
+    const n = noteOn(panel, key)
+    if (n) node.append(el('div', 'note-badge', `From the agent: ${n.text}`))
+    return node
+  }
+  plan.replaceChildren(...view.plan.items.map((it) => withNote(markable(el('li', it.status, it.content), { panel: 'plan', key: `plan:${it.content}`, text: it.content }), 'plan', `plan:${it.content}`)))
   if (!view.plan.items.length) plan.replaceChildren(el('li', 'muted', 'No plan in this session.'))
 
   $('now').replaceChildren(...(view.now.length ? view.now.map((a) => actionRow(a, { showAgo: true })) : [el('li', 'muted', 'No actions yet.')]))
 
-  $('waiting').replaceChildren(
-    ...(view.waiting.length
-      ? view.waiting.map((w) => {
-          const li = el('li', 'action running')
-          li.append(el('span', 'text', w.text), el('span', 'when', since(w.startedAt)))
-          return li
-        })
-      : [el('li', 'muted', 'Nothing running in the background.')]),
-  )
+  // Waiting (R10): background work from the transcript at once, and from
+  // Claude Code's end-of-turn report, which also gives the scheduled jobs;
+  // the session's own wake-ups from the transcript.
+  const work = view.work
+  const rows = []
+  const seen = new Set()
+  for (const w of view.waiting) {
+    seen.add(w.id)
+    const li = el('li', 'action running')
+    li.append(el('span', 'text', w.text), el('span', 'when', since(w.startedAt)))
+    rows.push(li)
+  }
+  for (const t of work?.tasks ?? []) {
+    if (seen.has(t.id) || t.status !== 'running') continue
+    const li = el('li', 'action running')
+    li.append(el('span', 'text', t.text), el('span', 'when', 'running'))
+    rows.push(li)
+  }
+  const fmtPrompt = (p) => (p.split('\n')[0] || '').slice(0, 160)
+  const wakeRow = (when, recurring, prompt, full, key) => {
+    const li = el('li', 'action wakeup')
+    const text = el('span', 'text', `${recurring ? 'Recurs' : 'Wakes'} ${when}: ${fmtPrompt(prompt)}`)
+    li.append(text)
+    li.title = 'Click to show the whole prompt'
+    let whole = false
+    const toggle = () => {
+      whole = !whole
+      text.textContent = `${recurring ? 'Recurs' : 'Wakes'} ${when}: ${whole ? full : fmtPrompt(prompt)}`
+    }
+    return markable(li, { panel: 'now', key, text: `Wake-up ${when}` }, toggle)
+  }
+  for (const c of work?.crons ?? []) rows.push(wakeRow(c.next ? `at ${clock(c.next)}` : `on "${c.schedule}"`, c.recurring, c.prompt, c.prompt, `cron:${c.id}`))
+  for (const w of view.wakeups ?? []) if (w.at > Date.now()) rows.push(wakeRow(`at ${clock(w.at)}`, false, w.reason || w.prompt, w.prompt || w.reason, `wake:${w.setAt}`))
+  if (!rows.length) rows.push(el('li', 'muted', 'Nothing running in the background, and no wake-up set.'))
+  rows.push(el('li', 'muted small', work ? `Claude Code's last report: ${ago(work.at)}.` : 'No end-of-turn report from Claude Code yet (the watcher hook writes it); shown from the transcript.'))
+  $('waiting').replaceChildren(...rows)
 
   const lw = view.lastWord
   const box = $('last-word')
@@ -283,6 +483,8 @@ function renderPresent() {
   if (lw?.text) box.append(Object.assign(markdown(lw.text), { className: 'speech markdown' }))
   if (lw?.recap) box.append(el('div', 'recap', lw.recap))
   if (lw?.ask) box.append(el('div', 'awaiting', `Asked: ${lw.ask}`))
+  const lwNote = notes.find((n) => n.status === 'open' && n.on.panel === 'lastword')
+  if (lwNote) box.append(el('div', 'note-badge', `From the agent: ${lwNote.text}`))
   if (lw?.agentSpokeLast) box.append(el('div', 'awaiting', `The agent has spoken last${lw.at ? ` (${ago(lw.at)})` : ''}: your turn.`))
   else if (lw?.working) box.append(el('div', 'muted', 'The agent is at work.'))
   if (!box.childNodes.length) box.append(el('span', 'muted', 'Nothing yet.'))
@@ -410,6 +612,7 @@ function turnEl(t, i, isLast) {
     else if (it.type === 'mid-turn') body.append(el('div', 'item mid-turn', `Sent mid-turn: ${it.text}`))
     else if (it.type === 'notification') body.append(el('div', 'item notification', `Finished in the background: ${it.text}`))
     else if (it.type === 'interrupt') body.append(el('div', 'item muted', 'Interrupted by the person.'))
+    else if (it.type === 'compaction') body.append(compactionEl(it, i, j))
   }
   flush()
   if (t.recap) body.append(el('div', 'recap', t.recap))
@@ -418,6 +621,42 @@ function turnEl(t, i, isLast) {
   if (t.notes.length) body.append(el('h2', null, 'Memory notes'), pathList(t.notes, 'notes'))
   sec.append(body)
   return sec
+}
+
+// A compaction (R11): when, who started it, how much context it replaced; it
+// opens to the summary the agent continues from, its first paragraph and
+// then the whole.
+const compactionOpen = new Map() // key -> 'first' | 'all'
+function compactionEl(it, i, j) {
+  const key = `compaction:${i}:${j}`
+  const box = el('div', 'item compaction')
+  const who = it.trigger === 'manual' ? 'by you (/compact)' : it.trigger === 'auto' ? 'by Claude Code (the context was full)' : ''
+  const size = it.preTokens != null ? ` · ${tokens(it.preTokens)} tokens of context${it.postTokens != null ? ` replaced by a summary of ${tokens(it.postTokens)}` : ''}` : ''
+  const line = el('div', 'compaction-line', `Context compacted at ${clock(it.at)} ${who}${size}`)
+  box.append(line)
+  markable(line, { panel: 'trail', key, text: `Compaction at ${clock(it.at)}` }, () => {
+    compactionOpen.set(key, compactionOpen.has(key) ? undefined : 'first')
+    if (!compactionOpen.get(key)) compactionOpen.delete(key)
+    renderTrail()
+  })
+  const state = compactionOpen.get(key)
+  if (state && it.summary) {
+    const paras = it.summary.split(/\n\s*\n/)
+    const shown = state === 'all' ? it.summary : paras[0]
+    const sum = el('div', 'compaction-summary')
+    sum.append(el('h3', null, 'The summary the agent continues from'), Object.assign(markdown(shown), { className: 'markdown' }))
+    if (state !== 'all' && paras.length > 1) {
+      const more = el('button', 'show-earlier', `Show all (${it.summary.split(/\s+/).length} words)`)
+      more.type = 'button'
+      more.addEventListener('click', () => {
+        compactionOpen.set(key, 'all')
+        renderTrail()
+      })
+      sum.append(more)
+    }
+    box.append(sum)
+  } else if (state) box.append(el('p', 'muted', 'No summary was recorded.'))
+  return box
 }
 
 function renderTrail() {
@@ -509,10 +748,10 @@ function renderMemory() {
 // Which are on is remembered across windows; at least one stays on. The
 // board takes half the window, on the side set in Settings, or all of it
 // when it is the only panel on.
-const PANELS = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'board']
+const PANELS = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'subagents', 'board']
 const PANELS_KEY = 'garnet.panels'
-const DEFAULT_PANELS = { sessions: false, desk: true, trail: false, memory: false, discuss: false, board: true }
-const SIDE = ['sessions', 'desk', 'trail', 'memory', 'discuss'] // the panels that share the Desk's half
+const DEFAULT_PANELS = { sessions: false, desk: true, trail: false, memory: false, discuss: false, subagents: false, board: true }
+const SIDE = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'subagents'] // the panels that share the Desk's half
 
 function loadPanels() {
   try {
@@ -580,7 +819,7 @@ window.garnet.live.get().then(showMyState)
 // header's flag button. Choosing an entry shows its item in its own panel
 // (turned on, a Trail turn opened, as needed), scrolled into view, with a
 // highlight that fades over two seconds.
-const WHERE = { plan: 'Plan', now: 'Now', trail: 'Trail', memory: 'Memory', foryou: 'For you' }
+const WHERE = { plan: 'Plan', now: 'Now', trail: 'Trail', memory: 'Memory', foryou: 'For you', subagents: 'Subagents' }
 
 function discussEntries() {
   const open = marks.filter((m) => m.status === 'open').reverse()
@@ -597,6 +836,7 @@ function discussItem(m, after) {
   body.append(el('div', 'discuss-meta', meta))
   if (m.note) body.append(el('div', 'discuss-note', `“${m.note}”`))
   if (m.answer) body.append(el('div', 'discuss-ans', `Answered: ${m.answer}`))
+  if (m.status !== 'off') body.append(receipt(`discuss ${m.id} ${m.at}`, m.status === 'answered'))
   item.append(flag, body)
   item.title = 'Show it where it is'
   item.addEventListener('click', () => {
@@ -605,6 +845,85 @@ function discussItem(m, after) {
   })
   return item
 }
+
+// ---- the agent's notes (R14) ----
+const NOTE_WHERE = { plan: 'Plan', foryou: 'For you', board: 'Board', lastword: 'Last word' }
+function answerNote(n, status, reply = null) {
+  const next = notes.map((x) => (x.id === n.id ? { ...x, status, reply, answeredAt: new Date().toISOString().replace(/\.\d+Z$/, 'Z') } : x))
+  window.garnet.board.setState({ notes: next }).then(setMarks)
+}
+function noteItem(n) {
+  const item = el('div', `discuss-item note ${n.status}`)
+  const body = el('div', 'discuss-body')
+  body.append(el('div', 'note-from', 'From the agent'), el('div', 'discuss-what', n.text))
+  body.append(el('div', 'discuss-meta', [NOTE_WHERE[n.on.panel] ?? n.on.panel, n.on.panel === 'plan' ? n.on.key.slice(5) : n.on.panel === 'foryou' ? basename(n.on.key.slice(5)) : null, n.at ? ago(n.at) : null].filter(Boolean).join(' · ')))
+  if (n.status === 'open') {
+    const row = el('div', 'note-actions')
+    const confirm = el('button', null, 'Confirm')
+    const correct = el('button', null, 'Correct…')
+    const dismiss = el('button', null, 'Dismiss')
+    for (const b of [confirm, correct, dismiss]) b.type = 'button'
+    confirm.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'confirmed')))
+    dismiss.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'dismissed')))
+    correct.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const input = el('input', 'note-correction')
+      input.placeholder = 'Your correction, then Enter'
+      input.addEventListener('click', (ev) => ev.stopPropagation())
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' && input.value.trim()) answerNote(n, 'corrected', input.value.trim())
+        if (ev.key === 'Escape') input.replaceWith(row)
+      })
+      row.replaceWith(input)
+      input.focus()
+    })
+    row.append(confirm, correct, dismiss)
+    body.append(row)
+  } else body.append(el('div', 'discuss-ans', n.status === 'corrected' ? `You corrected: ${n.reply}` : `You ${n.status} it.`))
+  body.append(receipt(n.status === 'open' ? null : `note ${n.id} ${n.answeredAt}`, n.status !== 'open', n.status === 'open' ? 'pinned' : 'answer'))
+  item.append(body)
+  if (n.on.panel === 'plan' || n.on.panel === 'foryou') {
+    item.title = 'Show it where it is'
+    item.addEventListener('click', () => jumpTo({ panel: n.on.panel, key: n.on.key }))
+  }
+  return item
+}
+
+// ---- receipts (R15) ----
+// Sent, then delivered (the watcher woke the session with it), then
+// answered. Delivered means the session was woken, not that it was read.
+function receipt(key, answered, kind = 'signal') {
+  const sentLabel = kind === 'pinned' ? 'Pinned by the agent' : 'Sent'
+  const delivered = answered || (key != null && delivery.delivered.includes(key))
+  const box = el('div', 'receipt')
+  const step = (text, on, bad = false) => el('span', `step${on ? ' on' : ''}${bad ? ' bad' : ''}`, text)
+  if (kind === 'pinned') return box.append(step(sentLabel, true), step('Waiting for your answer', false)), box
+  box.append(step('Sent', true), step(delivered ? 'Delivered' : delivery.watching ? 'Delivering…' : 'Not delivered', delivered, !delivered && !delivery.watching), step('Answered', answered))
+  box.title = 'Delivered means the watcher woke the session with it, not that the agent has read it.'
+  return box
+}
+function showDelivery(d) {
+  if (d) delivery = d
+  const warn = $('watch-warning')
+  const waiting = marks.filter((m) => m.status === 'open').length + (boardStateNow?.review ? 1 : 0) + (boardStateNow?.hold === 'requested' ? 1 : 0)
+  warn.hidden = delivery.watching
+  const holdKey = boardStateNow?.hold === 'requested' ? `hold ${boardStateNow.holdAt}` : null
+  if (holdKey) $('hold').title = delivery.delivered.includes(holdKey) ? 'Hold delivered: the agent was woken with it' : delivery.watching ? 'Hold sent; delivering…' : 'Hold sent, but no watcher is running, so it has not reached the agent'
+  warn.textContent = `No watcher is running for this session, so your signals are not reaching it${waiting ? ` (${waiting} waiting)` : ''}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
+  renderDiscuss()
+}
+// What Claude installed from Set-up Info is from an earlier version (P5).
+window.garnet.setup.check().then((r) => {
+  if (!r || r.ok) return
+  const box = $('setup-stale')
+  const open = el('button', null, 'Open Set-up Info')
+  open.type = 'button'
+  open.addEventListener('click', () => window.garnet.setup.open())
+  box.replaceChildren(el('span', null, `garnet-scoping's hooks or extension in Claude Code are from an earlier version, or missing (${r.stale.join(', ')}); some features need them. Paste the text in Set-up Info into a session to update them. `), open)
+  box.hidden = false
+})
+window.garnet.board.onDelivery(showDelivery)
+window.garnet.board.delivery().then((d) => d && showDelivery(d))
 
 function renderDiscuss() {
   const entries = discussEntries()
@@ -615,7 +934,14 @@ function renderDiscuss() {
   btn.classList.toggle('lit', openCount > 0)
   btn.title = openCount ? `${openCount} request${openCount === 1 ? '' : 's'} to discuss` : 'No open requests to discuss'
   const list = $('discuss-list')
-  list.replaceChildren(...(entries.length ? entries.map((m) => discussItem(m)) : [el('p', 'muted', 'Nothing marked to discuss in this session.')]))
+  const openNotes = notes.filter((n) => n.status === 'open')
+  const noteNodes = notes.length ? [el('h3', null, `Notes from the agent${openNotes.length ? ` (${openNotes.length} awaiting you)` : ''}`), ...[...openNotes, ...notes.filter((n) => n.status !== 'open')].reverse().map(noteItem), el('h3', null, 'Your requests to discuss')] : []
+  list.replaceChildren(...noteNodes, ...(entries.length ? entries.map((m) => discussItem(m)) : [el('p', 'muted', 'Nothing marked to discuss in this session.')]))
+  if (openNotes.length) {
+    btn.hidden = false
+    btn.append(el('span', 'note-count', `${openNotes.length} from the agent`))
+    btn.classList.add('lit')
+  }
   const drop = $('discuss-drop')
   if (!drop.hidden) fillDrop()
 }
@@ -651,6 +977,11 @@ function jumpTo(m) {
   } else if (m.panel === 'memory') {
     want.memory = true
     container = 'memory'
+  } else if (m.panel === 'subagents') {
+    want.subagents = true
+    container = 'subagents'
+    openSubs.add(key.slice(9))
+    renderSubagents()
   } else if (m.panel === 'foryou') {
     want.desk = true
     container = 'for-you'
@@ -709,6 +1040,7 @@ async function refresh() {
   renderFacts()
   renderPresent()
   renderTrail()
+  renderSubagents()
   memory = await window.garnet.listMemory()
   renderMemory()
 }

@@ -307,6 +307,70 @@ input[type='search'] {
   color: var(--fg);
   background: var(--raised);
 }
+.desk > .subagents-col {
+  flex: 3 1 0;
+}
+.subagent {
+  border-bottom: 1px solid var(--line);
+  padding: 6px 0;
+}
+.subagent.nested {
+  margin-left: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  border-bottom: none;
+}
+.sub-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.sub-head:hover {
+  background: var(--raised);
+}
+.sub-head .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sub-head .meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.sub-body {
+  padding: 4px 6px 6px 16px;
+}
+.sub-report {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.to-subagent,
+.to-trail {
+  font-size: 11px;
+  padding: 0 6px;
+  margin-left: 6px;
+}
+.item.compaction {
+  border: 1px dashed var(--muted);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 8px 0;
+}
+.compaction-line {
+  cursor: pointer;
+  color: var(--warn);
+}
+.compaction-summary {
+  margin-top: 8px;
+  max-height: 420px;
+  overflow: auto;
+}
 .desk > .memory-col {
   flex: 2.2 1 0;
 }
@@ -959,4 +1023,134 @@ input[type='search'] {
 .discuss-item > .discuss-badge {
   align-self: flex-start;
   margin-top: 2px;
+}
+
+.muted.small {
+  font-size: 12px;
+}
+
+/* ---- questions on the board (R13) ---- */
+.board-canvas {
+  position: relative;
+}
+.board-menu {
+  position: absolute;
+  z-index: 20;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+}
+.board-menu[hidden] {
+  display: none;
+}
+.board-menu button {
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+}
+.board-menu button:hover {
+  background: var(--panel);
+}
+.question-typing {
+  position: absolute;
+  z-index: 20;
+  width: 240px;
+  height: 70px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 2px solid #1d9e75;
+  background: #e1f5ee;
+  color: #085041;
+  font: 15px Helvetica, Arial, sans-serif;
+  resize: none;
+}
+
+.question-typing-arm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 19;
+}
+.question-typing-arm path {
+  fill: #e1f5ee;
+  stroke: #1d9e75;
+  stroke-width: 2;
+}
+
+/* ---- notes from the agent (R14) and receipts (R15) ---- */
+.note-badge {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #5c3d0a;
+  color: #fac775;
+  font-size: 12px;
+}
+.note-from {
+  color: #fac775;
+  font-size: 11px;
+}
+.note-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.note-actions button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.note-correction {
+  width: 100%;
+  margin-top: 6px;
+}
+.note-count {
+  margin-left: 6px;
+  color: #fac775;
+  font-size: 11px;
+}
+.receipt {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+.receipt .step {
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.receipt .step.on {
+  color: var(--fg);
+  background: var(--raised);
+}
+.receipt .step.bad {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+/* ---- asides (R16) ---- */
+.aside-answer {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border: 1px dashed var(--muted);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.aside-q {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.aside-escalate {
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 2px 8px;
 }

@@ -13,7 +13,7 @@ const shape = (id, type, text, extra = {}) => [
 // Waits until cond() holds, or fails after ms.
 async function until(cond, ms = 5000) {
   const end = Date.now() + ms
-  while (!cond()) {
+  while (!(await cond())) {
     if (Date.now() > end) throw new Error('timed out waiting')
     await new Promise((r) => setTimeout(r, 25))
   }
@@ -40,6 +40,21 @@ describe('merging', () => {
     const mine = [{ id: 'a', version: 3, x: 1 }, { id: 'b', version: 1, x: 1 }]
     const theirs = [{ id: 'a', version: 2, x: 9 }, { id: 'b', version: 2, x: 9 }, { id: 'c', version: 1, x: 9 }]
     expect(mergeElements(mine, theirs).map((e) => [e.id, e.x])).toEqual([['a', 1], ['b', 9], ['c', 9]])
+  })
+})
+
+describe('notes from the agent (R14)', () => {
+  it('reads where a note is pinned', async () => {
+    const { noteTarget } = await import('../src/main/board.js')
+    expect(noteTarget('plan:Write tests')).toEqual({ panel: 'plan', key: 'plan:Write tests' })
+    expect(noteTarget('file:/tmp/a.png')).toEqual({ panel: 'foryou', key: 'file:/tmp/a.png' })
+    expect(noteTarget('shape:abc')).toEqual({ panel: 'board', key: 'abc' })
+    expect(noteTarget('last-message')).toEqual({ panel: 'lastword', key: 'lastword' })
+    expect(noteTarget('somewhere')).toBeNull()
+  })
+  it('keeps a pinned note and the person’s answer', () => {
+    const s = cleanState({ notes: [{ id: 'n1', on: { panel: 'plan', key: 'plan:A' }, text: 'Assumed:  by date', status: 'corrected', reply: 'by name', answeredAt: 'T' }, { id: 'n2', on: { panel: 'nowhere' } }] })
+    expect(s.notes).toEqual([{ id: 'n1', on: { panel: 'plan', key: 'plan:A' }, text: 'Assumed: by date', at: null, status: 'corrected', reply: 'by name', answeredAt: 'T' }])
   })
 })
 
@@ -77,6 +92,21 @@ describe('the board on disk', () => {
     b.close()
   })
 
+  it('writes the outcome of each request for the board tools (R12.1)', async () => {
+    const b = openBoard('s5', { dir, onRequest() {}, onExternal() {} })
+    await new Promise((r) => setTimeout(r, 50))
+    await writeFile(b.paths.request, JSON.stringify({ requestId: 'q1', add: [{ kind: 'rectangle', text: 'Q' }] }))
+    await until(async () => (await readFile(b.paths.outcome, 'utf8').catch(() => '')).includes('q1'))
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q1', queued: true })
+    b.ready()
+    await b.outcome({ requestId: 'q1', added: 1, problems: [] })
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q1', ok: true, added: 1 })
+    await writeFile(b.paths.request, JSON.stringify({ requestId: 'q2', reviewed: true }))
+    await until(async () => (await readFile(b.paths.outcome, 'utf8').catch(() => '')).includes('q2'))
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8'))).toMatchObject({ requestId: 'q2', reviewed: true })
+    b.close()
+  })
+
   it('reports a request that is not valid JSON', async () => {
     const got = []
     const b = openBoard('s3', { dir, onRequest: (r) => got.push(r), onExternal() {} })
@@ -84,6 +114,9 @@ describe('the board on disk', () => {
     await writeFile(b.paths.request, '{ not json')
     await until(() => got.length > 0)
     expect(got[0].error).toMatch(/not valid JSON/)
+    // It is removed, and its outcome says why (R7.4).
+    await expect(readFile(b.paths.request)).rejects.toThrow()
+    expect(JSON.parse(await readFile(b.paths.outcome, 'utf8')).error).toMatch(/not valid JSON/)
     b.close()
   })
 
@@ -143,8 +176,8 @@ describe('the board on disk', () => {
   })
 
   it('cleans a state read from disk', () => {
-    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null })
-    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null })
+    expect(cleanState({ editing: 'yes', review: true, reviewAt: 5, x: 1 })).toEqual({ editing: false, review: true, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [], asides: [], away: { on: false, until: null, at: null, backAt: null } })
+    expect(cleanState(null)).toEqual({ editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [], asides: [], away: { on: false, until: null, at: null, backAt: null } })
     const marks = cleanState({ discuss: [{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', status: 'open', answer: 'x' }, { id: 'd2', panel: 'elsewhere', key: 'k' }, null] }).discuss
     expect(marks).toEqual([{ id: 'd1', panel: 'plan', key: 'plan:0', text: 'One', note: null, at: null, status: 'open', answer: null, answeredAt: null }])
   })

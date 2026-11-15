@@ -90,6 +90,42 @@ At start the app opens a window on the most recently active session with the pan
 
 **Tests** use synthetic session files and synthetic `claude agents` output, never the machine's own.
 
+## Subagents and compaction (R9, R11)
+
+**Subagents.** The session model (`transcript/session.js`) records each Agent call as a subagent: its type and task from the call, its id, model and (for a foreground one) duration, tokens and tool calls from the call's result, and for a background one the same figures and its report from the completion notice. The main process adds each one's effort from the last records of its own transcript, `<session>/subagents/agent-<id>.jsonl`, and reads that transcript whole when the person opens the row (`subagent:detail`), for its actions and its own subagents. The Subagents panel lists them newest first; a row opens to the actions, the nested subagents and the final report; "Show in Trail" and the action's "Subagent" button lead each to the other.
+
+**Compaction.** `records.js` recognises the boundary record (`system`, subtype `compact_boundary`, with `compactMetadata.trigger`, `preTokens` and `postTokens`) and the summary record by `isCompactSummary`, never by its wording. The model places a compaction item in the Trail where it happened, carrying the summary; the Trail shows it as a marker that opens to the summary's first paragraph and then the whole.
+
+## Background work and wake-ups (R10)
+
+The watcher's hook (`setup/garnet-rewake.sh`), which Claude Code already runs at the end of every turn, keeps that turn's input whole as `<session>.work.json` in the app's folder: Claude Code gives it the session's running background work (`background_tasks`) and its scheduled jobs (`session_crons`). `src/main/work.js` reads it, showing each piece of work by its description, never its command, and works out each job's next run from its five-field schedule. Waiting shows the work the transcript shows at once, adds what only the report shows, lists the jobs and the session's own wake-ups (its ScheduleWakeup calls, from the transcript) with their next time and the first line of their prompt, opening to the whole, and says how old the report is, or that there is none yet. An installation from Set-up Info before this version has no such report until the hook is installed again.
+
+## Board tools for the agent (R12)
+
+`setup/garnet-board/` is a Claude Code extension (a mod) that Claude installs from Set-up Info. It registers three tools: `board_read` (the rendition), `board_change` (add, relabel and remove, as in a request) and `board_answer` (Discuss answers, a finished review, a confirmed hold). Each writes the same request file the agent can write by hand, tagged with a request id, and waits up to four seconds for `<session>.outcome.json`, which the app writes for every request: what it changed and any problems, that the change waits until the board is open, that the request was not valid JSON (the request is then removed), or what it did with the signals. The tool answers the agent in plain text, the only answer shape Claude Code accepts from such a tool (probed 2026-11-14). The extension finds the boards folder as the app does (`GARNET_SCOPING_BOARDS`, else `~/.garnet-scoping/boards`). The request file remains for sessions without the extension (R12.3).
+
+## Questions on the board (R13)
+
+A right-click on the board opens the app's own menu (Add question, Remove this exchange on any piece of one, and More… for the editor's own menu), caught before the editor's. Add question opens a balloon to type into, its arm already drawn to the point clicked; Enter places it. A balloon is a rounded rectangle with its text, and its arm is two locked line elements over its edge (a filled wedge that covers the border where the arm leaves, and the arm's two sides) plus a small dot at the tip, the one piece of the arm the person drags. `renderer/src/questions.js` holds the geometry; after every change the board recomputes each arm so that it leaves the side facing its tip, and the tip stays on what it points at (a fixed place on a shape, moving with it; the nearest edge of the answer a follow-up follows; or a point of the board). Each piece carries `customData.garnet` with its role and its exchange.
+
+A question is kept in the board's state as a draft, with Editing ticked, until the person presses Review, which sends every draft at once; the watcher's Review signal says how many questions it holds. Each question records what its arm points at and a picture of the area round it (`<session>.q-<id>.png`, from the editor's own export). The agent answers with `answers` in a request, or the board tool; the window places each answer as a note in the agent's colour, joined to its question, and a right-click on the note asks a follow-up whose arm points at it. Remove this exchange, deleting a question or an answer, or the agent's `removeExchange` removes every piece of the exchange at once. The rendition lists the exchanges under "## Questions", and leaves their pieces out of the shapes.
+
+## Notes from the agent and receipts (R14, R15)
+
+**Notes.** The agent pins a one-line note with `notes` in a request or the board tool, naming its item as `plan:<step>`, `file:<path>`, `shape:<id>` or `last-message`; the board's state keeps it. The Desk shows an open note on its item, in the agent's colour, and lists every note at the head of the Discuss panel, where the person confirms it, corrects it with a line, or dismisses it. The watcher reports each answer as a signal; the agent never waits for it.
+
+**Receipts.** The watcher already records the signals it has delivered (`<session>.watched`) and its own process (`<session>.watcher.pid`). The app reads both, whenever they change, and shows each request to discuss as Sent, Delivered (the watcher woke the session with it, labelled as not meaning read) and Answered, the Hold button's title likewise; and a warning under the header whenever no watcher is running for the session, with the number of signals waiting and how they will next be delivered.
+
+## Asides and Away (R16, R17)
+
+**Asides.** "Ask aside…" on any row's menu keeps the question in the board's state. The garnet-board extension inside Claude Code polls the state every 1.5 s, answers each new aside with one tool-less completion over the session's own transcript (`$.model.fork`, low effort), and writes the answer to `<session>.asides.json`; the app, the state file's only writer, folds it in, and the row shows it under a label saying a copy with no tools answered, with "Ask the agent instead" to turn it into a Discuss mark. A fork started from a timer answered in under a second (probed 2026-11-14); it sees the session as of its last request.
+
+**Away.** The header's Away button keeps `away` in the state (on, the time given for the return, when it began, when it ended). The watcher tells the agent when the person goes away (keep questions for their return, carry on with what does not need them, assume nothing) and when they come back (welcome them and take them through what is pending, one item at a time); the Sessions panel marks the session; on return, a line under the header counts what came while the person was away.
+
+## Installing for this build (P5)
+
+Set-up Info's text now also has Claude copy `setup/garnet-board` to `~/.claude/mods/garnet-board` and replace, rather than skip, an earlier "garnet-scoping signals" section in `~/.claude/CLAUDE.md`, whose rules now cover questions, notes, Away and the board tools. The app reads, and never writes, what is installed: each session window compares the installed hooks and extension with the ones it ships, byte for byte, and says when they are from an earlier version or missing, with a button to open Set-up Info.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

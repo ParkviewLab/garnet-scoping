@@ -23,6 +23,12 @@ id="${CLAUDE_CODE_SESSION_ID:-$(printf '%s' "$input" | sed -n 's/.*"session_id" 
 [ -n "$id" ] || exit 0
 dir="$HOME/.garnet-scoping/boards"
 mkdir -p "$dir"
+# At the end of each turn, Claude Code tells this hook the session's running
+# background work and its scheduled jobs; garnet-scoping shows them in
+# Waiting (R10). The hook's input is kept whole, written in one move.
+if printf '%s' "$input" | grep -qE '"hook_event_name" *: *"Stop"'; then
+  printf '%s' "$input" > "$dir/$id.work.json.tmp" && mv -f "$dir/$id.work.json.tmp" "$dir/$id.work.json"
+fi
 pidfile="$dir/$id.watcher.pid"
 if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then exit 0; fi
 echo $$ > "$pidfile"

@@ -17,11 +17,14 @@ import { follow } from './follower.js'
 import { openBoard, inheritBoard } from './board.js'
 import { openAboutWindow, openLicensesWindow } from './about.js'
 import { loadSettings, saveSettings, clean } from './settings.js'
-import { openSetupInfo, installChannel } from './setupInfo.js'
+import { openSetupInfo, installChannel, installedMatches } from './setupInfo.js'
 import { watchLive } from './live/index.js'
 import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
-import { readEdge } from './transcript/reader.js'
-import { boardPaths, cleanState } from './board.js'
+import { readEdge, readFrom } from './transcript/reader.js'
+import { createSession, snapshot } from './transcript/session.js'
+import { classify } from './transcript/records.js'
+import { boardPaths, cleanState, BOARDS } from './board.js'
+import { parseWork, nextRun } from './work.js'
 
 const CLAUDE = join(homedir(), '.claude')
 const PROJECTS = join(CLAUDE, 'projects')
@@ -106,6 +109,7 @@ function openSession(info, { sessions = false } = {}) {
         onRequest: (r) => send('board:request', r),
         onExternal: (elements) => send('board:external', elements),
         onPending: () => send('board:pending'),
+        onDelivery: (d) => send('board:delivery', d),
         onState: (state) => {
           send('board:state', state)
           updateLive()
@@ -129,6 +133,36 @@ function openSession(info, { sessions = false } = {}) {
     follower.close()
     windows.delete(info.id)
   })
+}
+
+// A subagent's transcript: <session>/subagents/agent-<id>.jsonl beside the
+// session's own.
+const subagentFile = (sessionFile, agentId) => join(sessionFile.replace(/\.jsonl$/, ''), 'subagents', `agent-${agentId}.jsonl`)
+// Each subagent's effort and model, from the last records of its own
+// transcript (the session's records carry only the model).
+async function withEffort(sessionFile, subs) {
+  return Promise.all(
+    subs.map(async (s) => {
+      if (!s.agentId) return s
+      const tail = await readEdge(subagentFile(sessionFile, s.agentId), 16 * 1024, true).catch(() => [])
+      const last = tail.map(classify).filter((r) => r.kind === 'assistant').at(-1)
+      return { ...s, effort: last?.effort ?? null, model: s.model ?? last?.model ?? null }
+    }),
+  )
+}
+
+// Claude Code's end-of-turn report of the session's background work and
+// scheduled jobs (R10), as the watcher's hook keeps it; null where absent.
+async function readWork(id) {
+  const file = join(BOARDS, `${id}.work.json`)
+  try {
+    const [text, st] = await Promise.all([readFile(file, 'utf8'), stat(file)])
+    const work = parseWork(JSON.parse(text), st.mtimeMs)
+    if (work) for (const c of work.crons) c.next = nextRun(c.schedule)
+    return work
+  } catch {
+    return null
+  }
 }
 
 const entryOf = (e) => [...windows.values()].find((w) => w.win.webContents === e.sender)
@@ -157,6 +191,8 @@ function registerIpc() {
   })
   ipcMain.handle('sessions:list', async () => (known = await listSessions(PROJECTS)))
   ipcMain.handle('live:get', () => live)
+  ipcMain.handle('setup:check', () => installedMatches())
+  ipcMain.handle('setup:open', () => openSetupInfo())
   ipcMain.handle('sessions:open', (_e, info) => openSession(info))
   ipcMain.handle('session:view', async (e) => {
     const w = entryOf(e)
@@ -166,7 +202,20 @@ function registerIpc() {
     // Each delivered file, with whether it still exists (scratch folders are
     // cleared in time).
     const deliveries = (v.deliveries ?? []).map((d) => ({ ...d, files: d.files.map((p) => ({ path: p, exists: existsSync(p) })) }))
-    return { ...v, deliveries, project: w.project }
+    return { ...v, deliveries, subagents: await withEffort(w.file, v.subagents ?? []), work: await readWork(v.id), project: w.project }
+  })
+  // A subagent's own work (R9.2): its actions, its own subagents and its
+  // report, read from its transcript beside the session's.
+  ipcMain.handle('subagent:detail', async (e, agentId) => {
+    const w = entryOf(e)
+    if (!w || typeof agentId !== 'string' || !/^[\w-]+$/.test(agentId)) return null
+    const file = subagentFile(w.file, agentId)
+    const { records } = await readFrom(file, 0).catch(() => ({ records: [] }))
+    const { state, apply } = createSession(agentId)
+    for (const r of records) apply(r)
+    const v = snapshot(state)
+    const actions = v.turns.flatMap((t) => t.items.filter((it) => it.type === 'action')).map(({ id, text, target, at, done, isError }) => ({ id, text, target, at, done, isError }))
+    return { actions, subagents: await withEffort(w.file, v.subagents), effort: v.facts.effort, model: v.facts.model }
   })
   ipcMain.handle('session:detail', (e, actionId) => entryOf(e)?.follower.detail(actionId) ?? null)
   ipcMain.handle('memory:list', (e) => {
@@ -193,6 +242,9 @@ function registerIpc() {
   ipcMain.handle('session:discuss', (e, op) => entryOf(e)?.boardReady.then((b) => b.discuss(op)))
   ipcMain.handle('board:save', (e, scene) => entryOf(e)?.boardReady.then((b) => b.save(scene)))
   ipcMain.handle('board:ready', (e) => entryOf(e)?.boardReady.then((b) => b.ready()))
+  ipcMain.handle('board:outcome', (e, o) => entryOf(e)?.boardReady.then((b) => b.outcome(o)))
+  ipcMain.handle('board:delivery', (e) => entryOf(e)?.boardReady.then((b) => b.delivery()))
+  ipcMain.handle('board:picture', (e, qid, bytes) => entryOf(e)?.boardReady.then((b) => b.picture(qid, bytes)))
   // Files the agent delivered in this session: opened with their default
   // app, or read for the in-app preview. Only delivered files are served.
   const delivered = (e, p) => {
@@ -245,11 +297,11 @@ function watchProjects() {
 // Live state (R8): the facts from Claude Code, the transcript's tail of each
 // running session (why it waits, R8.4) and the board's hold, turned into a
 // state per listed session, sent to every window and counted on the Dock.
-async function holdOf(id) {
+async function boardStateOf(id) {
   try {
-    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8'))).hold
+    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8')))
   } catch {
-    return 'off'
+    return null
   }
 }
 async function computeLive() {
@@ -259,10 +311,15 @@ async function computeLive() {
     const facts = liveFacts.bySession[s.id] ?? null
     let tail = null
     if (facts) tail = pendingFromTail(await readEdge(s.file, TAIL, true).catch(() => []))
-    states[s.id] = sessionState({ live: facts, available: liveFacts.available, hold: facts ? await holdOf(s.id) : 'off', tail })
+    const board = facts ? await boardStateOf(s.id) : null
+    states[s.id] = { ...sessionState({ live: facts, available: liveFacts.available, hold: board?.hold ?? 'off', tail }), away: Boolean(board?.away?.on) }
   }
   live = { available: liveFacts.available, states }
-  for (const w of BrowserWindow.getAllWindows()) w.webContents.send('live:changed', live)
+  for (const w of BrowserWindow.getAllWindows()) {
+    try {
+      if (!w.isDestroyed() && !w.webContents.isDestroyed()) w.webContents.send('live:changed', live)
+    } catch {} // a window closing as the update goes out
+  }
   const n = waitingCount(states)
   app.setBadgeCount(n)
 }

@@ -210,3 +210,32 @@ describe('helpers', () => {
     expect(compareVersions('2.1.299', '2.1.30')).toBeGreaterThan(0)
   })
 })
+
+describe('subagents and compaction', () => {
+  it('records a foreground subagent with its figures and report (R9)', () => {
+    const v = build([
+      F.human('go'),
+      F.assistant([F.tool('a1', 'Agent', { subagent_type: 'searcher', description: 'Find the reader', prompt: 'x' })]),
+      F.result('a1', 'Found it in records.js', { agentId: 'ag1', resolvedModel: 'claude-sonnet-5-5', totalDurationMs: 4000, totalTokens: 12000, totalToolUseCount: 3, status: 'completed' }),
+    ])
+    expect(v.subagents[0]).toMatchObject({ type: 'searcher', task: 'Find the reader', agentId: 'ag1', model: 'claude-sonnet-5-5', status: 'finished', durationMs: 4000, tokens: 12000, toolCalls: 3, report: 'Found it in records.js' })
+  })
+  it('finishes a background subagent from its completion notice', () => {
+    const v = build([
+      F.assistant([F.tool('a2', 'Agent', { description: 'Check docs', run_in_background: true })]),
+      F.result('a2', 'Launched', { agentId: 'ag2', isAsync: true, resolvedModel: 'claude-opus-5-5' }),
+      F.injected('<task-notification><task-id>ag2</task-id><status>completed</status><summary>done</summary><result>All current.</result><usage>subagent_tokens: 5000\ntool_uses: 4\nduration_ms: 9000</usage></task-notification>'),
+    ])
+    expect(v.subagents[0]).toMatchObject({ background: true, status: 'finished', report: 'All current.', tokens: 5000, toolCalls: 4, durationMs: 9000 })
+  })
+  it('marks a compaction in the Trail with its summary, never as the person (R11)', () => {
+    const boundary = { ...F.human('x'), type: 'system', subtype: 'compact_boundary', compactMetadata: { trigger: 'manual', preTokens: 494493, postTokens: 25821 } }
+    delete boundary.message
+    const summary = { ...F.human('This session is being continued from a previous conversation.'), isCompactSummary: true }
+    delete summary.origin
+    const v = build([F.human('before'), boundary, summary, F.human('after')])
+    const items = v.turns.flatMap((t) => t.items)
+    expect(items.find((it) => it.type === 'compaction')).toMatchObject({ trigger: 'manual', preTokens: 494493, postTokens: 25821, summary: 'This session is being continued from a previous conversation.' })
+    expect(v.turns.map((t) => t.human?.text)).not.toContain('This session is being continued from a previous conversation.')
+  })
+})

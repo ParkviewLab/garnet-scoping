@@ -94,6 +94,8 @@ export function createSession(id = null) {
     plan: { source: null, items: [] },
     background: new Map(), // task id -> { id, text, startedAt, finishedAt, status }
     deliveries: [], // files the agent sent the person: { id, files, caption, at }
+    subagents: new Map(), // tool-use id -> subagent the session started (R9)
+    wakeups: [], // ScheduleWakeup calls: { at (when it fires), reason, prompt, setAt } (R10.2)
     // Earlier sessions this one continues: a resumed or forked conversation
     // begins with the earlier records, which keep their own session id.
     lineage: [],
@@ -240,6 +242,28 @@ export function createSession(id = null) {
             }
             t.items.push(action)
             s.pending.set(part.id, action)
+            if (part.name === 'ScheduleWakeup' && !part.input.stop && Number.isFinite(part.input.delaySeconds)) {
+              const setAt = Date.parse(r.at)
+              if (Number.isFinite(setAt)) s.wakeups.push({ at: setAt + part.input.delaySeconds * 1000, reason: String(part.input.reason ?? ''), prompt: String(part.input.prompt ?? ''), setAt })
+            }
+            if (part.name === 'ScheduleWakeup' && part.input.stop) s.wakeups = []
+            if (part.name === 'Agent' || part.name === 'Task') {
+              s.subagents.set(part.id, {
+                id: part.id,
+                agentId: null,
+                type: String(part.input.subagent_type ?? 'general-purpose'),
+                task: String(part.input.description ?? 'Subagent'),
+                model: part.input.model ?? null,
+                background: Boolean(part.input.run_in_background),
+                startedAt: r.at,
+                finishedAt: null,
+                status: 'running',
+                durationMs: null,
+                tokens: null,
+                toolCalls: null,
+                report: null,
+              })
+            }
             const how = FILE_TOOLS[part.name]
             if (how) touch(t, d.target, how)
           }
@@ -260,6 +284,21 @@ export function createSession(id = null) {
           p.done = true
           p.isError = res.isError
           p.output = res.text.length > OUTPUT_LIMIT ? res.text.slice(0, OUTPUT_LIMIT) + '\n…' : res.text
+          const sub = s.subagents.get(res.id)
+          if (sub) {
+            const m = r.meta ?? {}
+            sub.agentId = m.agentId ? String(m.agentId) : sub.agentId
+            if (m.resolvedModel) sub.model = m.resolvedModel
+            if (m.isAsync) sub.background = true
+            else {
+              sub.status = res.isError ? 'stopped' : 'finished'
+              sub.finishedAt = r.at
+              sub.report = res.text
+              if (Number.isFinite(m.totalDurationMs)) sub.durationMs = m.totalDurationMs
+              if (Number.isFinite(m.totalTokens)) sub.tokens = m.totalTokens
+              if (Number.isFinite(m.totalToolUseCount)) sub.toolCalls = m.totalToolUseCount
+            }
+          }
           const bgId = r.meta?.backgroundTaskId ?? (r.meta?.isAsync ? r.meta.agentId : null)
           if (bgId && r.results.length === 1) {
             s.background.set(String(bgId), { id: String(bgId), text: p.text, startedAt: r.at ?? p.at, finishedAt: null, status: 'running' })
@@ -267,12 +306,31 @@ export function createSession(id = null) {
         }
         break
       case 'notification': {
+        const sub = r.taskId ? [...s.subagents.values()].find((x) => x.agentId === r.taskId) : null
+        if (sub) {
+          sub.status = r.status === 'completed' || r.status === 'finished' ? 'finished' : (r.status ?? 'finished')
+          sub.finishedAt = r.at
+          if (r.result) sub.report = r.result
+          if (Number.isFinite(r.durationMs)) sub.durationMs = r.durationMs
+          if (Number.isFinite(r.tokens)) sub.tokens = r.tokens
+          if (Number.isFinite(r.toolCalls)) sub.toolCalls = r.toolCalls
+        }
         const b = r.taskId ? s.background.get(r.taskId) : null
         if (b) {
           b.finishedAt = r.at
           b.status = r.status ?? 'finished'
         }
         turn().items.push({ type: 'notification', text: r.summary ?? 'Background work finished', status: r.status, at: r.at })
+        break
+      }
+      case 'compaction':
+        turn().items.push({ type: 'compaction', trigger: r.trigger, preTokens: r.preTokens, postTokens: r.postTokens, at: r.at, summary: null })
+        break
+      case 'compact-summary': {
+        const items = turn().items
+        const marker = [...items].reverse().find((it) => it.type === 'compaction' && it.summary == null)
+        if (marker) marker.summary = r.text
+        else items.push({ type: 'compaction', trigger: null, preTokens: null, postTokens: null, at: r.at, summary: r.text })
         break
       }
       case 'title':
@@ -358,6 +416,10 @@ export function snapshot(s) {
     now: actions,
     waiting: [...s.background.values()].filter((b) => b.status === 'running'),
     deliveries: s.deliveries.slice(-50).reverse(),
+    // The subagents the session started, newest first (R9).
+    subagents: [...s.subagents.values()].reverse(),
+    // The wake-ups the session set; the window shows those still to come.
+    wakeups: s.wakeups.slice(-5),
     // The earlier sessions, the most recent first.
     lineage: [...s.lineage].reverse(),
     lastWord: last ? { text: last.closing, recap: last.recap, ask: last.ask, at: last.closingAt, agentSpokeLast, working: running } : null,
