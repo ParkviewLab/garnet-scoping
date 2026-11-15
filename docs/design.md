@@ -10,7 +10,7 @@ An Electron app in plain JavaScript, built with electron-vite and packaged with 
 
 - **Main** (`src/main/`): finds and reads the transcripts and memory stores, watches them, keeps the session models, owns the board files, and refuses every network request.
 - **Preload** (`src/preload/`): a narrow bridge, `window.garnet`, with read calls and change events; the board's save and load are the only writes it exposes.
-- **Renderer** (`src/renderer/`): two pages, the session list and the session window (Desk and board); under the proposed R8 design, one, with the list as a panel of the window.
+- **Renderer** (`src/renderer/`): the session window (its panels, the board among them), and a page shown only when the machine has no session at all.
 
 ## Reading transcripts
 
@@ -59,9 +59,9 @@ A request is compact:
 
 The app expands added shapes and arrows with Excalidraw's own skeleton conversion, so that text sits in its shape and arrows are bound to the shapes they join, then merges the result into the board. A change to the board file from outside the window is merged element by element, the higher `version` winning; the board is written whole to a temporary file and renamed into place.
 
-## Live state and the Sessions panel (proposed, R8)
+## Live state and the Sessions panel (R8)
 
-Proposed on 2026-11-14 for R8; not built. The interface was settled with the owner through a clickable mock-up of the Sessions panel in a session window.
+The interface was settled with the owner through a clickable mock-up of the Sessions panel in a session window.
 
 **Sources.** A new module, `src/main/live/`, is the one place that knows Claude Code's live-state format, as `transcript/` is for the transcript's (R6.1, P10).
 
@@ -80,13 +80,13 @@ Proposed on 2026-11-14 for R8; not built. The interface was settled with the own
 
 **Delivery.** The module emits `live:changed` with the state of every session at most twice a second, so that a change reaches the window within R8.1's two seconds.
 
-**The Sessions panel (R8.6)** replaces the list page (`renderer/src/list.js` and `index.html`) and the list window. It is a panel of the session window, beside Desk, Trail, Memory, Discuss and Board in the header's toggles (D9), and shows:
+**The Sessions panel (R8.6)** (`renderer/src/sessions-panel.js`) replaces the list window; the list page remains only for a machine with no session. It is a panel of the session window, beside Desk, Trail, Memory, Discuss and Board in the header's toggles (D9), and shows:
 
 - each session's title, folder, state badge and, when it waits, its reason and since when;
-- two views, By project (waiting first within each group) and All, waiting first (R8.3);
+- three views (R8.3): Waiting first (all sessions, those waiting first), Recent first (by project, ordered by last activity) and Alphabetical (projects by name);
 - a click on a session opens its window, or brings it forward.
 
-At start the app opens a window on the most recently active session with the panel on. The Dock badge is `app.setBadgeCount` with the number of sessions waiting; on macOS it needs the person's permission for notifications, asked once; on Ubuntu it shows where the `.deb`'s desktop file lets the dock count it (Q8's ruling).
+At start the app opens a window on the most recently active session with the panel on. The Dock badge is `app.setBadgeCount` with the number of sessions waiting; on Ubuntu it shows where the `.deb`'s desktop file lets the dock count it (Q8's ruling).
 
 **Tests** use synthetic session files and synthetic `claude agents` output, never the machine's own.
 

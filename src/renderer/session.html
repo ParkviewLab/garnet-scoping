@@ -11,16 +11,22 @@
   <body class="session-page">
     <header class="bar">
       <div class="title-block">
-        <h1 id="title">Session</h1>
+        <h1 id="title">Session</h1><span id="live-state" class="live-state"></span>
         <div id="facts" class="facts"></div>
       </div>
       <button id="discuss-btn" class="discuss-btn" type="button" hidden title="Your requests to discuss"></button>
       <button id="hold" class="hold" type="button" aria-pressed="false" title="Ask the agent to stop after its current step">Hold</button>
-      <nav class="tabs" aria-label="Panels"><button id="tog-desk" type="button" aria-pressed="false">Desk</button><button id="tog-trail" type="button" aria-pressed="false">Trail</button><button id="tog-memory" type="button" aria-pressed="false">Memory</button><button id="tog-discuss" type="button" aria-pressed="false">Discuss</button><button id="tog-board" type="button" aria-pressed="false">Board</button></nav>
+      <nav class="tabs" aria-label="Panels"><button id="tog-sessions" type="button" aria-pressed="false">Sessions</button><button id="tog-desk" type="button" aria-pressed="false">Desk</button><button id="tog-trail" type="button" aria-pressed="false">Trail</button><button id="tog-memory" type="button" aria-pressed="false">Memory</button><button id="tog-discuss" type="button" aria-pressed="false">Discuss</button><button id="tog-board" type="button" aria-pressed="false">Board</button></nav>
     </header>
     <div id="drift" class="drift" hidden></div>
     <div id="stage" class="stage board-right">
     <main id="desk" class="desk">
+      <section id="pane-sessions" class="sessions-col">
+        <div class="sessions-head"><h2>Sessions</h2><span class="views"><button type="button" data-view="waiting">Waiting first</button><button type="button" data-view="project">Recent first</button><button type="button" data-view="name">Alphabetical</button></span></div>
+        <input class="sessions-filter" type="search" placeholder="Filter by title or folder" autocomplete="off" />
+        <p class="sessions-note muted" hidden>Live state is unavailable: Claude Code's session files and its session listing could not be read, so states are not shown.</p>
+        <div class="sessions-list"></div>
+      </section>
       <section id="pane-desk" class="present">
         <div class="card"><h2>Plan</h2><ol id="plan" class="plan"></ol></div>
         <div class="card"><h2>Now</h2><ul id="now" class="actions"></ul></div>
