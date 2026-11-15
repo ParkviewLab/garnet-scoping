@@ -40,7 +40,7 @@ export function setupTexts() {
   const mcp = JSON.stringify({ mcpServers: { garnet: { command: binary, args: [channelScript], env: { ELECTRON_RUN_AS_NODE: '1' } } } }, null, 2)
   const prompt = `Please set up garnet-scoping for all my Claude Code sessions. Read each file before installing it.
 
-1. Copy ${join(setup, 'garnet-watch.sh')}, ${join(setup, 'garnet-rewake.sh')} and ${join(setup, 'garnet-session-start.sh')} into ~/.claude/hooks/ and make them executable.
+1. Copy ${join(setup, 'garnet-watch.sh')}, ${join(setup, 'garnet-rewake.sh')} and ${join(setup, 'garnet-session-start.sh')} into ~/.claude/hooks/ and make them executable. Copy each to a temporary name in that folder and move it over the old one, never overwrite it in place: a watcher still running the old copy reads its script as it goes.
 2. In ~/.claude/settings.json, keeping every other hook already there but replacing any earlier garnet hook, add three command hooks:
    - SessionStart, matcher "startup|resume": bash ~/.claude/hooks/garnet-session-start.sh
    - SessionStart, matcher "resume" (not "startup"): bash ~/.claude/hooks/garnet-rewake.sh, with "asyncRewake": true and "timeout": 86400
@@ -56,21 +56,29 @@ Nothing needs starting by hand: from the end of this turn on, Claude Code runs t
 }
 
 // Whether what Claude installed from this text matches what this version of
-// the app ships (P5): the hooks and the extension, compared byte for byte.
+// the app ships (P5): the hooks and the extension's files, compared byte for byte.
 // Read only; nothing in the Claude configuration directory is written.
+// The extension's files, as the repository's setup/garnet-board holds them.
+export const BOARD_FILES = ['.claude-plugin/plugin.json', 'hooks/hooks.json', 'hooks/register.ts']
+
 export async function installedMatches() {
   const { readFile } = await import('node:fs/promises')
   const setup = join(resources(), 'setup')
   const claude = join(homedir(), '.claude')
   const pairs = [
     ...['garnet-watch.sh', 'garnet-rewake.sh', 'garnet-session-start.sh'].map((f) => [join(setup, f), join(claude, 'hooks', f)]),
-    [join(setup, 'garnet-board', 'hooks', 'register.ts'), join(claude, 'mods', 'garnet-board', 'hooks', 'register.ts')],
+    ...BOARD_FILES.map((f) => [join(setup, 'garnet-board', f), join(claude, 'mods', 'garnet-board', f)]),
   ]
   const stale = []
+  const unshipped = []
   for (const [shipped, installed] of pairs) {
     const [a, b] = await Promise.all([readFile(shipped).catch(() => null), readFile(installed).catch(() => null)])
-    if (a && (!b || !a.equals(b))) stale.push(installed.replace(homedir(), '~'))
+    // A file this app should ship but does not is a packaging fault, not a
+    // stale install; it is logged, since pasting the text again cannot mend it.
+    if (!a) unshipped.push(shipped)
+    else if (!b || !a.equals(b)) stale.push(installed.replace(homedir(), '~'))
   }
+  if (unshipped.length) console.error('garnet-scoping: files missing from this build:', unshipped.join(', '))
   return { ok: !stale.length, stale }
 }
 
