@@ -1,0 +1,54 @@
+{
+  "n": 28,
+  "title": "Preview and open the files the agent sent you",
+  "group": "Setting up",
+  "panels": [
+    "panel-for-you"
+  ],
+  "done": "That is it: the file opens in the preview; open it in its own app or show it in the Finder from there.",
+  "steps": [
+    {
+      "target": [
+        "panel-for-you"
+      ],
+      "action": "point",
+      "caption": "When the agent sends you a file, For you lists it, with the agent's line about it."
+    },
+    {
+      "target": [
+        "delivery-file"
+      ],
+      "action": "click",
+      "caption": "Click it to preview it here: text, pictures and PDFs."
+    },
+    {
+      "target": [
+        "file-open"
+      ],
+      "action": "point",
+      "caption": "From the preview, open it in its own app, or show it in the Finder or the file manager."
+    },
+    {
+      "target": [
+        "file-discuss"
+      ],
+      "action": "point",
+      "caption": "Discuss asks the agent about the file, as for any row."
+    },
+    {
+      "target": [
+        "viewer-close"
+      ],
+      "action": "click",
+      "caption": "Close the preview when you are done."
+    },
+    {
+      "target": [
+        "delivery-file"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: click the file to preview it."
+    }
+  ]
+}

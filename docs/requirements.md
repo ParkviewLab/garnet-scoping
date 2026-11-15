@@ -264,6 +264,26 @@ R18.3. The manual works without a network connection: lessons, captions and voic
 
 R18.4. The manual is designed before any lesson is made: the list of lessons and where each is offered, the script of each, how its animation is produced and kept current as the interface changes, and the voice. That design is put to the owner, as every design is.
 
+R18.5. A lesson plays in a manual window of its own, which opens beside the person's session window, on a demo session shipped with the app. The person's own session stays in view while a lesson plays, and nothing a lesson does reaches a real session: it sends no signal and changes no board.
+
+R18.6. When a lesson has played, it asks the person to do its step themselves on the demo ("Your turn: press Hold on the demo") and confirms when they have. The person can skip this.
+
+R18.7. While a lesson plays, the person can pause and resume it, go back one step, replay it from the start, show or hide the captions, and turn the voice off or on; a counter shows the step. There is no speed control: a lesson is under thirty seconds and can be paused or stepped back.
+
+R18.8. The voice-over is spoken in phonorheos's voice bf_emma, a voice no session speaks with, so that the manual is never mistaken for an agent.
+
+R18.9. The lessons, each one task, in five groups:
+
+- **Getting around:** 1. Find the sessions waiting for you. 2. Read the Dock count (macOS only; on Ubuntu the count reaches only some launchers). 3. Switch between Waiting first, Recent first and Alphabetical. 4. Find a session by title or folder. 5. Open another session's window. 6. Turn panels on and off.
+- **Following the agent:** 7. Read the Desk at a glance. 8. See why a session is waiting. 9. Follow the Trail turn by turn. 10. Read what the agent keeps in Memory. 11. See what the agent's subagents are doing. 12. Spot a compaction and read its summary. 13. Check the work running in the background and the wake-ups.
+- **Talking to the agent:** 14. Ask the agent about a row (Discuss). 15. Ask an aside without interrupting. 16. Pause the agent with Hold. 17. Tell the agent you are away, and come back. 18. Answer a note the agent pinned for you. 19. Check that a signal reached the agent.
+- **Working on the board:** 20. Draw shapes and connect them. 21. Ask a question on the board. 22. Follow up and remove an exchange. 23. Ask the agent to review the board. 24. Mark up a mock-up the agent placed.
+- **Setting up:** 25. Set up Claude Code with Set-up Info. 26. Update the install when the app says it is stale. 27. Choose the board's side in Settings. 28. Preview and open the files the agent sent you.
+
+R18.10. A lesson is found from a **?** at the right of each panel's header, which lists that panel's lessons, and from **How do I…** in the Help menu (⌘? on macOS; F1 on Ubuntu, where F1 is the usual key for help), which opens the manual window with a search over every lesson's title and captions.
+
+R18.11. A lesson stays correct as the interface changes: a check fails when an element a lesson acts on no longer exists, so a lesson cannot silently show what the app no longer has.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -282,6 +302,7 @@ R18.4. The manual is designed before any lesson is made: the list of lessons and
 - **Asides:** accepted (R16), demonstrated in a mock-up.
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
 - **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
+- **The manual's design**, ruled 2026-11-14 and 2026-11-15 on mock-ups: a manual window of its own with a demo session (R18.5); each lesson played, then tried on the demo, with a skip (R18.6); the controls of R18.7, without speed; the voice bf_emma, chosen by ear from five (R18.8); the 28 lessons of R18.9; the entry points of R18.10.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation); pins re-given to the agent after a compaction (what must survive a compaction is kept on disk, in memory notes, the board and the repository, which the agent can read again).
 
 ### Proposed defaults
@@ -296,6 +317,8 @@ R18.4. The manual is designed before any lesson is made: the list of lessons and
 - P12. **Receipts** are read from what the watcher already writes in the app's folder: `<session>.watcher.pid` (whether a watcher is running, checked against a live process) and `<session>.watched` (the signals it has delivered). The channel records what it delivers in the same way. Reason: both files exist today and nothing reads them (verified 2026-11-14).
 - P13. **Asides** are answered by a single tool-less completion over the session's own transcript, the prefix served from Claude Code's prompt cache where it is still warm (`$.model.fork`, in use in a mod on this machine). Probed 2026-11-14 in the desktop app: a fork started while the agent was running a 25-second command answered in 2.9 s, before the command ended, without interrupting the agent. It sees the session as of the agent's last request, so an aside knows everything up to the step in progress but not that step's own result, and its answer says so.
 - P14. **Voice-over** is spoken by phonorheos, the lab's local speech app, when the lessons are made, and the audio ships with the app; phonorheos today only plays speech and keeps it in memory (checked 2026-11-14: no endpoint returns audio or writes a file), so making the voice-over needs a way to render speech to a file added to phonorheos first, a change in that repository.
+- P15. **Lessons replay the interface, not video:** each lesson is a script of steps (point at an element, click, type, wait), each step naming the element it acts on and its caption, which the manual window plays on the app's own interface with an overlaid pointer. Reason: a recording goes stale with every interface change and weighs tens of megabytes, while a script names elements, so R18.11's check can find a lesson whose element has gone, and the same named element checks the person's own try (R18.6).
+- P16. **The demo session** is a fixture shipped with the app: a transcript, a board and a state file in a folder of its own, read by the same code as a real session, so that a lesson shows the real panels; the manual window writes signals only to that folder, never to the boards folder.
 
 ### Open questions
 

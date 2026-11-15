@@ -1,0 +1,50 @@
+{
+  "n": 4,
+  "title": "Find a session by title or folder",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: clear the filter to see every session again.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "With many sessions, the filter finds one by its title or its folder."
+    },
+    {
+      "target": [
+        "sessions-filter"
+      ],
+      "action": "type",
+      "text": "login",
+      "caption": "Type part of a title or a folder: here, login."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "point",
+      "caption": "Only the sessions that match are listed."
+    },
+    {
+      "target": [
+        "sessions-filter"
+      ],
+      "action": "type",
+      "text": "",
+      "caption": "Clear it, and they are all listed again."
+    },
+    {
+      "target": [
+        "sessions-filter"
+      ],
+      "action": "type",
+      "try": true,
+      "caption": "Your turn: type docs into the filter."
+    }
+  ]
+}

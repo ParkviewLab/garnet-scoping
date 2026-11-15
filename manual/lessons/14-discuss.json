@@ -1,0 +1,14 @@
+{
+  "n": 14,
+  "title": "Ask the agent about a row (Discuss)",
+  "group": "Talking to the agent",
+  "panels": ["panel-now", "panel-plan", "pane-trail"],
+  "done": "That is it: the row is marked, and the agent answers it when its current step ends.",
+  "steps": [
+    { "target": ["panel-now", "row"], "action": "point", "caption": "Each row is something the agent did. You can ask about exactly that row." },
+    { "target": ["panel-now", "row"], "action": "menu", "caption": "Right-click a row to see what you can do with it." },
+    { "target": ["menu-discuss"], "action": "click", "caption": "Discuss marks the row for the agent, without a message from you." },
+    { "target": ["discuss-btn"], "action": "point", "caption": "The count shows your open requests. The agent answers each when its current step ends." },
+    { "target": ["panel-plan", "row"], "action": "dblclick", "try": true, "caption": "Your turn: double-click a step of the plan to discuss it." }
+  ]
+}

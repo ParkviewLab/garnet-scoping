@@ -1,0 +1,13 @@
+{
+  "n": 11,
+  "title": "See what the agent's subagents are doing",
+  "group": "Following the agent",
+  "panels": ["pane-subagents"],
+  "done": "That is it: the Trail opens at the turn that started the subagent.",
+  "steps": [
+    { "target": ["tog-subagents"], "action": "show", "caption": "Subagents lists each subagent the agent started, running or finished." },
+    { "target": ["pane-subagents", "row"], "action": "point", "caption": "Each shows its task, its model, and when finished, its time, tokens and tool calls." },
+    { "target": ["pane-subagents", "row"], "action": "click", "caption": "Click one to read its report." },
+    { "target": ["show-in-trail"], "action": "click", "try": true, "caption": "Your turn: press Show in Trail to see where it was started." }
+  ]
+}

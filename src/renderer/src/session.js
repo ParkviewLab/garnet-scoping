@@ -11,6 +11,20 @@ import { ago, clock, fileUrl, fromFile, since } from './util.js'
 import { mountSessions, badge as stateBadge } from './sessions-panel.js'
 
 const $ = (id) => document.getElementById(id)
+// The manual's window keeps its layout, views and marks in memory only: every
+// window of the app shares one store, and a lesson must neither change the
+// person's own windows nor find them changed (R18.5).
+if (new URLSearchParams(location.search).get('manual') === '1') {
+  const mem = new Map()
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) },
+  })
+}
+// A lesson of the manual (R18) names the element it acts on by this, so that its
+// script survives a change of wording or layout; tests check that each name exists.
+const ui = (e, name) => ((e.dataset.ui = name), e)
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const el = (tag, cls, text) => {
   const e = document.createElement(tag)
   if (cls) e.className = cls
@@ -70,7 +84,7 @@ const onTheWay = () => delivery.watching || myState === 'working'
 // The Discuss badge: lit while a request to discuss, outlined when turned
 // off or answered; a click toggles it.
 function badge(m, title) {
-  const b = el('button', `discuss-badge ${m.status === 'open' ? 'on' : 'off'}`, 'Discuss')
+  const b = ui(el('button', `discuss-badge ${m.status === 'open' ? 'on' : 'off'}`, 'Discuss'), 'discuss-badge')
   b.type = 'button'
   b.title = title
   b.addEventListener('click', (e) => {
@@ -141,7 +155,7 @@ function askNote(row) {
   const area = el('textarea')
   area.rows = 3
   area.placeholder = 'What would you like to ask about it?'
-  const go = el('button', 'primary', 'Discuss')
+  const go = ui(el('button', 'primary', 'Discuss'), 'discuss-go')
   go.type = 'button'
   const send = () => {
     $('viewer').hidden = true
@@ -193,9 +207,9 @@ $('away').addEventListener('click', () => {
   const a = boardStateNow?.away ?? { on: false }
   if (a.on) return window.garnet.board.setState({ away: { ...a, on: false, backAt: now } }).then(setMarks)
   const body = el('div', 'note-form')
-  const until = el('input')
+  const until = ui(el('input'), 'away-until')
   until.type = 'time'
-  const go = el('button', 'primary', 'I am away')
+  const go = ui(el('button', 'primary', 'I am away'), 'away-go')
   go.type = 'button'
   go.addEventListener('click', () => {
     $('viewer').hidden = true
@@ -209,10 +223,10 @@ $('away').addEventListener('click', () => {
 // of the session with no tools, while the agent works on undisturbed.
 function askAside(row) {
   const body = el('div', 'note-form')
-  const area = el('textarea')
+  const area = ui(el('textarea'), 'aside-text')
   area.rows = 3
   area.value = `Why "${row.text.slice(0, 80)}"?`
-  const go = el('button', 'primary', 'Ask aside')
+  const go = ui(el('button', 'primary', 'Ask aside'), 'aside-go')
   go.type = 'button'
   const send = () => {
     const question = area.value.trim()
@@ -247,7 +261,7 @@ function showMenu(e, row, extra = []) {
   items.push(...extra)
   menu.replaceChildren(
     ...items.map(([label, act]) => {
-      const b = el('button', null, label)
+      const b = ui(el('button', null, label), `menu-${slug(label)}`)
       b.type = 'button'
       b.addEventListener('click', () => {
         closeMenu()
@@ -284,6 +298,7 @@ function markable(node, row, onClick = null, extra = []) {
     toggleMark(row)
   })
   node.addEventListener('contextmenu', (e) => showMenu(e, row, extra))
+  if (!node.dataset.ui) ui(node, 'row')
   // A marked row carries the Discuss badge at its start; an unmarked row
   // keeps its full width.
   node.dataset.key = row.key
@@ -314,12 +329,12 @@ function markable(node, row, onClick = null, extra = []) {
   if (done?.answer) node.append(el('div', 'discuss-answer', `Answered: ${done.answer}`))
   const aside = [...asides].reverse().find((a) => a.key === row.key)
   if (aside) {
-    const box = el('div', 'aside-answer')
+    const box = ui(el('div', 'aside-answer'), 'aside-answer')
     box.append(el('div', 'aside-q', `Aside: ${aside.question}`))
     if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-board extension inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
     else if (aside.answer) {
       box.append(el('div', null, aside.answer), el('div', 'muted small', 'Answered by a copy of the session, with no tools: it can explain, not check. The agent was not interrupted.'))
-      const ask = el('button', 'aside-escalate', 'Ask the agent instead')
+      const ask = ui(el('button', 'aside-escalate', 'Ask the agent instead'), 'aside-escalate')
       ask.type = 'button'
       ask.addEventListener('click', (e) => (e.stopPropagation(), mark(row, aside.question)))
       box.append(ask)
@@ -347,7 +362,7 @@ function actionRow(a, { showAgo = false, panel = 'now' } = {}) {
   if (a.target) li.title = a.target
   // An action that started a subagent leads to its row (R9.3).
   if (view?.subagents?.some((s) => s.id === a.id)) {
-    const link = el('button', 'to-subagent', 'Subagent')
+    const link = ui(el('button', 'to-subagent', 'Subagent'), 'to-subagent')
     link.type = 'button'
     link.title = 'Show this subagent in the Subagents panel'
     link.addEventListener('click', (e) => {
@@ -401,7 +416,7 @@ function subagentRow(s, nested = false) {
     body.append(rep)
   } else body.append(el('p', 'muted', s.status === 'running' ? 'No report yet: still running.' : 'No report.'))
   if (!nested) {
-    const back = el('button', 'to-trail', 'Show in Trail')
+    const back = ui(el('button', 'to-trail', 'Show in Trail'), 'show-in-trail')
     back.type = 'button'
     back.addEventListener('click', () => jumpTo({ panel: 'trail', key: `action:${s.id}` }))
     body.append(back)
@@ -516,7 +531,7 @@ function renderForYou() {
       item.append(head)
       const files = el('div', 'delivery-files')
       for (const f of d.files) {
-        const tile = el('button', `delivery-file${f.exists ? '' : ' gone'}`)
+        const tile = ui(el('button', `delivery-file${f.exists ? '' : ' gone'}`), 'delivery-file')
         tile.type = 'button'
         tile.title = f.exists ? `${f.path}\nClick to preview; right-click for more.` : `${f.path}\nNo longer on disk.`
         if (f.exists && IMAGE.test(f.path)) {
@@ -566,7 +581,8 @@ async function previewFile(path, row) {
     [`Show in ${window.garnet.fileManager}`, () => window.garnet.showInFinder(path)],
     ['Discuss…', () => askNote(row)],
   ]) {
-    const b = el('button', null, label)
+    // data-ui: file-open, file-show, file-discuss
+    const b = ui(el('button', null, label), `file-${slug(label.split(' ')[0])}`)
     b.type = 'button'
     b.addEventListener('click', act)
     bar.append(b)
@@ -633,7 +649,7 @@ function turnEl(t, i, isLast) {
 const compactionOpen = new Map() // key -> 'first' | 'all'
 function compactionEl(it, i, j) {
   const key = `compaction:${i}:${j}`
-  const box = el('div', 'item compaction')
+  const box = ui(el('div', 'item compaction'), 'compaction')
   const who = it.trigger === 'manual' ? 'by you (/compact)' : it.trigger === 'auto' ? 'by Claude Code (the context was full)' : ''
   const size = it.preTokens != null ? ` · ${tokens(it.preTokens)} tokens of context${it.postTokens != null ? ` replaced by a summary of ${tokens(it.postTokens)}` : ''}` : ''
   const line = el('div', 'compaction-line', `Context compacted at ${clock(it.at)} ${who}${size}`)
@@ -650,7 +666,7 @@ function compactionEl(it, i, j) {
     const sum = el('div', 'compaction-summary')
     sum.append(el('h3', null, 'The summary the agent continues from'), Object.assign(markdown(shown), { className: 'markdown' }))
     if (state !== 'all' && paras.length > 1) {
-      const more = el('button', 'show-earlier', `Show all (${it.summary.split(/\s+/).length} words)`)
+      const more = ui(el('button', 'show-earlier', `Show all (${it.summary.split(/\s+/).length} words)`), 'show-all')
       more.type = 'button'
       more.addEventListener('click', () => {
         compactionOpen.set(key, 'all')
@@ -672,7 +688,7 @@ function renderTrail() {
   const from = Math.max(0, turns.length - trailShown)
   const nodes = []
   if (from > 0) {
-    const more = el('button', 'show-earlier', `Show ${Math.min(TRAIL_PAGE, from)} earlier turns (${from} hidden)`)
+    const more = ui(el('button', 'show-earlier', `Show ${Math.min(TRAIL_PAGE, from)} earlier turns (${from} hidden)`), 'show-earlier')
     more.type = 'button'
     more.addEventListener('click', () => {
       trailShown += TRAIL_PAGE
@@ -861,15 +877,15 @@ function answerNote(n, status, reply = null) {
   window.garnet.board.setState({ notes: next }).then(setMarks)
 }
 function noteItem(n) {
-  const item = el('div', `discuss-item note ${n.status}`)
+  const item = ui(el('div', `discuss-item note ${n.status}`), 'note')
   const body = el('div', 'discuss-body')
   body.append(el('div', 'note-from', 'From the agent'), el('div', 'discuss-what', n.text))
   body.append(el('div', 'discuss-meta', [NOTE_WHERE[n.on.panel] ?? n.on.panel, n.on.panel === 'plan' ? n.on.key.slice(5) : n.on.panel === 'foryou' ? basename(n.on.key.slice(5)) : null, n.at ? ago(n.at) : null].filter(Boolean).join(' · ')))
   if (n.status === 'open') {
     const row = el('div', 'note-actions')
-    const confirm = el('button', null, 'Confirm')
-    const correct = el('button', null, 'Correct…')
-    const dismiss = el('button', null, 'Dismiss')
+    const confirm = ui(el('button', null, 'Confirm'), 'note-confirm')
+    const correct = ui(el('button', null, 'Correct…'), 'note-correct')
+    const dismiss = ui(el('button', null, 'Dismiss'), 'note-dismiss')
     for (const b of [confirm, correct, dismiss]) b.type = 'button'
     confirm.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'confirmed')))
     dismiss.addEventListener('click', (e) => (e.stopPropagation(), answerNote(n, 'dismissed')))
@@ -903,7 +919,7 @@ function noteItem(n) {
 function receipt(key, answered, kind = 'signal') {
   const sentLabel = kind === 'pinned' ? 'Pinned by the agent' : 'Sent'
   const delivered = answered || (key != null && delivery.delivered.includes(key))
-  const box = el('div', 'receipt')
+  const box = ui(el('div', 'receipt'), 'receipt')
   const step = (text, on, bad = false) => el('span', `step${on ? ' on' : ''}${bad ? ' bad' : ''}`, text)
   if (kind === 'pinned') return box.append(step(sentLabel, true), step('Waiting for your answer', false)), box
   box.append(step('Sent', true), step(delivered ? 'Delivered' : onTheWay() ? 'Delivering…' : 'Not delivered', delivered, !delivered && !onTheWay()), step('Answered', answered))
@@ -929,7 +945,7 @@ function showDelivery(d) {
 window.garnet.setup.check().then((r) => {
   if (!r || r.ok) return
   const box = $('setup-stale')
-  const open = el('button', null, 'Open Set-up Info')
+  const open = ui(el('button', null, 'Open Set-up Info'), 'open-setup')
   open.type = 'button'
   open.addEventListener('click', () => window.garnet.setup.open())
   box.replaceChildren(el('span', null, `garnet-scoping's hooks or extension in Claude Code are from an earlier version, or missing (${r.stale.join(', ')}); some features need them. Paste the text in Set-up Info into a session to update them. `), open)
@@ -1064,3 +1080,48 @@ window.garnet.discuss({ op: 'get' }).then(setMarks)
 window.garnet.board.onState(setMarks)
 setInterval(() => view && renderPresent(), 15_000) // keep the waiting times current
 refresh()
+
+// The manual (R18): in its own window, the lesson's bar and player; in every
+// other window, a ? on each panel that lists the panel's lessons (R18.10).
+const query = new URLSearchParams(location.search)
+if (query.get('manual') === '1') {
+  const n = query.get('lesson')
+  import('./manual.js').then((m) => m.startManual({ lesson: n == null ? null : Number(n), step: Number(query.get('step') ?? 0) }))
+} else {
+  window.garnet.manual.lessons().then((lessons) => {
+    for (const panel of document.querySelectorAll('[data-ui^="panel-"], [data-ui^="pane-"]')) {
+      const name = panel.dataset.ui
+      const mine = lessons.filter((l) => l.panels.includes(name))
+      const head = panel.querySelector(':scope > h2')
+      if (!mine.length || !head) continue
+      const q = el('button', 'lesson-q', '?')
+      q.type = 'button'
+      q.title = 'Lessons for this panel'
+      q.dataset.ui = `lessons-${name}`
+      q.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const open = document.querySelector('.lesson-drop')
+        open?.remove()
+        if (open?.dataset.for === name) return
+        const drop = el('div', 'lesson-drop')
+        drop.dataset.for = name
+        drop.append(el('div', 'muted small', 'Lessons for this panel'))
+        for (const l of mine) {
+          const b = el('button', 'lesson-item')
+          b.type = 'button'
+          b.append(el('span', null, l.title), el('span', 'lesson-play', 'Play'))
+          b.addEventListener('click', () => (drop.remove(), window.garnet.manual.open(l.n)))
+          drop.append(b)
+        }
+        const all = el('button', 'lesson-item muted')
+        all.type = 'button'
+        all.textContent = 'All lessons, How do I…'
+        all.addEventListener('click', () => (drop.remove(), window.garnet.manual.open(null)))
+        drop.append(all)
+        head.append(drop)
+      })
+      head.append(q)
+    }
+    document.addEventListener('click', (e) => !e.target.closest('.lesson-drop') && document.querySelector('.lesson-drop')?.remove())
+  })
+}

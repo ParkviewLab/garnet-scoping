@@ -126,6 +126,32 @@ A question is kept in the board's state as a draft, with Editing ticked, until t
 
 Set-up Info's text now also has Claude copy `setup/garnet-board` to `~/.claude/mods/garnet-board` and replace, rather than skip, an earlier "garnet-scoping signals" section in `~/.claude/CLAUDE.md`, whose rules now cover questions, notes, Away and the board tools. The app reads, and never writes, what is installed: each session window compares the installed hooks and extension with the ones it ships, byte for byte, and says when they are from an earlier version or missing, with a button to open Set-up Info.
 
+## The manual (R18, P14 to P16)
+
+The mock-up the owner reviewed is [`manual-mockup.html`](manual-mockup.html): a session window with a **?** on each panel and **How do I…** in the Help menu, and the manual window beside it playing a lesson.
+
+**Entry points.** Each panel's header carries a **?** at its right; it drops down the lessons whose script names that panel, each with Play, and a last line, "All lessons, How do I…". The Help menu's How do I… (⌘? on macOS, F1 on Ubuntu) opens the manual window with its search field focused; the search matches every word typed against each lesson's title and captions.
+
+**The manual window.** One per app, opened beside the session window it was called from. Its top shows the lesson's number and title and "← All lessons"; below, a stage holding the demo session's window, drawn by the same renderer as a real session window; below that, the controls: Pause and Play, Back a step, Replay, Captions, Sound, and the step counter. A lesson marked macOS only, such as lesson 2, is not listed on Ubuntu.
+
+**The demo's window.** The manual window is a session window opened on a fresh copy of the demo, in the app's own folder (`manual-demo` beside its settings), whose board, memory and work files are read and written there and never in `~/.garnet-scoping/boards`. Its Sessions panel lists the demo's four sessions alone (the CSV parser, and three others: one waiting on a question, one idle, one no longer running), so that no lesson opens a real session; another demo session's window opens on the same copy; its state is always Working, or Waiting for you while its own Hold is on, and it is never counted on the Dock. Replay and Back a step make a fresh copy and reopen the window where it was, which then does the earlier steps without pointer or voice, each given time to take effect.
+
+**A lesson's script.** A JSON file per lesson in `manual/lessons/`, holding its number, title, group, the panels that list it, the platforms it plays on, and its steps. A step names the element it acts on by a `data-ui` attribute the interface carries for the purpose (`data-ui="hold"`, `data-ui="panel-plan"`), the action (point, click, type a given text, wait), and the caption, which is also what the voice says. The last step is the try: the pointer withdraws, the caption asks the person to act, and the manual waits for that action on the named element, with Skip the try beside it.
+
+**Lessons outside the window.** Two lessons teach what lies in the app's other windows: 25 (Set-up Info) and 27 (Settings). A `window` step opens that window; a lesson cannot point inside it, nor have the person try it on the demo, since Settings would change the person's own setting. These two lessons therefore end without a try, a departure from R18.6 confined to them. For lesson 26, the demo's window always shows the notice that the install is stale.
+
+**The agent's side.** A lesson that shows a reply (an aside answered, a note pinned, a request answered) has an `agent` step, which writes into the demo's copy what an agent would: a request to its board, or the answer to the last aside. Nothing is sent to a real agent.
+
+**Playing.** The pointer is an overlay that moves to the named element's centre over about a second; a click is shown as a brief ring and then performed on the demo, so the demo's own code changes what it shows (Hold turns to Holding). Each step's audio plays as its caption appears; the next step starts when both the audio and a minimum time have passed. Back a step restores the demo to the state recorded before that step; Replay restores it to the start.
+
+**The demo session** (P16) is a folder in `manual/demo/` holding a short transcript, a board and a state file, read by the same code that reads a real session. The manual window gives that code the demo folder in place of the boards folder, so a lesson's Hold or Review is written there and goes nowhere; the folder is copied afresh for each lesson, so one lesson's clicks never carry into the next.
+
+**Voice-over** (P14). The audio is made when a lesson is written, not when it is played: `scripts/voice-lessons.mjs` has phonorheos speak each changed caption, and each lesson's closing line, in the voice bf_emma into a WAV file (`phonorheos say --to-file`), and macOS's `afconvert` compresses it to AAC at 32 kbit/s as `manual/audio/<lesson>-<step>.m4a` (`<lesson>-done.m4a` for the closing line), with the text's hash in `manual/audio/index.json`. The 166 files of the 28 lessons come to 3.9 MB (as WAV they would be about ten times that). The script therefore runs on a Mac; the app plays the files on every system with the renderer's own audio element, and never calls phonorheos. A step waits for its voice to end and for its caption's reading time, whichever is longer.
+
+**Kept current** (R18.11). A test reads every lesson and fails when a `data-ui` name a step uses is no longer present in the renderer's source, when a lesson's panel no longer exists, or when a caption's hash differs from the one its audio was made from. The last means that a changed caption cannot ship with the old voice.
+
+**What phonorheos provides.** phonorheos 0.10.0 renders speech to a file without playing it: `POST /render` returns the speech as WAV (24 kHz, mono, 16-bit) once complete, and `phonorheos say --to-file <path.wav>` writes it (phonorheos decision R1). It writes WAV only, since Opus would add a C library to its three signed builds; the compression to AAC is done here, by the script above.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

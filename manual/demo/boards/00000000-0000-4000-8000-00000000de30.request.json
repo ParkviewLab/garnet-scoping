@@ -1,0 +1,36 @@
+{
+  "add": [
+    {
+      "id": "reader",
+      "kind": "rectangle",
+      "text": "reader.js (lines)",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "parser",
+      "kind": "rectangle",
+      "text": "parse.js (fields)",
+      "x": 260,
+      "y": 0
+    },
+    {
+      "id": "tests",
+      "kind": "ellipse",
+      "text": "eight tests",
+      "x": 260,
+      "y": 180
+    },
+    {
+      "kind": "arrow",
+      "from": "reader",
+      "to": "parser",
+      "text": "lines"
+    },
+    {
+      "kind": "arrow",
+      "from": "tests",
+      "to": "parser"
+    }
+  ]
+}

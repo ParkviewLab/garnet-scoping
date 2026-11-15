@@ -1,0 +1,41 @@
+{
+  "n": 12,
+  "title": "Spot a compaction and read its summary",
+  "group": "Following the agent",
+  "panels": [
+    "pane-trail"
+  ],
+  "done": "That is it: the marker is marked for the agent to discuss.",
+  "steps": [
+    {
+      "target": [
+        "tog-trail"
+      ],
+      "action": "show",
+      "caption": "When the context fills, Claude Code compacts it, and the Trail marks the place."
+    },
+    {
+      "target": [
+        "compaction"
+      ],
+      "action": "point",
+      "caption": "The marker says when, by whom, and how much was replaced by a summary."
+    },
+    {
+      "target": [
+        "compaction"
+      ],
+      "action": "point",
+      "caption": "Below it is the summary the agent carried on from: what it now knows of the work before."
+    },
+    {
+      "target": [
+        "compaction",
+        "row"
+      ],
+      "action": "dblclick",
+      "try": true,
+      "caption": "Your turn: double-click the marker to ask the agent about it."
+    }
+  ]
+}

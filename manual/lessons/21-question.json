@@ -1,0 +1,49 @@
+{
+  "n": 21,
+  "title": "Ask a question on the board",
+  "group": "Working on the board",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: the menu opens where you clicked; choose Add question and type.",
+  "steps": [
+    {
+      "target": [
+        "board-canvas"
+      ],
+      "action": "menu",
+      "caption": "Right-click the place on the board your question is about."
+    },
+    {
+      "target": [
+        "board-menu-add-question"
+      ],
+      "action": "click",
+      "caption": "Choose Add question."
+    },
+    {
+      "target": [
+        "question-typing"
+      ],
+      "action": "type",
+      "text": "Should the cache sit before the reader?",
+      "caption": "Type the question. Its pointer already points at the place you clicked."
+    },
+    {
+      "target": [
+        "question-typing"
+      ],
+      "action": "key",
+      "text": "Enter",
+      "caption": "Press Enter. The question waits on the board until you press Review."
+    },
+    {
+      "target": [
+        "board-canvas"
+      ],
+      "action": "menu",
+      "try": true,
+      "caption": "Your turn: right-click the board to ask a question of your own."
+    }
+  ]
+}

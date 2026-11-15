@@ -275,6 +275,15 @@ function toScene(cx, cy) {
   const r = holderEl.getBoundingClientRect()
   return { x: (cx - r.left) / s.zoom.value - s.scrollX, y: (cy - r.top) / s.zoom.value - s.scrollY }
 }
+// For the manual's lessons (R18): where on screen the last element of a role
+// (question, answer, image) is drawn, at its centre; null where there is none.
+window.garnetBoardLocate = (role) => {
+  const e = live().findLast((x) => (role === 'image' ? x.type === 'image' : tag(x)?.role === role))
+  if (!e) return null
+  const c = toClient({ x: e.x + (e.width ?? 0) / 2, y: e.y + (e.height ?? 0) / 2 })
+  return { x: c.x, y: c.y }
+}
+
 function toClient(p) {
   const s = api.getAppState()
   const r = holderEl.getBoundingClientRect()
@@ -371,6 +380,8 @@ function showMenu(ev, items) {
       const b = document.createElement('button')
       b.type = 'button'
       b.textContent = label
+      // Named for the manual's lessons (R18), as in session.js.
+      b.dataset.ui = `board-menu-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
       b.addEventListener('click', () => {
         hideMenu()
         fn()
@@ -415,6 +426,7 @@ function typeQuestion(p, target, follow) {
   const r = overlayEl.getBoundingClientRect()
   const box = document.createElement('textarea')
   box.className = 'question-typing'
+  box.dataset.ui = 'question-typing'
   box.placeholder = follow ? 'Your follow-up, then Enter' : 'Your question, then Enter'
   box.style.left = `${at.x - r.left}px`
   box.style.top = `${at.y - r.top}px`
@@ -552,6 +564,7 @@ export async function mountBoard(container) {
   const copy = document.createElement('button')
   copy.type = 'button'
   copy.textContent = 'Copy the board’s path for the agent'
+  copy.dataset.ui = 'board-copy-path'
   copy.addEventListener('click', () => {
     navigator.clipboard.writeText(`The shared board's rendition is ${info.paths.rendition}; read it, and change the board by writing ${info.paths.request} as its header describes.`)
     setStatus('Copied.')
@@ -563,6 +576,7 @@ export async function mountBoard(container) {
   // "reviewed" turns it off.
   const editing = document.createElement('label')
   editing.className = 'board-editing'
+  editing.dataset.ui = 'board-editing'
   editingBox = document.createElement('input')
   editingBox.type = 'checkbox'
   editingBox.addEventListener('change', () => setState({ editing: editingBox.checked }))
@@ -570,6 +584,7 @@ export async function mountBoard(container) {
   reviewButton = document.createElement('button')
   reviewButton.type = 'button'
   reviewButton.className = 'board-review'
+  reviewButton.dataset.ui = 'board-review'
   reviewButton.textContent = 'Review'
   // Asking for a review ends editing.
   // Review also sends the questions added since the last one (R13.2).
@@ -580,6 +595,7 @@ export async function mountBoard(container) {
   const fit = document.createElement('button')
   fit.type = 'button'
   fit.className = 'board-fit'
+  fit.dataset.ui = 'board-fit'
   fit.textContent = 'Fit'
   fit.title = 'Zoom to fit the whole board (Shift+1)'
   fit.addEventListener('click', () => api?.scrollToContent(undefined, { fitToContent: true, animate: true }))
@@ -591,6 +607,7 @@ export async function mountBoard(container) {
   window.garnet.board.onState(showState)
   const holder = document.createElement('div')
   holder.className = 'board-canvas'
+  holder.dataset.ui = 'board-canvas'
   holderEl = holder
   overlayEl = container
   container.style.position = 'relative'

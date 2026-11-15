@@ -1,0 +1,29 @@
+{
+  "n": 27,
+  "title": "Choose the board's side in Settings",
+  "group": "Setting up",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: every session window places its board on the side you chose.",
+  "steps": [
+    {
+      "target": [
+        "board"
+      ],
+      "action": "point",
+      "caption": "The board sits beside the panels. Its side is a setting."
+    },
+    {
+      "target": [],
+      "action": "window",
+      "text": "settings",
+      "caption": "Settings is in the garnet-scoping menu on macOS, and the File menu on Ubuntu: Command or Control and comma. Here it is."
+    },
+    {
+      "target": [],
+      "action": "point",
+      "caption": "Choose left, right, top or bottom. Every session window follows at once."
+    }
+  ]
+}

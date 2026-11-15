@@ -1,0 +1,68 @@
+{
+  "n": 17,
+  "title": "Tell the agent you are away, and come back",
+  "group": "Talking to the agent",
+  "panels": [
+    "panel-waiting",
+    "panel-last-word"
+  ],
+  "done": "That is it: the agent welcomes you back, and takes you through what is pending one item at a time.",
+  "steps": [
+    {
+      "target": [
+        "away"
+      ],
+      "action": "point",
+      "caption": "Away tells the agent that you have stepped away."
+    },
+    {
+      "target": [
+        "away"
+      ],
+      "action": "click",
+      "caption": "Press it, and give the time you expect to be back, if you know it."
+    },
+    {
+      "target": [
+        "away-until"
+      ],
+      "action": "type",
+      "text": "17:30",
+      "caption": "Here, half past five."
+    },
+    {
+      "target": [
+        "away-go"
+      ],
+      "action": "click",
+      "caption": "While you are away, the agent keeps its questions for your return, and goes on with work that does not need you."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "notes": [
+          {
+            "on": "plan:Run the tests",
+            "text": "Kept for your return: shall the slow fixtures run too?"
+          }
+        ]
+      },
+      "caption": "Here the agent keeps a question for you, as a note."
+    },
+    {
+      "target": [
+        "away"
+      ],
+      "action": "point",
+      "caption": "The button shows that you are away, and until when."
+    },
+    {
+      "target": [
+        "away"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: press Away to say that you are back."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "n": 26,
+  "title": "Update the install when the app says it is stale",
+  "group": "Setting up",
+  "panels": [
+    "panel-waiting"
+  ],
+  "done": "That is it: Set-up Info opens, with the text to paste into a session.",
+  "steps": [
+    {
+      "target": [
+        "setup-stale"
+      ],
+      "action": "point",
+      "caption": "After an update, the app compares what Claude installed with what it now ships, and says when they differ."
+    },
+    {
+      "target": [
+        "setup-stale"
+      ],
+      "action": "point",
+      "caption": "Some features need the new files: the notice names the ones that are out of date."
+    },
+    {
+      "target": [
+        "open-setup"
+      ],
+      "action": "point",
+      "caption": "Open Set-up Info, and paste its text into a session again. Claude replaces the old files."
+    },
+    {
+      "target": [
+        "open-setup"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: press Open Set-up Info."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "n": 24,
+  "title": "Mark up a mock-up the agent placed",
+  "group": "Working on the board",
+  "panels": [
+    "board"
+  ],
+  "done": "That is it: draw on the mock-up, then press Review so that the agent reads your marks.",
+  "steps": [
+    {
+      "action": "agent",
+      "request": {
+        "add": [
+          {
+            "id": "mock",
+            "kind": "image",
+            "path": "__DEMO__/login-mockup.png",
+            "x": 520,
+            "y": -40,
+            "width": 360
+          }
+        ]
+      },
+      "caption": "The agent can put a picture on the board: here, a mock-up of a sign-in page."
+    },
+    {
+      "target": [
+        "scene:image"
+      ],
+      "action": "point",
+      "caption": "Mark it up as you would on paper: circle what is wrong, write beside it."
+    },
+    {
+      "target": [
+        "testid:toolbar-freedraw"
+      ],
+      "action": "point",
+      "caption": "The pen draws freehand; the arrow and text tools point and label."
+    },
+    {
+      "target": [
+        "board-review"
+      ],
+      "action": "point",
+      "caption": "Then press Review: the agent reads your marks with the picture beneath them."
+    },
+    {
+      "target": [
+        "testid:toolbar-freedraw"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: choose the pen, and mark the mock-up."
+    }
+  ]
+}

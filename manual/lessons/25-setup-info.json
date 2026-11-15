@@ -1,0 +1,32 @@
+{
+  "n": 25,
+  "title": "Set up Claude Code with Set-up Info",
+  "group": "Setting up",
+  "panels": [
+    "panel-waiting"
+  ],
+  "done": "That is it: paste the text once, and again whenever the app says the install is out of date.",
+  "steps": [
+    {
+      "target": [],
+      "action": "point",
+      "caption": "Set-up Info is in the garnet-scoping menu on macOS, and in the Help menu on Ubuntu."
+    },
+    {
+      "target": [],
+      "action": "window",
+      "text": "setup",
+      "caption": "It opens a window of text to copy. Here it is."
+    },
+    {
+      "target": [],
+      "action": "point",
+      "caption": "Paste its first block into any Claude Code session: Claude installs the watcher, its hooks, the CLAUDE.md rules and the board extension."
+    },
+    {
+      "target": [],
+      "action": "point",
+      "caption": "From then on, your signals reach every session, and new sessions have the board tools."
+    }
+  ]
+}

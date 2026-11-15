@@ -1,0 +1,64 @@
+{
+  "n": 19,
+  "title": "Check that a signal reached the agent",
+  "group": "Talking to the agent",
+  "panels": [
+    "pane-discuss",
+    "panel-now"
+  ],
+  "done": "That is it: each request shows Sent, then Delivering or Delivered, then Answered.",
+  "steps": [
+    {
+      "target": [
+        "tog-discuss"
+      ],
+      "action": "show",
+      "caption": "Discuss lists your requests, and how far each has got."
+    },
+    {
+      "target": [
+        "panel-now",
+        "row"
+      ],
+      "action": "dblclick",
+      "caption": "Here a row of Now is sent to the agent to discuss."
+    },
+    {
+      "target": [
+        "pane-discuss",
+        "receipt"
+      ],
+      "action": "point",
+      "caption": "Sent: the request is written. Delivering: it reaches the agent when its current step ends."
+    },
+    {
+      "action": "agent",
+      "request": {
+        "discussed": [
+          {
+            "id": "$last",
+            "answer": "The lint runs while the tests do, so that both finish together."
+          }
+        ]
+      },
+      "caption": "When the agent has answered, the receipt reads Answered, and the answer shows on the row."
+    },
+    {
+      "target": [
+        "pane-discuss",
+        "receipt"
+      ],
+      "action": "point",
+      "caption": "Delivered means the agent was woken with it, not that it has read it yet."
+    },
+    {
+      "target": [
+        "panel-plan",
+        "row"
+      ],
+      "action": "dblclick",
+      "try": true,
+      "caption": "Your turn: double-click a plan step to send another, and watch its receipt."
+    }
+  ]
+}

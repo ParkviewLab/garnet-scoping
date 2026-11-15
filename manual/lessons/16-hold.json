@@ -1,0 +1,14 @@
+{
+  "n": 16,
+  "title": "Pause the agent with Hold",
+  "group": "Talking to the agent",
+  "panels": ["panel-now", "panel-plan"],
+  "done": "That is it: the agent stops after the step it is on, and nothing is lost.",
+  "steps": [
+    { "target": ["panel-now"], "action": "point", "caption": "Now shows what the agent is doing: here, running the parser's tests." },
+    { "target": ["hold"], "action": "point", "caption": "Hold asks the agent to stop after the step it is on. It never cuts a step short." },
+    { "target": ["hold"], "action": "click", "caption": "Press it, and Hold stays lit until you release it." },
+    { "target": ["hold"], "action": "click", "caption": "Press it again to release it: the work goes on where it stopped." },
+    { "target": ["hold"], "action": "click", "try": true, "caption": "Your turn: press Hold on the demo." }
+  ]
+}
