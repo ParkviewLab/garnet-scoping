@@ -166,6 +166,13 @@ input[type='search'] {
   color: var(--warn);
   font-size: 12px;
 }
+/* The same band while the agent works: no watcher is expected then, so it
+   says when the signals will arrive, without the warning colours. */
+.drift.quiet {
+  background: transparent;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
 /* The stage holds the Desk's panels and the board. With both shown, the
    board takes half, on the side set in Settings. */
 .stage {

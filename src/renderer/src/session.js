@@ -63,6 +63,10 @@ let notes = [] // the agent's notes (R14)
 let asides = [] // the person's asides (R16)
 let boardStateNow = null
 let delivery = { watching: true, delivered: [] } // receipts (R15)
+// This session's live state ('working', 'idle', …). While the agent works, no
+// watcher runs by design: signals wait and are delivered when its turn ends.
+let myState = null
+const onTheWay = () => delivery.watching || myState === 'working'
 // The Discuss badge: lit while a request to discuss, outlined when turned
 // off or answered; a click toggles it.
 function badge(m, title) {
@@ -810,7 +814,11 @@ window.garnet.onShowPanel((p) => PANELS.includes(p) && setPanels({ ...panels, [p
 const myId = new URLSearchParams(location.search).get('id')
 mountSessions($('pane-sessions'), myId)
 // This session's live state on the window's header (R8.1).
-const showMyState = (l) => $('live-state').replaceChildren(...(l?.available === false ? [] : [stateBadge(l?.states?.[myId])]))
+const showMyState = (l) => {
+  $('live-state').replaceChildren(...(l?.available === false ? [] : [stateBadge(l?.states?.[myId])]))
+  const s = l?.available === false ? null : (l?.states?.[myId]?.state ?? null)
+  if (s !== myState) (myState = s), showDelivery()
+}
 window.garnet.live.onChanged(showMyState)
 window.garnet.live.get().then(showMyState)
 
@@ -898,7 +906,7 @@ function receipt(key, answered, kind = 'signal') {
   const box = el('div', 'receipt')
   const step = (text, on, bad = false) => el('span', `step${on ? ' on' : ''}${bad ? ' bad' : ''}`, text)
   if (kind === 'pinned') return box.append(step(sentLabel, true), step('Waiting for your answer', false)), box
-  box.append(step('Sent', true), step(delivered ? 'Delivered' : delivery.watching ? 'Delivering…' : 'Not delivered', delivered, !delivered && !delivery.watching), step('Answered', answered))
+  box.append(step('Sent', true), step(delivered ? 'Delivered' : onTheWay() ? 'Delivering…' : 'Not delivered', delivered, !delivered && !onTheWay()), step('Answered', answered))
   box.title = 'Delivered means the watcher woke the session with it, not that the agent has read it.'
   return box
 }
@@ -906,10 +914,15 @@ function showDelivery(d) {
   if (d) delivery = d
   const warn = $('watch-warning')
   const waiting = marks.filter((m) => m.status === 'open').length + (boardStateNow?.review ? 1 : 0) + (boardStateNow?.hold === 'requested' ? 1 : 0)
+  const working = !delivery.watching && myState === 'working'
   warn.hidden = delivery.watching
+  warn.classList.toggle('quiet', working)
   const holdKey = boardStateNow?.hold === 'requested' ? `hold ${boardStateNow.holdAt}` : null
-  if (holdKey) $('hold').title = delivery.delivered.includes(holdKey) ? 'Hold delivered: the agent was woken with it' : delivery.watching ? 'Hold sent; delivering…' : 'Hold sent, but no watcher is running, so it has not reached the agent'
-  warn.textContent = `No watcher is running for this session, so your signals are not reaching it${waiting ? ` (${waiting} waiting)` : ''}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
+  if (holdKey) $('hold').title = delivery.delivered.includes(holdKey) ? 'Hold delivered: the agent was woken with it' : onTheWay() ? 'Hold sent; delivering…' : 'Hold sent, but no watcher is running, so it has not reached the agent'
+  const count = waiting ? ` (${waiting} waiting)` : ''
+  warn.textContent = working
+    ? `Signals reach the agent when its turn ends${count}.`
+    : `No watcher is running for this session, so your signals are not reaching it${count}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
   renderDiscuss()
 }
 // What Claude installed from Set-up Info is from an earlier version (P5).
