@@ -24,6 +24,11 @@ const IGNORED_TYPES = new Set([
   'api-request-shape',
   'frame-link',
   'summary',
+  // Claude Code 2.1.325's own bookkeeping: the tools offered, the session's
+  // mods, and which process owns the session.
+  'tools-used',
+  'dev-mods',
+  'session-owner',
 ])
 
 // Attachment kinds that hold the session's setup rather than its work; never
