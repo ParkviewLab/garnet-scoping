@@ -4,6 +4,28 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.11.0] - 2026-11-15
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- Name the elements the manual's lessons act on (#85)
+- The manual's demo session (#86)
+- The manual window and lesson player, with two lessons (#87)
+- The manual's lessons for following the agent (7 to 13) (#88)
+- The manual's lessons for talking to the agent (15, 17, 18, 19) (#89)
+- The manual's lessons for getting around (1 to 6) (#90)
+- The manual's lessons for working on the board (20 to 24) (#91)
+- The manual's lessons for setting up (25 to 28) (#92)
+- The manual's voice-over, in bf_emma (#93)
+
+### Docs
+
+- The manual's requirements and design (R18) (#84)
+
 ## [v0.10.2] - 2026-11-14
 
 ### Highlights
