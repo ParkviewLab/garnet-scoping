@@ -10,7 +10,7 @@ An Electron app in plain JavaScript, built with electron-vite and packaged with 
 
 - **Main** (`src/main/`): finds and reads the transcripts and memory stores, watches them, keeps the session models, owns the board files, and refuses every network request.
 - **Preload** (`src/preload/`): a narrow bridge, `window.garnet`, with read calls and change events; the board's save and load are the only writes it exposes.
-- **Renderer** (`src/renderer/`): two pages, the session list and the session window (Desk and board).
+- **Renderer** (`src/renderer/`): two pages, the session list and the session window (Desk and board); under the proposed R8 design, one, with the list as a panel of the window.
 
 ## Reading transcripts
 
@@ -58,6 +58,37 @@ A request is compact:
 ```
 
 The app expands added shapes and arrows with Excalidraw's own skeleton conversion, so that text sits in its shape and arrows are bound to the shapes they join, then merges the result into the board. A change to the board file from outside the window is merged element by element, the higher `version` winning; the board is written whole to a temporary file and renamed into place.
+
+## Live state and the Sessions panel (proposed, R8)
+
+Proposed on 2026-11-14 for R8; not built. The interface was settled with the owner through a clickable mock-up of the Sessions panel in a session window.
+
+**Sources.** A new module, `src/main/live/`, is the one place that knows Claude Code's live-state format, as `transcript/` is for the transcript's (R6.1, P10).
+
+- It watches `~/.claude/sessions/` (one file per Claude Code process, `<pid>.json`) and reads each file whole on change: `sessionId`, `kind`, `status` (`busy`, `idle`, `waiting`), `waitingFor` and `statusUpdatedAt`. A file is live only if its `pid` is a running process whose start matches `procStart`; otherwise it is stale and ignored, so that a crash leaves no session shown as running (P8).
+- Where the folder is missing, or a file carries no field the module recognises, it runs `claude agents --json` every ten seconds with `execFile` (no shell, a five-second timeout, nothing written) and reads the same facts from its rows. Only where both fail is a session's state Unknown, and the panel says that live state is unavailable (R8.5).
+- Each session is matched to its transcript by `sessionId`. A session with no live process is Not running.
+
+**State.** The module turns those facts and the session model (`transcript/session.js`) into R8's five states:
+
+- **Working:** `busy`.
+- **Waiting for you:** `waiting`; or holding (the board's state file, R2.8); or a next-step question left at the end of the turn (the model's "Asked"). Background sessions (`kind` `bg`) that wait are labelled "background, attach to answer" (R8.2).
+- **Idle:** `idle` otherwise, with `statusUpdatedAt` as the time it went idle; "your turn" beside it where the agent spoke last (R2.4).
+- **Not running** and **Unknown**, as above.
+
+**Why it waits (R8.4)** comes from the transcript, which records the pending call before the session waits on it: the last tool call with no result yet. A permission wait shows that call's tool and its description (never its command); a question shows the AskUserQuestion input's question and option labels. `waitingFor`, where Claude Code gives a value the module does not recognise, is shown as given.
+
+**Delivery.** The module emits `live:changed` with the state of every session at most twice a second, so that a change reaches the window within R8.1's two seconds.
+
+**The Sessions panel (R8.6)** replaces the list page (`renderer/src/list.js` and `index.html`) and the list window. It is a panel of the session window, beside Desk, Trail, Memory, Discuss and Board in the header's toggles (D9), and shows:
+
+- each session's title, folder, state badge and, when it waits, its reason and since when;
+- two views, By project (waiting first within each group) and All, waiting first (R8.3);
+- a click on a session opens its window, or brings it forward.
+
+At start the app opens a window on the most recently active session with the panel on. The Dock badge is `app.setBadgeCount` with the number of sessions waiting; on macOS it needs the person's permission for notifications, asked once; on Ubuntu it shows where the `.deb`'s desktop file lets the dock count it (Q8's ruling).
+
+**Tests** use synthetic session files and synthetic `claude agents` output, never the machine's own.
 
 ## Versions checked
 
