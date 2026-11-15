@@ -8,6 +8,7 @@
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { ago, clock, fileUrl, fromFile, since } from './util.js'
+import { mountSessions, badge as stateBadge } from './sessions-panel.js'
 
 const $ = (id) => document.getElementById(id)
 const el = (tag, cls, text) => {
@@ -504,14 +505,14 @@ function renderMemory() {
 }
 
 // ---- the panels ----
-// Four panels the person turns on and off: Desk, Trail, Memory and Board.
+// The panels the person turns on and off: Sessions, Desk, Trail, Memory, Discuss and Board.
 // Which are on is remembered across windows; at least one stays on. The
 // board takes half the window, on the side set in Settings, or all of it
 // when it is the only panel on.
-const PANELS = ['desk', 'trail', 'memory', 'discuss', 'board']
+const PANELS = ['sessions', 'desk', 'trail', 'memory', 'discuss', 'board']
 const PANELS_KEY = 'garnet.panels'
-const DEFAULT_PANELS = { desk: true, trail: false, memory: false, discuss: false, board: true }
-const SIDE = ['desk', 'trail', 'memory', 'discuss'] // the panels that share the Desk's half
+const DEFAULT_PANELS = { sessions: false, desk: true, trail: false, memory: false, discuss: false, board: true }
+const SIDE = ['sessions', 'desk', 'trail', 'memory', 'discuss'] // the panels that share the Desk's half
 
 function loadPanels() {
   try {
@@ -524,6 +525,8 @@ function loadPanels() {
   }
 }
 let panels = loadPanels()
+// The window the app opens at start shows the Sessions panel (R8.6).
+if (new URLSearchParams(location.search).get('sessions') === '1') panels = { ...panels, sessions: true }
 let boardSide = 'right'
 
 // The board is loaded when it is first shown; Excalidraw finds its bundled
@@ -564,6 +567,13 @@ function setPanels(next) {
   layout()
 }
 for (const p of PANELS) $(`tog-${p}`).addEventListener('click', () => setPanels({ ...panels, [p]: !panels[p] }))
+window.garnet.onShowPanel((p) => PANELS.includes(p) && setPanels({ ...panels, [p]: true }))
+const myId = new URLSearchParams(location.search).get('id')
+mountSessions($('pane-sessions'), myId)
+// This session's live state on the window's header (R8.1).
+const showMyState = (l) => $('live-state').replaceChildren(...(l?.available === false ? [] : [stateBadge(l?.states?.[myId])]))
+window.garnet.live.onChanged(showMyState)
+window.garnet.live.get().then(showMyState)
 
 // ---- the requests to discuss: a list, and the jump to each item ----
 // The same list is shown in the Discuss panel and in the drop-down of the
