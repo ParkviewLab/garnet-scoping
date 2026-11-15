@@ -53,7 +53,7 @@ export async function readImage(path) {
 // the rows of the Desk they want to discuss (R2.7), and a hold (R2.8): the
 // person asks the agent to stop after its current step ("requested"), the
 // agent confirms it has stopped ("holding"), and the person releases it.
-export const NO_STATE = { editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [] }
+export const NO_STATE = { editing: false, review: false, reviewAt: null, discuss: [], hold: 'off', holdAt: null, questions: [], notes: [], asides: [], away: { on: false, until: null, at: null, backAt: null } }
 const HOLDS = new Set(['off', 'requested', 'holding'])
 const PANELS = new Set(['plan', 'now', 'trail', 'memory', 'foryou', 'subagents'])
 const str = (v, max = 2000) => (typeof v === 'string' ? v.slice(0, max) : null)
@@ -123,6 +123,26 @@ export function noteTarget(on) {
   if (s === 'last-message') return { panel: 'lastword', key: 'lastword' }
   return null
 }
+// An aside (R16): a question about a row, answered by a copy of the session
+// with no tools, so that the agent is not interrupted; kept with the marks.
+function cleanAside(a) {
+  if (!a || typeof a.id !== 'string' || !PANELS.has(a.panel) || typeof a.key !== 'string') return null
+  return {
+    id: a.id.slice(0, 40),
+    panel: a.panel,
+    key: a.key.slice(0, 400),
+    text: str(a.text) ?? '',
+    question: str(a.question) ?? '',
+    at: str(a.at, 40),
+    answer: str(a.answer, 4000),
+    answeredAt: str(a.answeredAt, 40),
+    error: str(a.error, 300),
+  }
+}
+// Away (R17): whether the person is away, until when, and when they came back.
+function cleanAway(a) {
+  return { on: a?.on === true, until: str(a?.until, 40), at: str(a?.at, 40), backAt: str(a?.backAt, 40) }
+}
 export function cleanState(raw) {
   const review = raw?.review === true
   return {
@@ -134,6 +154,8 @@ export function cleanState(raw) {
     holdAt: HOLDS.has(raw?.hold) && raw.hold !== 'off' ? str(raw.holdAt, 40) : null,
     questions: (Array.isArray(raw?.questions) ? raw.questions : []).map(cleanQuestion).filter(Boolean).slice(-200),
     notes: (Array.isArray(raw?.notes) ? raw.notes : []).map(cleanNote).filter(Boolean).slice(-100),
+    asides: (Array.isArray(raw?.asides) ? raw.asides : []).map(cleanAside).filter(Boolean).slice(-100),
+    away: cleanAway(raw?.away),
   }
 }
 const now = () => new Date().toISOString().replace(/\.\d+Z$/, 'Z')
@@ -181,6 +203,7 @@ export function rendition(elements, { title = null, requestPath = '', statePath 
       const open = (state.discuss ?? []).filter((m) => m.status === 'open')
       return open.length ? `${open.length} open (rows of the Desk the person wants to talk about; listed under "discuss" in ${statePath || '<id>.state.json'})` : 'nothing open'
     })()}`,
+    `Away: ${state.away?.on ? `yes, since ${state.away.at}${state.away.until ? `, back about ${state.away.until}` : ''} (keep your questions for the person's return; carry on with work that does not need them; assume nothing in their place)` : 'no'}`,
     `Notes you pinned: ${(() => {
       const ns = state.notes ?? []
       const answered = ns.filter((n) => n.status !== 'open').length
@@ -233,6 +256,9 @@ export function rendition(elements, { title = null, requestPath = '', statePath 
   const other = live.filter((e) => !SHAPES.has(e.type) && e.type !== 'text' && e.type !== 'arrow' && e.type !== 'line' && e.type !== 'image')
   if (other.length) lines.push('', `## Other`, `- ${other.length} element(s) of other kinds (${[...new Set(other.map((e) => e.type))].join(', ')}), not described here.`)
   // Questions not yet sent are the person's still.
+  lines.push('', '## Asides (questions a copy of you answered, without interrupting you)')
+  for (const a of state.asides ?? []) lines.push(`- [${a.id}] about "${a.text.replace(/\n/g, ' ').slice(0, 120)}": "${a.question}"${a.answer ? ` (answered: "${a.answer.replace(/\n/g, ' ').slice(0, 300)}")` : ''}`)
+  if (!(state.asides ?? []).length) lines.push('- (none)')
   lines.push('', '## Notes')
   for (const n of state.notes ?? []) lines.push(`- [${n.id}] on ${n.on.panel} ${n.on.key}: "${n.text}" (${n.status}${n.reply ? `: "${n.reply}"` : ''})`)
   if (!(state.notes ?? []).length) lines.push('- (none)')
@@ -450,6 +476,26 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
     return state.questions.map((q) => (byId.has(q.id) ? { ...q, status: 'answered', answer: byId.get(q.id), answeredAt: now() } : q))
   }
 
+  // Answers to asides, written by the extension inside Claude Code (R16);
+  // the app is the state file's only writer, so it folds them in.
+  async function checkAsides() {
+    let answers
+    try {
+      answers = JSON.parse(await readFile(join(dir, `${id}.asides.json`), 'utf8'))
+    } catch {
+      return
+    }
+    await stateLoaded
+    let changed = false
+    const asides = state.asides.map((a) => {
+      const got = answers?.[a.id]
+      if (!got || a.answeredAt) return a
+      changed = true
+      return { ...a, answer: typeof got.answer === 'string' ? got.answer : null, error: typeof got.error === 'string' ? got.error : null, answeredAt: now() }
+    })
+    if (changed) await setState({ asides })
+  }
+
   async function checkRequest() {
     let text
     try {
@@ -534,6 +580,7 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
         clearTimeout(timer)
         timer = setTimeout(() => {
           checkDelivery()
+          checkAsides()
           checkRequest()
           if (ready) checkBoard()
         }, 150)
@@ -546,6 +593,7 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
   const poll = setInterval(() => {
     checkRequest()
     checkDelivery()
+    checkAsides()
   }, POLL_MS)
 
   return {

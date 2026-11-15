@@ -295,11 +295,11 @@ function watchProjects() {
 // Live state (R8): the facts from Claude Code, the transcript's tail of each
 // running session (why it waits, R8.4) and the board's hold, turned into a
 // state per listed session, sent to every window and counted on the Dock.
-async function holdOf(id) {
+async function boardStateOf(id) {
   try {
-    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8'))).hold
+    return cleanState(JSON.parse(await readFile(boardPaths(id).state, 'utf8')))
   } catch {
-    return 'off'
+    return null
   }
 }
 async function computeLive() {
@@ -309,7 +309,8 @@ async function computeLive() {
     const facts = liveFacts.bySession[s.id] ?? null
     let tail = null
     if (facts) tail = pendingFromTail(await readEdge(s.file, TAIL, true).catch(() => []))
-    states[s.id] = sessionState({ live: facts, available: liveFacts.available, hold: facts ? await holdOf(s.id) : 'off', tail })
+    const board = facts ? await boardStateOf(s.id) : null
+    states[s.id] = { ...sessionState({ live: facts, available: liveFacts.available, hold: board?.hold ?? 'off', tail }), away: Boolean(board?.away?.on) }
   }
   live = { available: liveFacts.available, states }
   for (const w of BrowserWindow.getAllWindows()) {

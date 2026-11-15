@@ -116,6 +116,12 @@ A question is kept in the board's state as a draft, with Editing ticked, until t
 
 **Receipts.** The watcher already records the signals it has delivered (`<session>.watched`) and its own process (`<session>.watcher.pid`). The app reads both, whenever they change, and shows each request to discuss as Sent, Delivered (the watcher woke the session with it, labelled as not meaning read) and Answered, the Hold button's title likewise; and a warning under the header whenever no watcher is running for the session, with the number of signals waiting and how they will next be delivered.
 
+## Asides and Away (R16, R17)
+
+**Asides.** "Ask aside…" on any row's menu keeps the question in the board's state. The garnet-board extension inside Claude Code polls the state every 1.5 s, answers each new aside with one tool-less completion over the session's own transcript (`$.model.fork`, low effort), and writes the answer to `<session>.asides.json`; the app, the state file's only writer, folds it in, and the row shows it under a label saying a copy with no tools answered, with "Ask the agent instead" to turn it into a Discuss mark. A fork started from a timer answered in under a second (probed 2026-11-14); it sees the session as of its last request.
+
+**Away.** The header's Away button keeps `away` in the state (on, the time given for the return, when it began, when it ended). The watcher tells the agent when the person goes away (keep questions for their return, carry on with what does not need them, assume nothing) and when they come back (welcome them and take them through what is pending, one item at a time); the Sessions panel marks the session; on return, a line under the header counts what came while the person was away.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

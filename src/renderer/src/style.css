@@ -1135,3 +1135,22 @@ input[type='search'] {
   color: var(--error);
   border-color: var(--error);
 }
+
+/* ---- asides (R16) ---- */
+.aside-answer {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border: 1px dashed var(--muted);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.aside-q {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+.aside-escalate {
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 2px 8px;
+}
