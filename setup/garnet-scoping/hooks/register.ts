@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
-// garnet-scoping's board tools (R12): an extension Claude Code loads, so that
+// garnet-scoping's board tools (R12): the hooks module of the garnet-scoping
+// plugin (P5), which Claude Code loads, so that
 // the agent reads and changes the board, and answers the person's signals,
 // by calling tools, each answering at once with what became of the call.
 // The tools write the same request file the agent can write by hand (R7.4);
@@ -116,7 +117,7 @@ export const register: Register = (on) => {
     })
     return next(e)
   })
-  on('tool.call', { tool: 'mcp__garnet-board__board_read' }, async ($) => {
+  on('tool.call', { tool: 'mcp__garnet-scoping__board_read' }, async ($) => {
     const id = await $.session.id()
     try {
       return { result: String(await $.fs.read(`${base}/${id}.board.md`)) }
@@ -124,11 +125,11 @@ export const register: Register = (on) => {
       return { result: 'This session has no board yet: open its window in garnet-scoping.' }
     }
   })
-  on('tool.call', { tool: 'mcp__garnet-board__board_change' }, async ($, e: any) => {
+  on('tool.call', { tool: 'mcp__garnet-scoping__board_change' }, async ($, e: any) => {
     const { add, relabel, remove, removeExchange } = e
     return { result: await send($, base, await $.session.id(), { ...(add ? { add } : {}), ...(relabel ? { relabel } : {}), ...(remove ? { remove } : {}), ...(removeExchange ? { removeExchange } : {}) }) }
   })
-  on('tool.call', { tool: 'mcp__garnet-board__board_answer' }, async ($, e: any) => {
+  on('tool.call', { tool: 'mcp__garnet-scoping__board_answer' }, async ($, e: any) => {
     const { discussed, reviewed, holding, answers, notes } = e
     return { result: await send($, base, await $.session.id(), { ...(discussed ? { discussed } : {}), ...(reviewed ? { reviewed: true } : {}), ...(holding ? { holding: true } : {}), ...(answers ? { answers } : {}), ...(notes ? { notes } : {}) }) }
   })

@@ -331,14 +331,14 @@ function markable(node, row, onClick = null, extra = []) {
   if (aside) {
     const box = ui(el('div', 'aside-answer'), 'aside-answer')
     box.append(el('div', 'aside-q', `Aside: ${aside.question}`))
-    if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-board extension inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
+    if (!aside.answeredAt) box.append(el('div', 'muted small', Date.now() - Date.parse(aside.at) > 30_000 ? 'No answer yet. Answers come from the garnet-scoping plugin inside Claude Code: is it installed (Set-up Info)?' : 'Asking a copy of the session…'))
     else if (aside.answer) {
       box.append(el('div', null, aside.answer), el('div', 'muted small', 'Answered by a copy of the session, with no tools: it can explain, not check. The agent was not interrupted.'))
       const ask = ui(el('button', 'aside-escalate', 'Ask the agent instead'), 'aside-escalate')
       ask.type = 'button'
       ask.addEventListener('click', (e) => (e.stopPropagation(), mark(row, aside.question)))
       box.append(ask)
-    } else box.append(el('div', 'muted small', aside.error ?? 'No answer. Is the garnet-board extension installed (Set-up Info)?'))
+    } else box.append(el('div', 'muted small', aside.error ?? 'No answer. Is the garnet-scoping plugin installed in Claude Code (Set-up Info)?'))
     node.append(box)
   }
   return node
@@ -1071,14 +1071,25 @@ function showDelivery(d) {
     : `No watcher is running for this session, so your signals are not reaching it${count}. The watcher starts again at the end of the agent's next turn; if it never does, open Set-up Info from the app's menu.`
   renderDiscuss()
 }
-// What Claude installed from Set-up Info is from an earlier version (P5).
+// The garnet-scoping plugin in Claude Code is missing, off, of another
+// version, or has the earlier installation beside it (P5).
 window.garnet.setup.check().then((r) => {
   if (!r || r.ok) return
   const box = $('setup-stale')
   const open = ui(el('button', null, 'Open Set-up Info'), 'open-setup')
   open.type = 'button'
   open.addEventListener('click', () => window.garnet.setup.open())
-  box.replaceChildren(el('span', null, `garnet-scoping's hooks or extension in Claude Code are from an earlier version, or missing (${r.stale.join(', ')}); some features need them. Paste the text in Set-up Info into a session to update them. `), open)
+  const what = {
+    missing: "The garnet-scoping plugin is not installed in Claude Code, so your signals and the board tools do not reach sessions.",
+    disabled: 'The garnet-scoping plugin is turned off in Claude Code, so your signals and the board tools do not reach sessions.',
+    version: `The garnet-scoping plugin in Claude Code is version ${r.installedVersion}; this app is ${r.version}. Update it with the commands in Set-up Info.`,
+  }[r.state]
+  const left = r.earlier?.join('; ')
+  let text = [what, left ? `The earlier installation is still there (${left}), which runs a second watcher; Set-up Info has the text that removes it.` : ''].filter(Boolean).join(' ')
+  // Only the earlier installation: signals still arrive, from files this app
+  // no longer updates.
+  if (r.state === 'missing' && left) text = `garnet-scoping now goes into Claude Code as a plugin. The earlier installation (${left}) still delivers your signals but is no longer updated: install the plugin and remove it, as Set-up Info says.`
+  box.replaceChildren(el('span', null, `${text} `), open)
   box.hidden = false
 })
 window.garnet.board.onDelivery(showDelivery)

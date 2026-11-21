@@ -59,9 +59,9 @@ extraResources:
   - from: channel
     to: channel
     filter: ['*.mjs']
-  # What Set-up Info has Claude install: the watcher, its hooks, the rule and
-  # the garnet-board extension. The whole folder ships: a narrower filter left
-  # garnet-board out of v0.10.0 (tests/package.test.js holds it to this).
+  # The garnet-scoping plugin for Claude Code (P5), which the app writes to
+  # its local marketplace at each start. The whole folder ships: a narrower
+  # filter left part of it out of v0.10.0 (tests/package.test.js holds it to this).
   - from: setup
     to: setup
     filter: ['**/*']

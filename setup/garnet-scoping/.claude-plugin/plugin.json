@@ -1,0 +1,7 @@
+{
+  "name": "garnet-scoping",
+  "version": "0.0.0",
+  "description": "garnet-scoping inside Claude Code: the watcher that brings the person's signals to the session, the board tools, and the rules for answering them",
+  "author": { "name": "Gary Frattarola" },
+  "license": "AGPL-3.0-or-later"
+}

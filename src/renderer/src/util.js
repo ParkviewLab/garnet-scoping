@@ -40,3 +40,46 @@ export const fileUrl = (path) => `file://${encodeURI(path).replace(/[?#]/g, enco
 // the file's own folder, as a Markdown viewer resolves it. A reference that
 // names its own scheme (https:, data:) is left as it is.
 export const fromFile = (ref, filePath) => (/^[a-z][a-z0-9+.-]*:/i.test(ref) ? ref : new URL(ref, fileUrl(filePath)).href)
+
+// Spawned sessions (R20): `list` (already in display order) as rows with a
+// depth, each session followed by those it started, in the same order. A
+// session whose parent is not in `list` is top-level. `roots`, when given,
+// limits the top level to those sessions (one project's group); `folded`
+// holds the ids whose spawned sessions are hidden.
+export function nest(list, { roots = null, folded = new Set() } = {}) {
+  const ids = new Set(list.map((s) => s.id))
+  const kids = new Map()
+  for (const s of list)
+    if (s.parent && ids.has(s.parent) && s.parent !== s.id) {
+      if (!kids.has(s.parent)) kids.set(s.parent, [])
+      kids.get(s.parent).push(s)
+    }
+  const top = roots ?? list.filter((s) => !(s.parent && ids.has(s.parent)))
+  const out = []
+  const seen = new Set()
+  const walk = (s, depth) => {
+    if (seen.has(s.id)) return // a cycle in the records adds nothing
+    seen.add(s.id)
+    const children = kids.get(s.id) ?? []
+    out.push({ s, depth, children: children.length })
+    if (!folded.has(s.id)) for (const c of children) walk(c, depth + 1)
+  }
+  for (const s of top) walk(s, 0)
+  return out
+}
+
+// The sessions `matches` picks, with each one's ancestors in `all`, so that a
+// spawned session shown by the filter keeps the session that started it.
+export function withAncestors(all, matches) {
+  const byId = new Map(all.map((s) => [s.id, s]))
+  const keep = new Set()
+  for (const s of all)
+    if (matches(s)) {
+      let x = s
+      while (x && !keep.has(x.id)) {
+        keep.add(x.id)
+        x = x.parent ? byId.get(x.parent) : null
+      }
+    }
+  return all.filter((s) => keep.has(s.id))
+}

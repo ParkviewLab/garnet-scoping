@@ -5,7 +5,7 @@
   "panels": [
     "panel-waiting"
   ],
-  "done": "That is it: paste the text once, and again whenever the app says the install is out of date.",
+  "done": "That is it: install the plugin once, and update it whenever the app says it is out of date.",
   "steps": [
     {
       "target": [],
@@ -21,12 +21,12 @@
     {
       "target": [],
       "action": "point",
-      "caption": "Paste its first block into any Claude Code session: Claude installs the watcher, its hooks, the CLAUDE.md rules and the board extension."
+      "caption": "Run its first two commands in a terminal. They install the garnet-scoping plugin, which brings the watcher, the board tools and the rules into every session."
     },
     {
       "target": [],
       "action": "point",
-      "caption": "From then on, your signals reach every session, and new sessions have the board tools."
+      "caption": "From then on, your signals reach every new session, and each has the board tools."
     }
   ]
 }
