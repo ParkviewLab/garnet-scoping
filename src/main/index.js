@@ -241,6 +241,7 @@ function registerIpc() {
     return (known = await listSessions(PROJECTS))
   })
   ipcMain.handle('manual:lessons', () => listLessons(MANUAL_SRC()))
+  ipcMain.handle('manual:whats-this', () => readFile(join(MANUAL_SRC(), 'whats-this.json'), 'utf8').then(JSON.parse, () => ({ names: {}, prefixes: {} })))
   ipcMain.handle('manual:open', (e, lesson) => openManual({ lesson: Number.isInteger(lesson) ? lesson : null, from: BrowserWindow.fromWebContents(e.sender) }))
   // A lesson's step that opens one of the app's own windows, which a lesson
   // cannot reach from its menu: Set-up Info, or Settings.
@@ -422,6 +423,8 @@ function buildMenu() {
   const setupInfo = { label: 'Set-up Info…', click: () => openSetupInfo() }
   // How do I… (R18.10): ⌘? on macOS, F1 on Ubuntu.
   const howDoI = { label: 'How do I…', accelerator: isMac ? 'Cmd+Shift+/' : 'F1', click: () => openManual({ from: BrowserWindow.getFocusedWindow() }) }
+  // What's This (R21): ⌥⌘? on macOS, ⇧F1 on Ubuntu; the window's own button does the same.
+  const whatsThis = { label: 'What\'s This?', accelerator: isMac ? 'Alt+Cmd+Shift+/' : 'Shift+F1', click: () => BrowserWindow.getFocusedWindow()?.webContents.send('whats-this') }
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
       ...(isMac
@@ -437,7 +440,7 @@ function buildMenu() {
       { role: 'editMenu' },
       { label: 'View', submenu: [{ role: 'reload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
       { role: 'windowMenu' },
-      { role: 'help', submenu: [howDoI, { type: 'separator' }, setupInfo, about, licenses] },
+      { role: 'help', submenu: [howDoI, whatsThis, { type: 'separator' }, setupInfo, about, licenses] },
     ]),
   )
 }

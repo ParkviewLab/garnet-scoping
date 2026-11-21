@@ -704,7 +704,8 @@ function renderTrail() {
 // ---- the facts and drift (R2.6, R6) ----
 function renderFacts() {
   const f = view.facts
-  document.title = f.title ?? view.id
+  // The manual's window is titled as such, never as a session (R18.12).
+  document.title = new URLSearchParams(location.search).get('manual') === '1' ? 'garnet-scoping Manual' : (f.title ?? view.id)
   $('title').textContent = f.title ?? view.id
   const facts = $('facts')
   facts.replaceChildren()
@@ -1225,6 +1226,9 @@ refresh()
 // The manual (R18): in its own window, the lesson's bar and player; in every
 // other window, a ? on each panel that lists the panel's lessons (R18.10).
 const query = new URLSearchParams(location.search)
+// What's This (R21), in every window, the manual's included, where lesson 30
+// plays it on the demo.
+import('./whats-this.js').then((m) => m.mountWhatsThis())
 if (query.get('manual') === '1') {
   const n = query.get('lesson')
   import('./manual.js').then((m) => m.startManual({ lesson: n == null ? null : Number(n), step: Number(query.get('step') ?? 0) }))
