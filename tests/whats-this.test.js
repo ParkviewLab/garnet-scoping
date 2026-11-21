@@ -41,4 +41,10 @@ describe('every named element', () => {
     const missing = [...named].filter((n) => /^[a-z0-9-]+$/.test(n) && !describeName(n, texts))
     expect(missing).toEqual([])
   })
+  // Each says what the element is called, what it is, and what it is for.
+  it('has a name, an explanation and a purpose', () => {
+    const entries = [...Object.entries(texts.names), ...Object.entries(texts.prefixes)]
+    const short = entries.filter(([, e]) => !Array.isArray(e) || e.length !== 3 || e.some((s) => typeof s !== 'string' || s.trim().length < 3)).map(([k]) => k)
+    expect(short).toEqual([])
+  })
 })

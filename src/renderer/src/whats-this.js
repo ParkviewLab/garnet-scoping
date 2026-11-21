@@ -3,8 +3,8 @@
 //
 // What's This (R21): a mode in which the pointer asks what an element is. The
 // element is the nearest one with a data-ui name (the names the manual's
-// lessons use, R18.11); a click shows a card with its name, what it is for
-// (manual/whats-this.json) and the lessons that act on it, and never acts on
+// lessons use, R18.11); a click shows a card with its name, what it is and
+// what it is for (manual/whats-this.json) and the lessons that act on it, and never acts on
 // the element itself. One click per entry; Shift keeps the mode on; Esc leaves.
 
 const el = (tag, cls, text) => {
@@ -16,12 +16,13 @@ const el = (tag, cls, text) => {
 
 // The description of `name`: its own entry, or the entry for its prefix.
 export function describe(name, texts) {
+  const entry = (e) => ({ title: e[0], text: e[1], purpose: e[2] ?? '' })
   const own = texts.names?.[name]
-  if (own) return { title: own[0], text: own[1] }
+  if (own) return entry(own)
   const prefix = Object.keys(texts.prefixes ?? {})
     .sort((a, b) => b.length - a.length)
     .find((p) => name.startsWith(p))
-  return prefix ? { title: texts.prefixes[prefix][0], text: texts.prefixes[prefix][1] } : null
+  return prefix ? entry(texts.prefixes[prefix]) : null
 }
 
 // The lessons for an element: those with a step that acts on it; else those
@@ -81,6 +82,7 @@ export function mountWhatsThis() {
     close.setAttribute('aria-label', 'Close')
     close.addEventListener('click', closeCard)
     card.append(close, el('h3', null, d.title), el('p', null, d.text))
+    if (d.purpose) card.append(el('p', 'whats-this-purpose', d.purpose))
     if (mine.length) {
       card.append(el('div', 'muted small', ofPanel ? 'Lessons for this panel' : 'Lessons'))
       for (const l of mine) {
