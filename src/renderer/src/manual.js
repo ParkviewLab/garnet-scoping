@@ -102,6 +102,7 @@ export function startManual({ lesson: wanted, step: from }) {
   // R18.12: the strip that says this window practises on a demo session.
   const practice = el('div', 'manual-practice')
   const leave = el('button', 'manual-leave', 'Leave the manual')
+  leave.dataset.ui = 'manual-leave'
   leave.type = 'button'
   leave.addEventListener('click', () => window.close())
   practice.append(el('span', null, 'Manual: practising on a demo session. Nothing here reaches your real sessions.'), leave)

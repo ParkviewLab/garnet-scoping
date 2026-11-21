@@ -274,7 +274,7 @@ R18.8. The voice-over is spoken in phonorheos's voice bf_emma, a voice no sessio
 
 R18.9. The lessons, each one task, in five groups:
 
-- **Getting around:** 1. Find the sessions waiting for you. 2. Read the Dock count (macOS only; on Ubuntu the count reaches only some launchers). 3. Switch between Waiting first, Recent first and Alphabetical. 4. Find a session by title or folder. 5. Open another session's window. 6. Turn panels on and off. 29. See the sessions another session started (R20).
+- **Getting around:** 1. Find the sessions waiting for you. 2. Read the Dock count (macOS only; on Ubuntu the count reaches only some launchers). 3. Switch between Waiting first, Recent first and Alphabetical. 4. Find a session by title or folder. 5. Open another session's window. 6. Turn panels on and off. 29. See the sessions another session started (R20). 30. Find out what anything is with What's This (R21).
 - **Following the agent:** 7. Read the Desk at a glance. 8. See why a session is waiting. 9. Follow the Trail turn by turn. 10. Read what the agent keeps in Memory. 11. See what the agent's subagents are doing. 12. Spot a compaction and read its summary. 13. Check the work running in the background and the wake-ups.
 - **Talking to the agent:** 14. Ask the agent about a row (Discuss). 15. Ask an aside without interrupting. 16. Pause the agent with Hold. 17. Tell the agent you are away, and come back. 18. Answer a note the agent pinned for you. 19. Check that a signal reached the agent.
 - **Working on the board:** 20. Draw shapes and connect them. 21. Ask a question on the board. 22. Follow up and remove an exchange. 23. Ask the agent to review the board. 24. Mark up a mock-up the agent placed.
@@ -310,6 +310,20 @@ R20.3. A spawned session whose parent is not listed (its transcript is gone, or 
 
 R20.4. The order of R8.3 applies to the top-level sessions; a parent's spawned sessions follow it, in the same order among themselves.
 
+### R21. What's This
+
+Now: a lesson is found from a panel's **?**, which lists that panel's lessons, or by searching How do I… (R18.10); nothing says what a single control is for.
+
+R21.1. A **What's This** mode turns the pointer into the help cursor (an arrow with a question mark). It is entered from a **?** button at the right of the window's header, from "What's This?" in the Help menu, and by a shortcut: ⌥⌘? on macOS, beside How do I…'s ⌘?, and ⇧F1 on Ubuntu.
+
+R21.2. While the mode is on, a line under the header says what it does and how to leave it, and the element under the pointer is outlined with its name, so that the person sees what a click will ask about.
+
+R21.3. A click in the mode asks about the element clicked and never acts on it: a card beside the element gives its name, one sentence on what it is for, and the lessons that act on it, each of which opens the manual on that lesson. Where no lesson acts on the element itself, the card lists the lessons of the panel that holds it, and says so.
+
+R21.4. The mode ends after one click, or on Esc; a click with Shift held keeps it on, for asking about several things in turn. A click outside the card, or Esc, closes the card.
+
+R21.5. Every element the manual names (R18.11) has its description, and a check fails when one has none, so that a card cannot be blank for a control the app has.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -329,6 +343,7 @@ R20.4. The order of R8.3 applies to the top-level sessions; a parent's spawned s
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
 - **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
 - **Resizing panels:** splitters between open panels, vertical or horizontal as the panels lie, with a 90 px minimum and a double-click reset (R19); demonstrated in a mock-up on 2026-11-15.
+- **What's This:** a mode that asks what any element is, entered from a header button, the Help menu or ⌥⌘? (⇧F1 on Ubuntu), one click per entry with Shift to keep it on, answered by a card with a description and the element's lessons (R21); proposed by the owner and demonstrated in a mock-up on 2026-11-21.
 - **Spawned sessions:** indented beneath the session that started them, foldable by a chevron (R20); demonstrated in a mock-up on 2026-11-21.
 - **The manual window's frame:** teal diagonal stripes round the window, a teal practice strip with Leave the manual, its own title and demo tags (R18.12); chosen 2026-11-21 from six rendered frames, the pattern so that it reads without colour vision.
 - **Install as a plugin:** the Claude Code side of the app (hooks, board tools, rules) is one Claude Code plugin, replacing the pasted set-up text (P5), ruled 2026-11-21 after the probes recorded under P5.

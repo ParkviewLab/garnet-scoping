@@ -1431,4 +1431,76 @@ body.manual-window .manual-top {
   background: var(--demo-deep);
   color: var(--demo-fg);
   vertical-align: 1px;
+/* What's This (R21): the header's button, the help cursor everywhere while
+   the mode is on, the outline and name of the element under the pointer, and
+   the card a click shows. */
+.whats-this-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  padding: 0;
+  font-weight: 600;
+}
+.whats-this-btn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+body.whats-this,
+body.whats-this * {
+  cursor: help !important;
+}
+body.whats-this .whats-this-btn {
+  cursor: pointer !important;
+}
+.whats-this-line {
+  color: var(--fg);
+}
+.whats-this-outline {
+  position: fixed;
+  z-index: 900;
+  pointer-events: none;
+  border: 2px solid var(--accent);
+  border-radius: 5px;
+}
+.whats-this-label {
+  position: fixed;
+  z-index: 901;
+  pointer-events: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.whats-this-card {
+  position: fixed;
+  z-index: 902;
+  width: 300px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+}
+.whats-this-card h3 {
+  margin: 0 22px 4px 0;
+  font-size: 13px;
+}
+.whats-this-card p {
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+.whats-this-card .lesson-item {
+  width: 100%;
+}
+.whats-this-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
 }
