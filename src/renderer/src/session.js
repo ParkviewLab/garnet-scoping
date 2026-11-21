@@ -704,7 +704,8 @@ function renderTrail() {
 // ---- the facts and drift (R2.6, R6) ----
 function renderFacts() {
   const f = view.facts
-  document.title = f.title ?? view.id
+  // The manual's window is titled as such, never as a session (R18.12).
+  document.title = new URLSearchParams(location.search).get('manual') === '1' ? 'garnet-scoping Manual' : (f.title ?? view.id)
   $('title').textContent = f.title ?? view.id
   const facts = $('facts')
   facts.replaceChildren()

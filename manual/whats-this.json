@@ -1,83 +1,318 @@
 {
   "names": {
-    "whats-this": ["What's This", "Turns the pointer into a question: click anything in the window to see what it is for and the lessons that teach it."],
-    "hold": ["Hold", "Asks the agent to stop after the step it is on and start no other; press it again to release the hold."],
-    "away": ["Away", "Tells the agent you have stepped away: it keeps its questions for your return and carries on with what does not need you."],
-    "away-until": ["Back at", "The time you expect to be back, which the agent is told."],
-    "away-go": ["I am away", "Sends the Away signal with the time you gave."],
-    "discuss-btn": ["Discuss", "Lists the rows you have marked to discuss and the notes the agent pinned, and sends the open ones to the agent."],
-    "discuss-badge": ["Discuss mark", "Marks this row for the agent to talk about in the conversation; click it again to turn the mark off."],
-    "discuss-go": ["Send to discuss", "Sends the marked row, with your note, to the agent to answer in the conversation."],
-    "aside-text": ["Aside question", "Your question about this row, answered by a copy of the session without interrupting the agent."],
-    "aside-go": ["Ask aside", "Asks a copy of the session about this row; the agent itself is not interrupted."],
-    "aside-answer": ["Aside answer", "The answer from a copy of the session, which had no tools: it can explain, not check."],
-    "aside-escalate": ["Ask the agent instead", "Turns the aside into a Discuss mark, so that the agent itself answers it."],
-    "note": ["Agent's note", "A one-line assumption the agent pinned instead of stopping to ask; confirm, correct or dismiss it."],
-    "note-confirm": ["Confirm", "Tells the agent its assumption was right."],
-    "note-correct": ["Correct", "Tells the agent what to assume instead, in a line of your own."],
-    "note-dismiss": ["Dismiss", "Clears the note without an answer."],
-    "receipt": ["Receipt", "Where a signal has got to: Sent, Delivered to the session, and Answered by the agent."],
-    "watch-warning": ["Watcher notice", "Says whether your signals are reaching this session now, or when they next will."],
-    "setup-stale": ["Set-up notice", "Says when the garnet-scoping plugin in Claude Code is missing, turned off, of another version, or has the earlier installation beside it."],
-    "open-setup": ["Open Set-up Info", "Opens the window with the commands that install and update the garnet-scoping plugin."],
-    "back-summary": ["While you were away", "Counts what came in while you were away, for the agent to take you through."],
-    "tog-sessions": ["Sessions toggle", "Shows or hides the Sessions panel."],
-    "tog-desk": ["Desk toggle", "Shows or hides the Desk, the session's present state."],
-    "tog-trail": ["Trail toggle", "Shows or hides the Trail, the session turn by turn."],
-    "tog-memory": ["Memory toggle", "Shows or hides the Memory panel."],
-    "tog-discuss": ["Discuss toggle", "Shows or hides the Discuss panel."],
-    "tog-subagents": ["Subagents toggle", "Shows or hides the Subagents panel."],
-    "tog-board": ["Board toggle", "Shows or hides the board."],
-    "pane-sessions": ["Sessions", "Every Claude Code session on this machine with its live state; click one to open its window."],
-    "pane-desk": ["Desk", "The session's present state: its plan, what it is doing, what it waits on, and what it has touched."],
-    "pane-trail": ["Trail", "The session turn by turn: your messages, the agent's actions and answers."],
-    "pane-memory": ["Memory", "The notes the agent keeps for this project between sessions."],
-    "pane-discuss": ["Discuss", "The rows you marked to discuss and the notes the agent pinned for you."],
-    "pane-subagents": ["Subagents", "The subagents this session started, with their model, effort, actions and reports."],
-    "panel-plan": ["Plan", "The agent's task list, with the step it is on."],
-    "panel-now": ["Now", "What the agent is doing at this moment, by description and target."],
-    "panel-waiting": ["Waiting", "What the session waits on: you, background work, scheduled jobs and wake-ups."],
-    "panel-last-word": ["Last word", "The agent's most recent message to you."],
-    "panel-for-you": ["For you", "The files the agent sent you in this session, newest first; click one to preview it."],
-    "panel-touched": ["Touched this turn", "The files the agent read and wrote in its current turn."],
-    "row": ["Row", "One item the agent did or said; mark it to discuss, or ask an aside about it, from its menu."],
-    "turn": ["Turn", "One exchange in the Trail: your message and everything the agent did in answer."],
-    "compaction": ["Compaction", "Where the conversation was compacted; open it to read the summary the agent continues from."],
-    "show-all": ["Show all", "Shows the whole compaction summary."],
-    "show-earlier": ["Show earlier turns", "Loads the turns before those shown."],
-    "to-subagent": ["Subagent", "Goes to the row of the subagent this action started."],
-    "show-in-trail": ["Show in Trail", "Goes to the action that started this subagent, in the Trail."],
-    "delivery-file": ["File sent to you", "A file the agent sent you; click it to preview it."],
-    "file-open": ["Open", "Opens the file in the application your system uses for it."],
-    "file-show": ["Show in folder", "Shows the file in the Finder or your file manager."],
-    "file-discuss": ["Discuss", "Marks the file for the agent to talk about."],
-    "viewer-close": ["Close", "Closes the preview."],
-    "session-row": ["Session", "One Claude Code session with its live state; click it to open its window."],
-    "session-row-current": ["This session", "The session this window shows."],
-    "session-fold": ["Fold", "Hides or shows the sessions this session started."],
-    "sessions-filter": ["Filter", "Lists only the sessions whose title or folder holds what you type."],
-    "view-waiting": ["Waiting first", "Lists every session, those waiting for you first."],
-    "view-recent": ["Recent first", "Lists sessions by project, the most recently active first."],
-    "view-alphabetical": ["Alphabetical", "Lists sessions by project, the projects in alphabetical order."],
-    "splitter": ["Divider", "Drag it to share the space between the two panels beside it; double-click to restore their sizes."],
-    "splitter-board": ["Board divider", "Drag it to share the window between the board and the other panels; double-click to give the board half again."],
-    "board": ["Board", "A shared whiteboard for this session: draw, ask questions in balloons, and ask the agent to review it."],
-    "board-canvas": ["Board", "A shared whiteboard for this session: draw, ask questions in balloons, and ask the agent to review it."],
-    "board-review": ["Review", "Asks the agent to read the board now and answer what is on it."],
-    "board-editing": ["Editing", "Ticked while you are still changing the board, so that the agent waits; untick it when you are done."],
-    "board-fit": ["Fit", "Zooms the board to show everything on it."],
-    "board-copy-path": ["Copy the board's path", "Copies the path of the board's text rendition, for an agent you give it to."],
-    "board-side-left": ["Board on the left", "Places the board on the left of the window."],
-    "board-side-right": ["Board on the right", "Places the board on the right of the window."],
-    "board-side-top": ["Board at the top", "Places the board above the other panels."],
-    "board-side-bottom": ["Board at the bottom", "Places the board below the other panels."],
-    "question-typing": ["Question", "Type a question for the agent; it is sent with the board's next Review."],
-    "manual-search": ["Search lessons", "Finds lessons by any word in their titles or captions."],
-    "manual-all": ["All lessons", "Every lesson of the manual, by group."]
+    "whats-this": [
+      "What's This",
+      "Turns the pointer into a question: click anything in the window to see what it is for and the lessons that teach it."
+    ],
+    "hold": [
+      "Hold",
+      "Asks the agent to stop after the step it is on and start no other; press it again to release the hold."
+    ],
+    "away": [
+      "Away",
+      "Tells the agent you have stepped away: it keeps its questions for your return and carries on with what does not need you."
+    ],
+    "away-until": [
+      "Back at",
+      "The time you expect to be back, which the agent is told."
+    ],
+    "away-go": [
+      "I am away",
+      "Sends the Away signal with the time you gave."
+    ],
+    "discuss-btn": [
+      "Discuss",
+      "Lists the rows you have marked to discuss and the notes the agent pinned, and sends the open ones to the agent."
+    ],
+    "discuss-badge": [
+      "Discuss mark",
+      "Marks this row for the agent to talk about in the conversation; click it again to turn the mark off."
+    ],
+    "discuss-go": [
+      "Send to discuss",
+      "Sends the marked row, with your note, to the agent to answer in the conversation."
+    ],
+    "aside-text": [
+      "Aside question",
+      "Your question about this row, answered by a copy of the session without interrupting the agent."
+    ],
+    "aside-go": [
+      "Ask aside",
+      "Asks a copy of the session about this row; the agent itself is not interrupted."
+    ],
+    "aside-answer": [
+      "Aside answer",
+      "The answer from a copy of the session, which had no tools: it can explain, not check."
+    ],
+    "aside-escalate": [
+      "Ask the agent instead",
+      "Turns the aside into a Discuss mark, so that the agent itself answers it."
+    ],
+    "note": [
+      "Agent's note",
+      "A one-line assumption the agent pinned instead of stopping to ask; confirm, correct or dismiss it."
+    ],
+    "note-confirm": [
+      "Confirm",
+      "Tells the agent its assumption was right."
+    ],
+    "note-correct": [
+      "Correct",
+      "Tells the agent what to assume instead, in a line of your own."
+    ],
+    "note-dismiss": [
+      "Dismiss",
+      "Clears the note without an answer."
+    ],
+    "receipt": [
+      "Receipt",
+      "Where a signal has got to: Sent, Delivered to the session, and Answered by the agent."
+    ],
+    "watch-warning": [
+      "Watcher notice",
+      "Says whether your signals are reaching this session now, or when they next will."
+    ],
+    "setup-stale": [
+      "Set-up notice",
+      "Says when the garnet-scoping plugin in Claude Code is missing, turned off, of another version, or has the earlier installation beside it."
+    ],
+    "open-setup": [
+      "Open Set-up Info",
+      "Opens the window with the commands that install and update the garnet-scoping plugin."
+    ],
+    "back-summary": [
+      "While you were away",
+      "Counts what came in while you were away, for the agent to take you through."
+    ],
+    "tog-sessions": [
+      "Sessions toggle",
+      "Shows or hides the Sessions panel."
+    ],
+    "tog-desk": [
+      "Desk toggle",
+      "Shows or hides the Desk, the session's present state."
+    ],
+    "tog-trail": [
+      "Trail toggle",
+      "Shows or hides the Trail, the session turn by turn."
+    ],
+    "tog-memory": [
+      "Memory toggle",
+      "Shows or hides the Memory panel."
+    ],
+    "tog-discuss": [
+      "Discuss toggle",
+      "Shows or hides the Discuss panel."
+    ],
+    "tog-subagents": [
+      "Subagents toggle",
+      "Shows or hides the Subagents panel."
+    ],
+    "tog-board": [
+      "Board toggle",
+      "Shows or hides the board."
+    ],
+    "pane-sessions": [
+      "Sessions",
+      "Every Claude Code session on this machine with its live state; click one to open its window."
+    ],
+    "pane-desk": [
+      "Desk",
+      "The session's present state: its plan, what it is doing, what it waits on, and what it has touched."
+    ],
+    "pane-trail": [
+      "Trail",
+      "The session turn by turn: your messages, the agent's actions and answers."
+    ],
+    "pane-memory": [
+      "Memory",
+      "The notes the agent keeps for this project between sessions."
+    ],
+    "pane-discuss": [
+      "Discuss",
+      "The rows you marked to discuss and the notes the agent pinned for you."
+    ],
+    "pane-subagents": [
+      "Subagents",
+      "The subagents this session started, with their model, effort, actions and reports."
+    ],
+    "panel-plan": [
+      "Plan",
+      "The agent's task list, with the step it is on."
+    ],
+    "panel-now": [
+      "Now",
+      "What the agent is doing at this moment, by description and target."
+    ],
+    "panel-waiting": [
+      "Waiting",
+      "What the session waits on: you, background work, scheduled jobs and wake-ups."
+    ],
+    "panel-last-word": [
+      "Last word",
+      "The agent's most recent message to you."
+    ],
+    "panel-for-you": [
+      "For you",
+      "The files the agent sent you in this session, newest first; click one to preview it."
+    ],
+    "panel-touched": [
+      "Touched this turn",
+      "The files the agent read and wrote in its current turn."
+    ],
+    "row": [
+      "Row",
+      "One item the agent did or said; mark it to discuss, or ask an aside about it, from its menu."
+    ],
+    "turn": [
+      "Turn",
+      "One exchange in the Trail: your message and everything the agent did in answer."
+    ],
+    "compaction": [
+      "Compaction",
+      "Where the conversation was compacted; open it to read the summary the agent continues from."
+    ],
+    "show-all": [
+      "Show all",
+      "Shows the whole compaction summary."
+    ],
+    "show-earlier": [
+      "Show earlier turns",
+      "Loads the turns before those shown."
+    ],
+    "to-subagent": [
+      "Subagent",
+      "Goes to the row of the subagent this action started."
+    ],
+    "show-in-trail": [
+      "Show in Trail",
+      "Goes to the action that started this subagent, in the Trail."
+    ],
+    "delivery-file": [
+      "File sent to you",
+      "A file the agent sent you; click it to preview it."
+    ],
+    "file-open": [
+      "Open",
+      "Opens the file in the application your system uses for it."
+    ],
+    "file-show": [
+      "Show in folder",
+      "Shows the file in the Finder or your file manager."
+    ],
+    "file-discuss": [
+      "Discuss",
+      "Marks the file for the agent to talk about."
+    ],
+    "viewer-close": [
+      "Close",
+      "Closes the preview."
+    ],
+    "session-row": [
+      "Session",
+      "One Claude Code session with its live state; click it to open its window."
+    ],
+    "session-row-current": [
+      "This session",
+      "The session this window shows."
+    ],
+    "session-fold": [
+      "Fold",
+      "Hides or shows the sessions this session started."
+    ],
+    "sessions-filter": [
+      "Filter",
+      "Lists only the sessions whose title or folder holds what you type."
+    ],
+    "view-waiting": [
+      "Waiting first",
+      "Lists every session, those waiting for you first."
+    ],
+    "view-recent": [
+      "Recent first",
+      "Lists sessions by project, the most recently active first."
+    ],
+    "view-alphabetical": [
+      "Alphabetical",
+      "Lists sessions by project, the projects in alphabetical order."
+    ],
+    "splitter": [
+      "Divider",
+      "Drag it to share the space between the two panels beside it; double-click to restore their sizes."
+    ],
+    "splitter-board": [
+      "Board divider",
+      "Drag it to share the window between the board and the other panels; double-click to give the board half again."
+    ],
+    "board": [
+      "Board",
+      "A shared whiteboard for this session: draw, ask questions in balloons, and ask the agent to review it."
+    ],
+    "board-canvas": [
+      "Board",
+      "A shared whiteboard for this session: draw, ask questions in balloons, and ask the agent to review it."
+    ],
+    "board-review": [
+      "Review",
+      "Asks the agent to read the board now and answer what is on it."
+    ],
+    "board-editing": [
+      "Editing",
+      "Ticked while you are still changing the board, so that the agent waits; untick it when you are done."
+    ],
+    "board-fit": [
+      "Fit",
+      "Zooms the board to show everything on it."
+    ],
+    "board-copy-path": [
+      "Copy the board's path",
+      "Copies the path of the board's text rendition, for an agent you give it to."
+    ],
+    "board-side-left": [
+      "Board on the left",
+      "Places the board on the left of the window."
+    ],
+    "board-side-right": [
+      "Board on the right",
+      "Places the board on the right of the window."
+    ],
+    "board-side-top": [
+      "Board at the top",
+      "Places the board above the other panels."
+    ],
+    "board-side-bottom": [
+      "Board at the bottom",
+      "Places the board below the other panels."
+    ],
+    "question-typing": [
+      "Question",
+      "Type a question for the agent; it is sent with the board's next Review."
+    ],
+    "manual-search": [
+      "Search lessons",
+      "Finds lessons by any word in their titles or captions."
+    ],
+    "manual-all": [
+      "All lessons",
+      "Every lesson of the manual, by group."
+    ],
+    "manual-leave": [
+      "Leave the manual",
+      "Closes the manual's window; your own session windows are as you left them."
+    ]
   },
   "prefixes": {
-    "lessons-": ["Lessons", "Lists the lessons for this panel; click one to play it."],
-    "menu-": ["Menu item", "An action from this row's menu."],
-    "board-menu-": ["Board menu item", "An action from the board's menu."]
+    "lessons-": [
+      "Lessons",
+      "Lists the lessons for this panel; click one to play it."
+    ],
+    "menu-": [
+      "Menu item",
+      "An action from this row's menu."
+    ],
+    "board-menu-": [
+      "Board menu item",
+      "An action from the board's menu."
+    ]
   }
 }

@@ -94,6 +94,8 @@ export function mountSessions(root, currentId) {
       head.append(fold)
       if (folded.has(s.id)) name.append(el('span', 'spawned-count', ` · ${children} spawned`))
     }
+    // The manual's demo sessions are tagged, so that none is taken for a real one (R18.12).
+    if (s.project === 'demo') name.append(el('span', 'demo-tag', 'demo'))
     head.append(name, badge(st))
     r.append(head, el('div', 'sub', [depth ? 'started by the session above' : (s.cwd ?? s.project), ago(s.modified)].filter(Boolean).join(' · ')))
     const w = why(st)
