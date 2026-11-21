@@ -16,7 +16,7 @@ The app only reads what Claude Code writes: it never writes under `~/.claude`, a
 
 ## Install
 
-Download from the [releases page](https://github.com/garycoding/garnet-scoping/releases).
+Download from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
 
 - **macOS (Apple silicon):** open the `.dmg` and drag garnet-scoping to Applications. The build is not signed, so macOS refuses the first launch; open it once with Control-click, Open, or run:
 
@@ -27,7 +27,7 @@ Download from the [releases page](https://github.com/garycoding/garnet-scoping/r
 - **Ubuntu (x64):** the `.deb` puts the app in `/opt/garnet-scoping` and in the applications menu. On Ubuntu, install with:
 
   ```bash
-  sudo apt install ./garnet-scoping-0.8.0-amd64.deb
+  sudo apt install ./garnet-scoping-<version>-amd64.deb
   ```
 
   Or run the `.AppImage` directly after `chmod +x` on it. With the AppImage, the watcher cannot find the app's binary on its own; set `GARNET_SCOPING_APP` to the AppImage's path in your shell profile.

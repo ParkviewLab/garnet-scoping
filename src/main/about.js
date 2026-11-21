@@ -12,7 +12,7 @@ import { join } from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import icon from '../../build/icon.png?asset'
 
-const SOURCE_URL = 'https://github.com/garycoding/garnet-scoping'
+const SOURCE_URL = 'https://github.com/ParkviewLab/garnet-scoping'
 const RELEASES_URL = `${SOURCE_URL}/releases`
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
