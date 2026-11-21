@@ -98,7 +98,16 @@ export function startManual({ lesson: wanted, step: from }) {
   const bar = document.getElementById('manual-bar')
   top.hidden = false
   bar.hidden = false
-  document.body.classList.add('manual-mode')
+  document.body.classList.add('manual-mode', 'manual-window')
+  // R18.12: the strip that says this window practises on a demo session.
+  const practice = el('div', 'manual-practice')
+  const leave = el('button', 'manual-leave', 'Leave the manual')
+  leave.type = 'button'
+  leave.addEventListener('click', () => window.close())
+  practice.append(el('span', null, 'Manual: practising on a demo session. Nothing here reaches your real sessions.'), leave)
+  document.body.prepend(practice)
+  const frame = el('div', 'manual-frame')
+  document.body.append(frame)
   const pointer = el('div', 'manual-pointer')
   const caption = el('div', 'manual-caption')
   pointer.hidden = true

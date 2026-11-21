@@ -1366,3 +1366,69 @@ body.manual-mode {
   color: #fff;
   pointer-events: none;
 }
+
+/* The manual window (R18.12): teal diagonal stripes round the window, a
+   pattern as well as a colour, so that it is not taken for a session window
+   with or without colour vision; a teal practice strip at its top; demo tags. */
+:root {
+  --demo: #1d9e75;
+  --demo-deep: #0f4a3b;
+  --demo-fg: #d5f3e8;
+}
+body.manual-window {
+  box-sizing: border-box;
+  padding: 9px;
+}
+.manual-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  pointer-events: none;
+  background: repeating-linear-gradient(45deg, var(--demo) 0 6px, transparent 6px 12px);
+  /* Only the outer 9 px: the window's middle is masked out. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  padding: 9px;
+  box-sizing: border-box;
+}
+.manual-practice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: var(--demo-deep);
+  color: var(--demo-fg);
+  font-size: 12px;
+}
+.manual-practice span {
+  flex: 1;
+}
+.manual-leave {
+  font: inherit;
+  color: var(--demo-fg);
+  background: transparent;
+  border: 1px solid var(--demo);
+  border-radius: 5px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.manual-leave:hover {
+  background: var(--demo);
+  color: #fff;
+}
+body.manual-window .manual-top {
+  border-bottom-color: var(--demo);
+}
+.demo-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--demo-deep);
+  color: var(--demo-fg);
+  vertical-align: 1px;
+}
