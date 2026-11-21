@@ -339,6 +339,30 @@ body.resizing.rows {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* A spawned session, indented beneath the session that started it (R20). */
+.sessions-row.spawned {
+  margin-left: calc(var(--depth, 1) * 18px);
+  border-left: 1px solid var(--line);
+  border-radius: 0 6px 6px 0;
+}
+.sessions-row .fold {
+  flex: 0 0 auto;
+  width: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.sessions-row .fold:hover {
+  color: var(--fg);
+}
+.sessions-row .spawned-count {
+  color: var(--muted);
+  font-size: 12px;
+}
 .sessions-row .why {
   color: var(--warn);
   font-size: 12px;
