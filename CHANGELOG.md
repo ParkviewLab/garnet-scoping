@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.13.0] - 2026-11-21
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- Spawned sessions in the Sessions panel, and garnet-scoping as a Claude Code plugin (#97)
+
 ## [v0.12.0] - 2026-11-15
 
 ### Highlights
