@@ -1493,6 +1493,9 @@ body.whats-this .whats-this-btn {
   margin: 0 0 8px;
   line-height: 1.45;
 }
+.whats-this-card .whats-this-purpose {
+  color: var(--muted);
+}
 .whats-this-card .lesson-item {
   width: 100%;
 }
