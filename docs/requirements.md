@@ -284,6 +284,8 @@ R18.10. A lesson is found from a **?** at the right of each panel's header, whic
 
 R18.11. A lesson stays correct as the interface changes: a check fails when an element a lesson acts on no longer exists, so a lesson cannot silently show what the app no longer has.
 
+R18.12. The manual window cannot be taken for a session window: it is framed by teal diagonal stripes, a colour and a pattern no other window uses, so that it stands apart without colour vision as well as with it; its top is a strip in the same teal saying that it practises on a demo session and that nothing in it reaches the person's real sessions, with the lesson's controls and a **Leave the manual** button that closes it; its title is "garnet-scoping Manual"; and each session in its Sessions panel is tagged "demo". Teal was chosen as a safe colour (green in the safety-sign standards), apart from the garnet of the app's accent and the blue of its Working badge; yellow stripes were declined as reading as a hazard.
+
 ### R19. Resizing panels
 
 R19.1. Open panels are separated by splitters: a divider between each pair of neighbouring panels that the person drags to move the space between them. A divider between panels side by side is vertical and drags left and right; the divider between the Desk's panels and the board, when the board is above or below them (D9), is horizontal and drags up and down.
@@ -328,6 +330,7 @@ R20.4. The order of R8.3 applies to the top-level sessions; a parent's spawned s
 - **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
 - **Resizing panels:** splitters between open panels, vertical or horizontal as the panels lie, with a 90 px minimum and a double-click reset (R19); demonstrated in a mock-up on 2026-11-15.
 - **Spawned sessions:** indented beneath the session that started them, foldable by a chevron (R20); demonstrated in a mock-up on 2026-11-21.
+- **The manual window's frame:** teal diagonal stripes round the window, a teal practice strip with Leave the manual, its own title and demo tags (R18.12); chosen 2026-11-21 from six rendered frames, the pattern so that it reads without colour vision.
 - **Install as a plugin:** the Claude Code side of the app (hooks, board tools, rules) is one Claude Code plugin, replacing the pasted set-up text (P5), ruled 2026-11-21 after the probes recorded under P5.
 - **The manual's design**, ruled 2026-11-14 and 2026-11-15 on mock-ups: a manual window of its own with a demo session (R18.5); each lesson played, then tried on the demo, with a skip (R18.6); the controls of R18.7, without speed; the voice bf_emma, chosen by ear from five (R18.8); the 28 lessons of R18.9; the entry points of R18.10.
 - **Declined:** Discuss controls drawn in the Claude conversation itself (a selection there carries no row id, and the interaction was poor); pausing, dropping or reordering plan steps from the Desk (dropping or moving a step can break the steps after it, and a pause is a sentence in the conversation); pins re-given to the agent after a compaction (what must survive a compaction is kept on disk, in memory notes, the board and the repository, which the agent can read again).
