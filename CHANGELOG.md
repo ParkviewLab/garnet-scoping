@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.14.3] - 2026-11-21
+
+### Highlights
+
+The repository has moved from garycoding to ParkviewLab on GitHub, and the links that pointed at the old account — the README's releases link, the homepage in package.json, the About window's source code and releases links, and the update publishing target — now point at the new location. Older changelog links are left unchanged and continue to redirect. The README's Ubuntu install instructions no longer pin a specific version number.
+
+### Docs
+
+- Garnet-scoping now lives in ParkviewLab (#108)
+
 ## [v0.14.2] - 2026-11-21
 
 ### Highlights
