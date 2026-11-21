@@ -4,6 +4,17 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.14.0] - 2026-11-21
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Features
+
+- What's This, a mode that asks what any element is (R21) (#101)
+- The manual window framed in teal stripes, with a practice strip (R18.12) (#102)
+
 ## [v0.13.1] - 2026-11-21
 
 ### Highlights
