@@ -274,7 +274,7 @@ R18.8. The voice-over is spoken in phonorheos's voice bf_emma, a voice no sessio
 
 R18.9. The lessons, each one task, in five groups:
 
-- **Getting around:** 1. Find the sessions waiting for you. 2. Read the Dock count (macOS only; on Ubuntu the count reaches only some launchers). 3. Switch between Waiting first, Recent first and Alphabetical. 4. Find a session by title or folder. 5. Open another session's window. 6. Turn panels on and off.
+- **Getting around:** 1. Find the sessions waiting for you. 2. Read the Dock count (macOS only; on Ubuntu the count reaches only some launchers). 3. Switch between Waiting first, Recent first and Alphabetical. 4. Find a session by title or folder. 5. Open another session's window. 6. Turn panels on and off. 29. See the sessions another session started (R20).
 - **Following the agent:** 7. Read the Desk at a glance. 8. See why a session is waiting. 9. Follow the Trail turn by turn. 10. Read what the agent keeps in Memory. 11. See what the agent's subagents are doing. 12. Spot a compaction and read its summary. 13. Check the work running in the background and the wake-ups.
 - **Talking to the agent:** 14. Ask the agent about a row (Discuss). 15. Ask an aside without interrupting. 16. Pause the agent with Hold. 17. Tell the agent you are away, and come back. 18. Answer a note the agent pinned for you. 19. Check that a signal reached the agent.
 - **Working on the board:** 20. Draw shapes and connect them. 21. Ask a question on the board. 22. Follow up and remove an exchange. 23. Ask the agent to review the board. 24. Mark up a mock-up the agent placed.

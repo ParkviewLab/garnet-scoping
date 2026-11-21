@@ -1084,8 +1084,12 @@ window.garnet.setup.check().then((r) => {
     disabled: 'The garnet-scoping plugin is turned off in Claude Code, so your signals and the board tools do not reach sessions.',
     version: `The garnet-scoping plugin in Claude Code is version ${r.installedVersion}; this app is ${r.version}. Update it with the commands in Set-up Info.`,
   }[r.state]
-  const earlier = r.earlier?.length ? `The earlier installation is still there (${r.earlier.join('; ')}), which runs a second watcher; Set-up Info has the text that removes it.` : ''
-  box.replaceChildren(el('span', null, `${[what, earlier].filter(Boolean).join(' ')} `), open)
+  const left = r.earlier?.join('; ')
+  let text = [what, left ? `The earlier installation is still there (${left}), which runs a second watcher; Set-up Info has the text that removes it.` : ''].filter(Boolean).join(' ')
+  // Only the earlier installation: signals still arrive, from files this app
+  // no longer updates.
+  if (r.state === 'missing' && left) text = `garnet-scoping now goes into Claude Code as a plugin. The earlier installation (${left}) still delivers your signals but is no longer updated: install the plugin and remove it, as Set-up Info says.`
+  box.replaceChildren(el('span', null, `${text} `), open)
   box.hidden = false
 })
 window.garnet.board.onDelivery(showDelivery)

@@ -23,6 +23,7 @@
     "title": "Demo: tidy the docs",
     "folder": "docs",
     "state": "not-running",
-    "age": 240
+    "age": 240,
+    "spawnedByDemo": true
   }
 ]

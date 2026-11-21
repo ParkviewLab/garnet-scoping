@@ -110,7 +110,7 @@ const board = {
 const OTHERS = [
   { id: '00000000-0000-4000-8000-00000000de31', title: 'Demo: release notes', folder: 'release-notes', state: 'waiting', question: 'Which changelog format shall I use?', options: ['Keep a Changelog', 'Plain list'], age: 3 },
   { id: '00000000-0000-4000-8000-00000000de32', title: 'Demo: fix the login page', folder: 'login-page', state: 'idle', age: 25 },
-  { id: '00000000-0000-4000-8000-00000000de33', title: 'Demo: tidy the docs', folder: 'docs', state: 'not-running', age: 240 },
+  { id: '00000000-0000-4000-8000-00000000de33', title: 'Demo: tidy the docs', folder: 'docs', state: 'not-running', age: 240, spawnedByDemo: true },
 ]
 function other(o) {
   const cwd = `__DEMO__/${o.folder}`
@@ -129,7 +129,7 @@ mkdirSync(join(OUT, 'others'), { recursive: true })
 for (const o of OTHERS) {
   writeFileSync(join(OUT, 'others', `${o.id}.jsonl`), other(o).map((r) => JSON.stringify(r)).join('\n') + '\n')
 }
-writeFileSync(join(OUT, 'others.json'), JSON.stringify(OTHERS.map(({ id, title, folder, state, question, options, age }) => ({ id, title, folder, state, question, options, age })), null, 2) + '\n')
+writeFileSync(join(OUT, 'others.json'), JSON.stringify(OTHERS.map(({ id, title, folder, state, question, options, age, spawnedByDemo }) => ({ id, title, folder, state, question, options, age, spawnedByDemo })), null, 2) + '\n')
 mkdirSync(join(OUT, 'boards'), { recursive: true })
 mkdirSync(join(OUT, 'csv-parser', 'samples'), { recursive: true })
 writeFileSync(join(OUT, 'session.jsonl'), records.map((r) => JSON.stringify(r)).join('\n') + '\n')

@@ -1,0 +1,48 @@
+{
+  "n": 29,
+  "title": "See the sessions another session started",
+  "group": "Getting around",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: a session started by another is always listed beneath it.",
+  "steps": [
+    {
+      "target": [
+        "tog-sessions"
+      ],
+      "action": "show",
+      "caption": "A session can start other sessions to work beside it. The Sessions panel lists each one beneath the session that started it."
+    },
+    {
+      "target": [
+        "pane-sessions",
+        "session-row"
+      ],
+      "action": "point",
+      "caption": "Here, Demo: tidy the docs was started by the session above it: it is indented, and its second line says so."
+    },
+    {
+      "target": [
+        "session-fold"
+      ],
+      "action": "click",
+      "caption": "The arrow beside a session folds away the sessions it started. Its title then counts them."
+    },
+    {
+      "target": [
+        "session-fold"
+      ],
+      "action": "click",
+      "caption": "Click it again, and they are listed once more."
+    },
+    {
+      "target": [
+        "session-fold"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: fold the sessions the demo session started."
+    }
+  ]
+}

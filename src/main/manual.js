@@ -131,7 +131,9 @@ export async function prepareDemo(from, to) {
 // The demo sessions as the Sessions panel lists them.
 export const demoList = (demo) => [
   { id: demo.id, title: 'Demo: a CSV parser', cwd: demo.cwd, project: 'demo', file: demo.file, modified: demo.modified },
-  ...demo.others.map((o) => ({ id: o.id, title: o.title, cwd: o.cwd, project: 'demo', file: o.file, modified: o.modified })),
+  // One of them was started by the demo session, for the lesson on spawned
+  // sessions (R20).
+  ...demo.others.map((o) => ({ id: o.id, title: o.title, cwd: o.cwd, project: 'demo', file: o.file, modified: o.modified, parent: o.spawnedByDemo ? demo.id : null })),
 ]
 
 // The live state the manual gives each other demo session.
