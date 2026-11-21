@@ -21,7 +21,7 @@ These were ruled before this document was written.
 - D2. A Desk shows the session's present state, with the session's trail beneath it (R2, R3).
 - D3. A Desk has a Memory pane (R4).
 - D4. The app runs on macOS and on Ubuntu (the first versions ran on macOS only).
-- D5. The repository is public, under the garycoding account, and the code is licensed under AGPL-3.0-or-later.
+- D5. The repository is public, in the ParkviewLab organisation, and the code is licensed under AGPL-3.0-or-later. It began under the garycoding account and moved to ParkviewLab on 2026-11-21: by then it was a released tool of the lab, used in every Claude Code session, rather than an exploration. The old address redirects, and garycoding/garnet-scoping must not be recreated.
 - D6. The app is named garnet-scoping; "Desk" names a part of its window (since D9, one of the window's panels), not the app.
 - D7. Changes to the details are expected to follow from use: the first version is the starting point, not a fixed design.
 - D8. Each session has one window, holding its Desk and its board (R7); the board is a shared whiteboard of shapes with text, lines and arrows.
