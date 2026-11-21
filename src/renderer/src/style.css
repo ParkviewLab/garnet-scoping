@@ -1431,6 +1431,7 @@ body.manual-window .manual-top {
   background: var(--demo-deep);
   color: var(--demo-fg);
   vertical-align: 1px;
+}
 /* What's This (R21): the header's button, the help cursor everywhere while
    the mode is on, the outline and name of the element under the pointer, and
    the card a click shows. */
