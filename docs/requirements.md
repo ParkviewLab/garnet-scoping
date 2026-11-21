@@ -318,11 +318,11 @@ R21.1. A **What's This** mode turns the pointer into the help cursor (an arrow w
 
 R21.2. While the mode is on, a line under the header says what it does and how to leave it, and the element under the pointer is outlined with its name, so that the person sees what a click will ask about.
 
-R21.3. A click in the mode asks about the element clicked and never acts on it: a card beside the element gives its name, one sentence on what it is for, and the lessons that act on it, each of which opens the manual on that lesson. Where no lesson acts on the element itself, the card lists the lessons of the panel that holds it, and says so.
+R21.3. A click in the mode asks about the element clicked and never acts on it: a card beside the element gives its name, what it is (and, where the element is a control, what it does), what it is for, and the lessons that act on it, each of which opens the manual on that lesson. Where no lesson acts on the element itself, the card lists the lessons of the panel that holds it, and says so.
 
 R21.4. The mode ends after one click, or on Esc; a click with Shift held keeps it on, for asking about several things in turn. A click outside the card, or Esc, closes the card.
 
-R21.5. Every element the manual names (R18.11) has its description, and a check fails when one has none, so that a card cannot be blank for a control the app has.
+R21.5. Every element the manual names (R18.11) has its name, explanation and purpose, and a check fails when one lacks any of them, so that a card cannot be blank for a control the app has.
 
 ### Rulings, 2026-11-14
 
