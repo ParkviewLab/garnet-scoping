@@ -4,6 +4,20 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.15.0] - 2026-11-21
+
+### Highlights
+
+This release adds a documentation site at parkviewlab.github.io/garnet-scoping/, with an introduction, an index of the project's documents, and a download page offering the macOS .dmg, Ubuntu .deb and AppImage installers alongside a screenshot and install steps. The README now reflects that the macOS build has been signed and notarised since 0.14.3, so the app opens like any other; earlier releases still need Control-click, Open on first launch.
+
+### Features
+
+- A documentation site with an introduction and a download page (#111)
+
+### Docs
+
+- The macOS build is signed and notarised from 0.14.3 (#110)
+
 ## [v0.14.3] - 2026-11-21
 
 ### Highlights
