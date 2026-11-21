@@ -32,6 +32,10 @@ export function lessonsFor(name, panel, lessons) {
   return { lessons: panel ? lessons.filter((l) => l.panels.includes(panel)) : [], ofPanel: true }
 }
 
+// The manual's own controls (its bar, caption and search), which the mode
+// leaves alone so that a lesson can be played and stepped while it is on.
+const EXEMPT = '.whats-this-card, #manual-top, .manual-caption, .manual-results'
+
 export function mountWhatsThis() {
   const btn = document.getElementById('whats-this')
   const line = document.getElementById('whats-this-line')
@@ -50,7 +54,7 @@ export function mountWhatsThis() {
 
   const target = (node) => {
     const t = node instanceof Element ? node.closest('[data-ui]') : null
-    return t && !t.closest('.whats-this-card') && t !== btn ? t : null
+    return t && !t.closest(EXEMPT) && t !== btn ? t : null
   }
   const closeCard = () => {
     card?.remove()
@@ -123,7 +127,7 @@ export function mountWhatsThis() {
   )
   // In the mode a press and a click only ask: nothing beneath them acts.
   const swallow = (e) => {
-    if (!on || e.target === btn || e.target.closest?.('.whats-this-card')) return
+    if (!on || e.target === btn || e.target.closest?.(EXEMPT)) return
     e.preventDefault()
     e.stopPropagation()
     e.stopImmediatePropagation()
@@ -133,7 +137,7 @@ export function mountWhatsThis() {
     'click',
     (e) => {
       if (card && !e.target.closest?.('.whats-this-card') && !on) closeCard()
-      if (!on || e.target === btn || e.target.closest?.('.whats-this-card')) return
+      if (!on || e.target === btn || e.target.closest?.(EXEMPT)) return
       swallow(e)
       const t = target(e.target)
       if (t) show(t)

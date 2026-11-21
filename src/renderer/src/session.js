@@ -1225,13 +1225,13 @@ refresh()
 // The manual (R18): in its own window, the lesson's bar and player; in every
 // other window, a ? on each panel that lists the panel's lessons (R18.10).
 const query = new URLSearchParams(location.search)
+// What's This (R21), in every window, the manual's included, where lesson 30
+// plays it on the demo.
+import('./whats-this.js').then((m) => m.mountWhatsThis())
 if (query.get('manual') === '1') {
-  document.getElementById('whats-this').hidden = true
   const n = query.get('lesson')
   import('./manual.js').then((m) => m.startManual({ lesson: n == null ? null : Number(n), step: Number(query.get('step') ?? 0) }))
 } else {
-  // What's This (R21), in every window but the manual's.
-  import('./whats-this.js').then((m) => m.mountWhatsThis())
   window.garnet.manual.lessons().then((lessons) => {
     for (const panel of document.querySelectorAll('[data-ui^="panel-"], [data-ui^="pane-"]')) {
       const name = panel.dataset.ui

@@ -1,0 +1,47 @@
+{
+  "n": 30,
+  "title": "Find out what anything is with What's This",
+  "group": "Getting around",
+  "panels": [
+    "pane-desk"
+  ],
+  "done": "That is it: press the question mark, or ⌥⌘? (⇧F1 on Ubuntu), whenever you meet something you do not know.",
+  "steps": [
+    {
+      "target": [
+        "whats-this"
+      ],
+      "action": "point",
+      "caption": "The question mark at the right of the header asks what anything in the window is."
+    },
+    {
+      "target": [
+        "whats-this"
+      ],
+      "action": "click",
+      "caption": "Press it, and the pointer becomes a question. Pointing at something outlines it and shows its name."
+    },
+    {
+      "target": [
+        "hold"
+      ],
+      "action": "click",
+      "caption": "Click Hold, here: instead of holding the agent, a card says what Hold is for, and lists the lessons that teach it."
+    },
+    {
+      "target": [
+        "hold"
+      ],
+      "action": "point",
+      "caption": "Play a lesson from the card, or click elsewhere to close it. One click asks one question; hold Shift to keep asking."
+    },
+    {
+      "target": [
+        "whats-this"
+      ],
+      "action": "click",
+      "try": true,
+      "caption": "Your turn: press the question mark, then click anything you like."
+    }
+  ]
+}
