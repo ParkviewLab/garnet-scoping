@@ -17,6 +17,7 @@ files:
   - '!tests/**'
   - '!.github/**'
   - '!LICENSES/**'
+  - '!site/**'
   # Every dependency is bundled into out/ by electron-vite, so no module is
   # loaded from node_modules at run time and none is packaged.
   - '!node_modules/**'
