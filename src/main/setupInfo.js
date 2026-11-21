@@ -2,24 +2,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // The Set-up Info window: copyable text for starting to use garnet-scoping
-// with Claude Code. First, a prompt that has Claude install the watcher, its
-// session-start hook and the CLAUDE.md rule from files shipped in the app;
-// second, the channel's configuration and the terminal command that loads it.
+// with Claude Code. The commands that install and update the garnet-scoping
+// plugin (P5); text that has Claude remove the installation that came before
+// the plugin; and the channel's configuration and the terminal command that
+// loads it.
 
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
-import { mkdir, cp } from 'node:fs/promises'
+import { mkdir, cp, writeFile } from 'node:fs/promises'
+import { writeMarketplace, MARKET, MARKET_DIR, PLUGIN_ID } from './plugin.js'
 
 // The channel's scripts are copied to the app's own folder at start, so that
 // Claude Code finds them at one path whatever the install: an AppImage runs
-// from a mount whose path changes on every launch.
+// from a mount whose path changes on every launch. Its configuration is
+// written there too.
 export const CHANNEL_DIR = join(homedir(), '.garnet-scoping', 'channel')
+const MCP_PATH = join(homedir(), '.garnet-scoping', 'channel.mcp.json')
 export async function installChannel() {
-  const from = join(app.isPackaged ? process.resourcesPath : join(__dirname, '../..'), 'channel')
+  const from = join(resources(), 'channel')
   await mkdir(CHANNEL_DIR, { recursive: true })
   await cp(from, CHANNEL_DIR, { recursive: true, force: true })
+  await writeFile(MCP_PATH, channelConfig() + '\n')
 }
+
+// The plugin's marketplace, written at each start at the app's own version
+// (P5).
+export const installPlugin = () => writeMarketplace(join(resources(), 'setup', 'garnet-scoping'), app.getVersion())
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
@@ -27,59 +36,30 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 // development.
 const resources = () => (app.isPackaged ? process.resourcesPath : join(__dirname, '../..'))
 
-export function setupTexts() {
-  const res = resources()
-  const setup = join(res, 'setup')
+function channelConfig() {
   // The binary that runs the channel: the AppImage itself when the app runs
   // from one; otherwise the app's executable (in development, where the
   // installed app would be: the macOS bundle, or the Ubuntu package under /opt).
   const installed = process.platform === 'darwin' ? '/Applications/garnet-scoping.app/Contents/MacOS/garnet-scoping' : '/opt/garnet-scoping/garnet-scoping'
   const binary = process.env.APPIMAGE || (app.isPackaged ? process.execPath : installed)
   const channelScript = join(CHANNEL_DIR, 'garnet-channel.mjs')
-  const mcpPath = join(homedir(), '.garnet-scoping', 'channel.mcp.json')
-  const mcp = JSON.stringify({ mcpServers: { garnet: { command: binary, args: [channelScript], env: { ELECTRON_RUN_AS_NODE: '1' } } } }, null, 2)
-  const prompt = `Please set up garnet-scoping for all my Claude Code sessions. Read each file before installing it.
-
-1. Copy ${join(setup, 'garnet-watch.sh')}, ${join(setup, 'garnet-rewake.sh')} and ${join(setup, 'garnet-session-start.sh')} into ~/.claude/hooks/ and make them executable. Copy each to a temporary name in that folder and move it over the old one, never overwrite it in place: a watcher still running the old copy reads its script as it goes.
-2. In ~/.claude/settings.json, keeping every other hook already there but replacing any earlier garnet hook, add three command hooks:
-   - SessionStart, matcher "startup|resume": bash ~/.claude/hooks/garnet-session-start.sh
-   - SessionStart, matcher "resume" (not "startup"): bash ~/.claude/hooks/garnet-rewake.sh, with "asyncRewake": true and "timeout": 86400
-   - Stop: bash ~/.claude/hooks/garnet-rewake.sh, with "asyncRewake": true and "timeout": 86400
-   The last two make Claude Code itself run the watcher, at the end of every turn and when a session is resumed, and wake the session when a signal arrives. Never run garnet-rewake.sh at "startup": at a new session's start Claude Code waits for SessionStart hooks to finish, asyncRewake or not, and the session would not start.
-3. Put the section in ${join(setup, 'claude-md-section.md')} into ~/.claude/CLAUDE.md, replacing an earlier section "garnet-scoping signals" if there is one, else appending it.
-4. Write ${mcpPath} with this content, for the channel (used only by terminal sessions started with it):
-${mcp}
-5. Copy the folder ${join(setup, 'garnet-board')} to ~/.claude/mods/garnet-board, replacing an earlier copy: the extension that gives sessions the board tools and answers the person's asides. Claude Code loads it in sessions started from then on.
-Nothing needs starting by hand: from the end of this turn on, Claude Code runs the watcher in every session.`
-  const command = `claude --mcp-config ${mcpPath} --dangerously-load-development-channels server:garnet`
-  return { prompt, mcp, mcpPath, command }
+  return JSON.stringify({ mcpServers: { garnet: { command: binary, args: [channelScript], env: { ELECTRON_RUN_AS_NODE: '1' } } } }, null, 2)
 }
 
-// Whether what Claude installed from this text matches what this version of
-// the app ships (P5): the hooks and the extension's files, compared byte for byte.
-// Read only; nothing in the Claude configuration directory is written.
-// The extension's files, as the repository's setup/garnet-board holds them.
-export const BOARD_FILES = ['.claude-plugin/plugin.json', 'hooks/hooks.json', 'hooks/register.ts']
+export function setupTexts() {
+  const market = MARKET_DIR.replace(homedir(), '~')
+  const install = `claude plugin marketplace add ${market}\nclaude plugin install ${PLUGIN_ID}`
+  const update = `claude plugin marketplace update ${MARKET}\nclaude plugin update ${PLUGIN_ID}`
+  const earlier = `Please remove the earlier installation of garnet-scoping from my Claude Code set-up; the garnet-scoping plugin (${PLUGIN_ID}) replaces it. Read each file before changing it.
 
-export async function installedMatches() {
-  const { readFile } = await import('node:fs/promises')
-  const setup = join(resources(), 'setup')
-  const claude = join(homedir(), '.claude')
-  const pairs = [
-    ...['garnet-watch.sh', 'garnet-rewake.sh', 'garnet-session-start.sh'].map((f) => [join(setup, f), join(claude, 'hooks', f)]),
-    ...BOARD_FILES.map((f) => [join(setup, 'garnet-board', f), join(claude, 'mods', 'garnet-board', f)]),
-  ]
-  const stale = []
-  const unshipped = []
-  for (const [shipped, installed] of pairs) {
-    const [a, b] = await Promise.all([readFile(shipped).catch(() => null), readFile(installed).catch(() => null)])
-    // A file this app should ship but does not is a packaging fault, not a
-    // stale install; it is logged, since pasting the text again cannot mend it.
-    if (!a) unshipped.push(shipped)
-    else if (!b || !a.equals(b)) stale.push(installed.replace(homedir(), '~'))
-  }
-  if (unshipped.length) console.error('garnet-scoping: files missing from this build:', unshipped.join(', '))
-  return { ok: !stale.length, stale }
+1. If \`claude plugin list\` does not show ${PLUGIN_ID} enabled, run \`claude plugin marketplace add ${market}\` and \`claude plugin install ${PLUGIN_ID}\` first.
+2. In ~/.claude/settings.json, remove every hook whose command runs ~/.claude/hooks/garnet-rewake.sh or ~/.claude/hooks/garnet-session-start.sh, keeping every other hook.
+3. Delete ~/.claude/hooks/garnet-watch.sh, ~/.claude/hooks/garnet-rewake.sh and ~/.claude/hooks/garnet-session-start.sh.
+4. Delete the folder ~/.claude/mods/garnet-board.
+5. In ~/.claude/CLAUDE.md, remove the section headed "## garnet-scoping signals", up to the next heading of the same or a higher level; the plugin now gives each session these rules.
+The plugin's hooks and board tools take effect in sessions started from then on.`
+  const command = `claude --mcp-config ${MCP_PATH.replace(homedir(), '~')} --dangerously-load-development-channels server:garnet`
+  return { install, update, earlier, mcp: channelConfig(), mcpPath: MCP_PATH, command }
 }
 
 let win = null
@@ -104,11 +84,17 @@ export function openSetupInfo() {
 </style><main>
 <h1>Set-up Info</h1>
 <p>garnet-scoping shows each session; these steps let your signals (Review on the board, Discuss on a row, Hold) reach Claude even when you send no message.</p>
-<h2>1. Set up the watcher and the board tools (once, and after each update)</h2>
-<p>Paste this into any Claude Code session. Claude installs the watcher, the hook that starts it in every new session, the rule in your <code>~/.claude/CLAUDE.md</code> that says how to answer each signal, and the garnet-board extension that gives sessions the board tools and answers your asides. When the app says these are from an earlier version, paste it again.</p>
-${block('prompt', t.prompt)}
-<h2>2. The channel, for terminal sessions (optional)</h2>
-<p>A channel delivers the signals at once, without the watcher. Claude Code supports channels only in the terminal for now, as a research preview; the desktop app does not load them yet. Step 1 writes this configuration to <code>${esc(t.mcpPath)}</code>:</p>
+<h2>1. Install the garnet-scoping plugin (once)</h2>
+<p>The plugin brings the watcher, the board tools and the rules for answering your signals into every Claude Code session. Run these two commands in a terminal; the plugin takes effect in sessions started afterwards, and is listed on the Claude app's Plugins page.</p>
+${block('install', t.install)}
+<h2>2. After each update of garnet-scoping</h2>
+<p>When a session window says the plugin is of another version, run these:</p>
+${block('update', t.update)}
+<h2>3. If you set up garnet-scoping before the plugin</h2>
+<p>Versions up to 0.12 installed the watcher's hooks, the rules in your <code>~/.claude/CLAUDE.md</code> and the garnet-board extension one by one. Left beside the plugin they run a second watcher. Paste this into any Claude Code session to have Claude remove them:</p>
+${block('earlier', t.earlier)}
+<h2>4. The channel, for terminal sessions (optional)</h2>
+<p>A channel delivers the signals at once, without the watcher. Claude Code supports channels only in the terminal for now, as a research preview; the desktop app does not load them yet. The app writes this configuration to <code>${esc(t.mcpPath)}</code>:</p>
 ${block('mcp', t.mcp)}
 <p>Start a terminal session with the channel by running this, and confirm the prompt about development channels:</p>
 ${block('command', t.command)}

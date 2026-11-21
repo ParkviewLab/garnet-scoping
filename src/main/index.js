@@ -17,7 +17,8 @@ import { follow } from './follower.js'
 import { openBoard, inheritBoard } from './board.js'
 import { openAboutWindow, openLicensesWindow } from './about.js'
 import { loadSettings, saveSettings, clean } from './settings.js'
-import { openSetupInfo, installChannel, installedMatches } from './setupInfo.js'
+import { openSetupInfo, installChannel, installPlugin } from './setupInfo.js'
+import { pluginStatus } from './plugin.js'
 import { watchLive } from './live/index.js'
 import { pendingFromTail, sessionState, waitingCount } from './live/state.js'
 import { readEdge, readFrom } from './transcript/reader.js'
@@ -258,7 +259,7 @@ function registerIpc() {
   ipcMain.handle('live:get', () => live)
   // The manual's demo always shows the notice that the install is stale, for
   // its lesson on updating it (R18.9, lesson 26).
-  ipcMain.handle('setup:check', (e) => (entryOf(e)?.demo ? { ok: false, stale: ['~/.claude/hooks/garnet-watch.sh'] } : installedMatches()))
+  ipcMain.handle('setup:check', (e) => (entryOf(e)?.demo ? { ok: false, state: 'version', installedVersion: '0.12.0', version: app.getVersion(), earlier: [] } : pluginStatus(app.getVersion())))
   ipcMain.handle('setup:open', () => openSetupInfo())
   // From a window on the demo, only a demo session opens, on the demo's copy.
   ipcMain.handle('sessions:open', (e, info) => {
@@ -445,6 +446,7 @@ app.whenReady().then(() => {
   settingsFile = join(app.getPath('userData'), 'settings.json')
   settings = loadSettings(settingsFile)
   installChannel().catch(() => {})
+  installPlugin().catch((err) => console.error('garnet-scoping: the Claude Code plugin was not written:', err))
   refuseNetwork()
   registerIpc()
   buildMenu()
