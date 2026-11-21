@@ -8,7 +8,7 @@ SPDX-PackageSupplier = "Gary Frattarola <garyf@parkviewlab.ai>"
 
 # --- Documentation, the manual's content and repository metadata → CC-BY-4.0
 [[annotations]]
-path = ["docs/**", "manual/**", "README.md", "LICENSING.md", "CHANGELOG.md", "REUSE.toml", ".gitignore", "AGENTS.md", "CLAUDE.md"]
+path = ["docs/**", "manual/**", "site/**", "README.md", "LICENSING.md", "CHANGELOG.md", "REUSE.toml", ".gitignore", "AGENTS.md", "CLAUDE.md"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
 SPDX-License-Identifier = "CC-BY-4.0"
@@ -23,7 +23,7 @@ SPDX-License-Identifier = "AGPL-3.0-or-later"
 # The app icon is a mark: all rights reserved, not relicensed by the
 # repository.
 [[annotations]]
-path = ["build/icon.png", "build/icon.svg", "build/icon.icns"]
+path = ["build/icon.png", "build/icon.svg", "build/icon.icns", "site/assets/icon.svg"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Gary Frattarola <garyf@parkviewlab.ai>"
 SPDX-License-Identifier = "LicenseRef-AllRightsReserved"

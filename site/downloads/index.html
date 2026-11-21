@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 Gary Frattarola <garyf@parkviewlab.ai>
+SPDX-License-Identifier: CC-BY-4.0
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>garnet-scoping — download</title>
+<meta name="description" content="garnet-scoping: detailed views of and enhanced interactions for your work with Claude Code. Download for macOS and Linux.">
+<link rel="icon" href="../assets/icon.svg">
+<style>
+/* Palette: the app icon's own colours on the app's dark ground. Garnet is the
+   accent, as in the app; the three download tiles take garnet, gold and sky
+   from the icon's marks. System fonts only: the page loads nothing from the
+   network. */
+:root{
+  --ground:#17181a; --panel:#1e1f22; --raised:#26282c; --line:#2f3237;
+  --ink:#e6e6e8; --muted:#9a9ca3;
+  --garnet:#d0404c; --garnet-ink:#e8737a; --gold:#e0b23a; --sky:#6bb3e0;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{font-family:var(--font-ui); color:var(--ink); background:var(--ground); line-height:1.55; min-height:100vh;}
+a{color:var(--garnet-ink);}
+code{font-family:var(--font-mono); font-size:.9em; background:var(--raised); padding:1px 6px; border-radius:4px;}
+.wrap{max-width:1040px; margin:0 auto; padding:0 20px;}
+
+.topbar{border-bottom:1px solid var(--line);}
+.topbar .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; padding-bottom:12px;}
+.brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.02em; color:var(--ink); text-decoration:none;}
+.brand img{width:26px; height:26px;}
+.toplinks{display:flex; gap:18px; font-size:14px;}
+.toplinks a{color:var(--muted); text-decoration:none;}
+.toplinks a:hover{color:var(--ink);}
+
+.hero{display:grid; grid-template-columns:1.2fr .8fr; gap:40px; align-items:center; padding:56px 0 36px;}
+.hero-mark{justify-self:center;}
+.hero-mark img{width:min(260px,60vw); height:auto; display:block; filter:drop-shadow(0 16px 40px rgba(0,0,0,.45));}
+.wordmark{font-size:clamp(40px,6.4vw,68px); line-height:1.05; letter-spacing:-.01em; margin:0 0 14px; font-weight:750;}
+.tagline{font-size:clamp(19px,2.5vw,23px); color:var(--garnet-ink); margin:0 0 14px; font-weight:600;}
+.lede{font-size:16px; max-width:50ch; margin:0 0 26px;}
+.lede .muted{color:var(--muted);}
+
+.dl-head{display:flex; align-items:baseline; gap:12px; margin:0 0 14px;}
+.dl-head h2{font-size:22px; margin:0; font-weight:650;}
+.verbadge{font-size:15px; font-weight:700; letter-spacing:.06em; color:var(--ground); background:var(--gold); padding:2px 10px; border-radius:5px;}
+.verbadge:empty{display:none;}
+.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+.tile{display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:12px;
+  padding:12px 15px; transition:transform .09s ease, background .09s ease;}
+.tile:hover{transform:translateY(-2px); background:var(--raised);}
+.tile .t-os{font-size:17px; font-weight:650; line-height:1.15;}
+.tile .t-kind{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:2px;}
+.tile.mac{--accent:var(--garnet);} .tile.deb{--accent:var(--gold);} .tile.appimage{--accent:var(--sky);}
+.dl-note{font-size:13px; color:var(--muted); margin:12px 0 0;}
+.dl-note a{color:var(--muted);}
+
+.shotband{padding:20px 0 48px;}
+.shot{border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.shot img{display:block; width:100%; height:auto;}
+.shot-cap{font-size:13px; color:var(--muted); text-align:center; margin:12px 0 0;}
+
+.trio{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:0 0 40px;}
+.pt h3{font-size:18px; margin:0 0 6px; font-weight:650;}
+.pt h3 .k{color:var(--garnet-ink);}
+.pt p{font-size:14px; color:var(--muted); margin:0;}
+
+.install{padding:0 0 48px;}
+.install h2{font-size:22px; margin:0 0 14px; font-weight:650;}
+.steps{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+.step{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+.step h3{font-size:16px; margin:0 0 6px;}
+.step p{font-size:14px; color:var(--muted); margin:0 0 6px;}
+
+footer{border-top:1px solid var(--line);}
+footer .wrap{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:space-between; padding-top:18px; padding-bottom:26px; font-size:13px; color:var(--muted);}
+footer a{color:var(--muted);}
+
+@media (max-width:900px){ .steps{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr; gap:24px; padding-top:36px;}
+  .hero-mark{order:-1;}
+  .tiles,.trio,.steps{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/icon.svg" alt="">garnet-scoping</a>
+    <nav class="toplinks">
+      <a href="../">Documentation</a>
+      <a href="https://github.com/ParkviewLab/garnet-scoping">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1 class="wordmark">garnet-scoping</h1>
+      <p class="tagline">Detailed views of and enhanced interactions for your work with Claude Code.</p>
+      <p class="lede">garnet-scoping sits beside each Claude Code session. It shows what the agent is doing, read from the session's own record, and gives you and the agent a board to draw on together. <span class="muted">It only reads: nothing you do in it slows the agent down.</span></p>
+
+      <div class="dl-head">
+        <h2>Download</h2>
+        <!-- The version is stamped into the page at deploy time, so it is right
+             with no script at all; the script below only uses it. -->
+        <span class="verbadge ver">__LATEST_TAG__</span>
+      </div>
+      <div class="tiles">
+        <a class="tile mac" id="dl-mac" href="https://github.com/ParkviewLab/garnet-scoping/releases/latest">
+          <div><div class="t-os">macOS</div><div class="t-kind">Apple silicon · .dmg</div></div>
+        </a>
+        <a class="tile deb" id="dl-deb" href="https://github.com/ParkviewLab/garnet-scoping/releases/latest">
+          <div><div class="t-os">Ubuntu</div><div class="t-kind">Package · .deb</div></div>
+        </a>
+        <a class="tile appimage" id="dl-appimage" href="https://github.com/ParkviewLab/garnet-scoping/releases/latest">
+          <div><div class="t-os">Linux</div><div class="t-kind">AppImage</div></div>
+        </a>
+      </div>
+      <p class="dl-note">Free and open source under AGPL-3.0-or-later. Needs Claude Code. See <a href="https://github.com/ParkviewLab/garnet-scoping/releases">all releases</a>.</p>
+    </div>
+    <div class="hero-mark"><img src="../assets/icon.svg" alt="The garnet-scoping icon"></div>
+  </section>
+
+  <section class="shotband">
+    <div class="shot"><img src="../assets/screenshot.webp" width="1600" height="1051" alt="A garnet-scoping window on a demo session: the Sessions panel at the left, the Desk with the agent's plan, what it is doing now and what it waits on in the middle, and the shared board with a diagram at the right."></div>
+    <p class="shot-cap">One session's window: the sessions, the Desk with the agent's present state, and the shared board.</p>
+  </section>
+
+  <section class="trio">
+    <div class="pt"><h3><span class="k">See</span> what it is doing.</h3><p>The Desk shows the agent's plan, the step it is on, what it waits on and every turn, from what Claude Code records rather than from the agent's account of it.</p></div>
+    <div class="pt"><h3><span class="k">Show</span> what you mean.</h3><p>A shared board for diagrams, mock-ups and questions placed on the very spot they concern; the agent reads it and answers on it.</p></div>
+    <div class="pt"><h3><span class="k">Steer</span> without losing work.</h3><p>Mark any step to discuss, ask an aside, or hold the agent at the end of its step; nothing in progress is cancelled.</p></div>
+  </section>
+
+  <section class="install">
+    <h2>Installing</h2>
+    <div class="steps">
+      <div class="step"><h3>macOS</h3><p>Open the <code>.dmg</code> and drag garnet-scoping to Applications. It is signed and notarised.</p></div>
+      <div class="step"><h3>Ubuntu</h3><p>Install the package with <code>sudo apt install ./garnet-scoping-*.deb</code>.</p></div>
+      <div class="step"><h3>Linux AppImage</h3><p>Make it executable and run it; set <code>GARNET_SCOPING_APP</code> to its path in your shell profile.</p></div>
+      <div class="step"><h3>Then, once</h3><p>Open Set-up Info in the app and run its two commands, which install the garnet-scoping plugin into Claude Code.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Gary Frattarola</span>
+    <span><a href="https://github.com/ParkviewLab/garnet-scoping">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+// Points each tile straight at its installer in the release this page was
+// published with. The build stamps that release's tag into the page, and the
+// installers' names follow from it (electron-builder.yml's artifactName), so
+// no request is made. Without JavaScript the tiles keep their /releases/latest
+// links.
+(function(){
+  var ver=document.querySelector('.ver');
+  var tag=ver ? ver.textContent.trim() : '';
+  if(!/^v\d+\.\d+\.\d+$/.test(tag)){
+    // A page served without the deploy step (a local preview): no version shown.
+    if(ver && tag.indexOf('__LATEST')===0) ver.textContent='';
+    return;
+  }
+  var v=tag.slice(1), base='https://github.com/ParkviewLab/garnet-scoping/releases/download/'+tag+'/garnet-scoping-'+v;
+  var files={ 'dl-mac':'-arm64.dmg', 'dl-deb':'-amd64.deb', 'dl-appimage':'-x86_64.AppImage' };
+  Object.keys(files).forEach(function(id){ var el=document.getElementById(id); if(el) el.href=base+files[id]; });
+})();
+</script>
+</body>
+</html>

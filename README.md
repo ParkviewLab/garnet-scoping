@@ -18,11 +18,7 @@ The app only reads what Claude Code writes: it never writes under `~/.claude`, a
 
 Download from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
 
-- **macOS (Apple silicon):** open the `.dmg` and drag garnet-scoping to Applications. The build is not signed, so macOS refuses the first launch; open it once with Control-click, Open, or run:
-
-  ```bash
-  xattr -dr com.apple.quarantine /Applications/garnet-scoping.app
-  ```
+- **macOS (Apple silicon):** open the `.dmg` and drag garnet-scoping to Applications. From 0.14.3 the app is signed with a Developer ID and notarised by Apple, so it opens like any other. Releases before 0.14.3 were not signed: macOS refuses their first launch until you open them once with Control-click, Open.
 
 - **Ubuntu (x64):** the `.deb` puts the app in `/opt/garnet-scoping` and in the applications menu. On Ubuntu, install with:
 
