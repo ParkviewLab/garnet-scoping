@@ -6,7 +6,7 @@ A desktop app for macOS and Ubuntu that shows what a Claude Code session is doin
 
 It reads each session's transcript, the file Claude Code writes as the session runs, and opens on the most recently active session. Each session's window shows:
 
-- **Sessions:** every session on the machine with its live state (Working, Idle, Waiting for you, Not running), and, for one waiting, what it waits on and since when; waiting first, recent first by project, or alphabetically by project. The Dock icon counts the sessions waiting for you. Click a session to open its window.
+- **Sessions:** every session on the machine with its live state (Working, Idle, Waiting for you, Not running), and, for one waiting, what it waits on and since when; waiting first, recent first by project, or alphabetically by project. A session that another session started is listed, indented, beneath it, with an arrow on the parent that folds such sessions away. The Dock icon counts the sessions waiting for you. Click a session to open its window.
 - **Desk:** the agent's plan and the step it is on, what it is doing now, what it is waiting on, the files it has read and changed, the project's memory notes, its last word and any question it has not had answered, and beneath them the session's trail, turn by turn.
 - **For you:** the files the agent has sent you in the session, newest first, with thumbnails for images. Click one to preview it in the app; right-click for Discuss and for opening it in its default app.
 - **Board:** an Excalidraw whiteboard for that session. The person drops shapes onto it, writes in them and connects them with lines and arrows; the agent reads the board as text and changes it by writing a request file.
@@ -31,7 +31,9 @@ Download from the [releases page](https://github.com/garycoding/garnet-scoping/r
 
   Or run the `.AppImage` directly after `chmod +x` on it. With the AppImage, the watcher cannot find the app's binary on its own; set `GARNET_SCOPING_APP` to the AppImage's path in your shell profile.
 
-The app does not check for newer versions, since it makes no network connection; new releases appear on the releases page.
+Then open **Set-up Info** from the app's menu and run its two install commands in a terminal; they install the garnet-scoping plugin into Claude Code (see [Signals reaching the agent](#signals-reaching-the-agent)). The plugin is then listed on the Claude app's Plugins page (Settings, Plugins), where it can be turned off and on. If you used garnet-scoping before 0.13, paste Set-up Info's third block into a session as well, to remove the earlier installation.
+
+The app does not check for newer versions, since it makes no network connection; new releases appear on the releases page. After installing a new release, run Set-up Info's two update commands, so that the plugin matches the app; each session window says when it does not.
 
 ## The board, for the agent
 
