@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.14.2] - 2026-11-21
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Bug fixes
+
+- What's This cards say what each thing is and what it is for (#106)
+
 ## [v0.14.1] - 2026-11-21
 
 ### Highlights
