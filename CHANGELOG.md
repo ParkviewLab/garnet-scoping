@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.14.1] - 2026-11-21
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Bug fixes
+
+- What's This flickers: an unclosed CSS rule dropped its styles (#104)
+
 ## [v0.14.0] - 2026-11-21
 
 ### Highlights
