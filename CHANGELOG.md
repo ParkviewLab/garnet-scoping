@@ -4,6 +4,16 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.13.1] - 2026-11-21
+
+### Highlights
+
+_Highlights were not generated for this release._
+
+### Docs
+
+- The plugin and spawned sessions in the README and the manual (#99)
+
 ## [v0.13.0] - 2026-11-21
 
 ### Highlights
