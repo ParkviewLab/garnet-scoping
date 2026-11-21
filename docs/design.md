@@ -168,6 +168,12 @@ Sizes are kept as flex weights: one per Desk panel (defaults 2.4 Sessions, 3 Des
 
 The Sessions panel orders the top-level sessions as before (R8.3) and places each session's spawned sessions after it, in the same order, recursively, a session whose parent is not in the list being top-level. In the by-project views a spawned session follows its parent even when its own folder differs. Each spawned row is indented 18 px a level, with a 1 px line at its left in the line colour, and its second line reads "started by the session above · <ago>". A parent's row has a chevron (`data-ui: session-fold`) that folds its spawned sessions; the folded set is kept in `localStorage` under `garnet.sessions.folded`, and a folded parent's title is followed by "· N spawned". The filter matches spawned sessions on their own; a match keeps its parent's row in view, so the indentation keeps its meaning.
 
+## What's This (R21)
+
+`renderer/src/whats-this.js` runs the mode in every session window but the manual's. Entering it (the header's `whats-this` button, or the main process's `whats-this` message from the Help menu item, accelerator `Alt+Cmd+Shift+/` on macOS and `Shift+F1` elsewhere) adds `body.whats-this`, whose rule gives every element `cursor: help`, and shows the line under the header. Listeners on the document in the capture phase take `pointerover`, `pointerdown` and `click` before any element's own handler: the element asked about is the nearest ancestor with a `data-ui` name, outlined by a positioned box with its name, and a click calls `preventDefault` and `stopPropagation`, so that no button, row or board tool acts. The board's canvas is covered by its container's name, `board`.
+
+The descriptions are `manual/whats-this.json`, a name and one sentence for each `data-ui` name, shipped with the manual; names made from a pattern (`lessons-<panel>`, `menu-<label>`) share one entry by prefix. The lessons for an element are those with a step whose target names it; with none, those whose `panels` include the nearest panel (`panel-*` or `pane-*`) that holds it, and the card says "Lessons for this panel". The test that holds each lesson's targets to the interface's names (R18.11) also holds every name to a description.
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

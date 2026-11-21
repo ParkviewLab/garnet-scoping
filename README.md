@@ -10,6 +10,7 @@ It reads each session's transcript, the file Claude Code writes as the session r
 - **Desk:** the agent's plan and the step it is on, what it is doing now, what it is waiting on, the files it has read and changed, the project's memory notes, its last word and any question it has not had answered, and beneath them the session's trail, turn by turn.
 - **For you:** the files the agent has sent you in the session, newest first, with thumbnails for images. Click one to preview it in the app; right-click for Discuss and for opening it in its default app.
 - **Board:** an Excalidraw whiteboard for that session. The person drops shapes onto it, writes in them and connects them with lines and arrows; the agent reads the board as text and changes it by writing a request file.
+- **What's This and the manual:** press the **?** at the right of a window's header (or ⌥⌘?, ⇧F1 on Ubuntu) and click anything to see what it is for and the lessons that teach it; the manual's lessons play on a demo session, and How do I… (⌘?, F1 on Ubuntu) searches them all.
 
 The app only reads what Claude Code writes: it never writes under `~/.claude`, and it makes no network connection. Each window follows its transcript as it grows, so the Desk is current whilst the session runs.
 

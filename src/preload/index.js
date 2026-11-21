@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('garnet', {
   },
   setup: { check: () => ipcRenderer.invoke('setup:check'), open: () => ipcRenderer.invoke('setup:open') },
   onShowPanel: (fn) => ipcRenderer.on('panel:show', (_e, p) => fn(p)),
+  // What's This (R21): the Help menu's item, and the descriptions it shows.
+  onWhatsThis: (fn) => ipcRenderer.on('whats-this', () => fn()),
+  whatsThis: () => ipcRenderer.invoke('manual:whats-this'),
   view: () => ipcRenderer.invoke('session:view'),
   detail: (actionId) => ipcRenderer.invoke('session:detail', actionId),
   subagent: (agentId) => ipcRenderer.invoke('subagent:detail', agentId),
