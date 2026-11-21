@@ -5,12 +5,14 @@
 // waiting one waits (R8.4), in two views (R8.3): by project, or all sessions
 // with those waiting first. A click opens the
 // session's window or brings it forward. Within each project, sessions are
-// ordered by last activity, most recent first.
+// ordered by last activity, most recent first; a spawned session is listed,
+// indented, beneath the session that started it (R20).
 
-import { ago, clock } from './util.js'
+import { ago, clock, nest, withAncestors } from './util.js'
 
 const byTime = (a, b) => b.modified - a.modified
 const VIEW_KEY = 'garnet.sessions.view'
+const FOLD_KEY = 'garnet.sessions.folded'
 const LABEL = { working: 'Working', idle: 'Idle', waiting: 'Waiting for you', 'not-running': 'Not running', unknown: 'Unknown' }
 
 const el = (tag, cls, text) => {
@@ -53,18 +55,47 @@ export function mountSessions(root, currentId) {
     const saved = localStorage.getItem(VIEW_KEY)
     view = ['project', 'name', 'waiting'].includes(saved) ? saved : 'project'
   } catch {}
+  // Parents whose spawned sessions are folded away (R20.2).
+  let folded = new Set()
+  try {
+    const f = JSON.parse(localStorage.getItem(FOLD_KEY) ?? '[]')
+    if (Array.isArray(f)) folded = new Set(f.filter((x) => typeof x === 'string'))
+  } catch {}
+  const toggleFold = (id) => {
+    folded.has(id) ? folded.delete(id) : folded.add(id)
+    try {
+      localStorage.setItem(FOLD_KEY, JSON.stringify([...folded]))
+    } catch {}
+    render()
+  }
 
   const waitingFirst = (a, b) => (live.states[a.id]?.state === 'waiting' ? 0 : 1) - (live.states[b.id]?.state === 'waiting' ? 0 : 1)
 
-  function row(s) {
+  function row({ s, depth = 0, children = 0 }) {
     const st = live.states[s.id]
-    const r = el('div', `sessions-row${s.id === currentId ? ' current' : ''}`)
+    const r = el('div', `sessions-row${s.id === currentId ? ' current' : ''}${depth ? ' spawned' : ''}`)
+    if (depth) r.style.setProperty('--depth', depth)
     // Named for the manual's lessons (R18). data-ui: session-row-current, session-row
     r.dataset.ui = s.id === currentId ? 'session-row-current' : 'session-row'
     r.tabIndex = 0
     const head = el('div', 'head')
-    head.append(el('span', 'name', s.title ?? s.firstMessage ?? s.id), badge(st))
-    r.append(head, el('div', 'sub', [s.cwd ?? s.project, ago(s.modified)].filter(Boolean).join(' · ')))
+    const name = el('span', 'name', s.title ?? s.firstMessage ?? s.id)
+    if (children) {
+      // data-ui: session-fold
+      const fold = el('button', 'fold', folded.has(s.id) ? '\u25b8' : '\u25be')
+      fold.dataset.ui = 'session-fold'
+      fold.title = folded.has(s.id) ? 'Show the sessions it started' : 'Hide the sessions it started'
+      fold.setAttribute('aria-expanded', String(!folded.has(s.id)))
+      fold.addEventListener('click', (e) => {
+        e.stopPropagation()
+        toggleFold(s.id)
+      })
+      fold.addEventListener('keydown', (e) => e.stopPropagation())
+      head.append(fold)
+      if (folded.has(s.id)) name.append(el('span', 'spawned-count', ` · ${children} spawned`))
+    }
+    head.append(name, badge(st))
+    r.append(head, el('div', 'sub', [depth ? 'started by the session above' : (s.cwd ?? s.project), ago(s.modified)].filter(Boolean).join(' · ')))
     const w = why(st)
     if (w) r.append(w)
     const open = () => window.garnet.openSession({ id: s.id, file: s.file, project: s.project, title: s.title })
@@ -77,12 +108,15 @@ export function mountSessions(root, currentId) {
     for (const b of viewBtns) b.classList.toggle('active', b.dataset.view === view)
     noteEl.hidden = live.available
     const q = filterEl.value.trim().toLowerCase()
-    const shown = sessions.filter((s) => !q || [s.title, s.cwd, s.firstMessage, s.project].some((v) => v && v.toLowerCase().includes(q)))
+    const shown = withAncestors(sessions, (s) => !q || [s.title, s.cwd, s.firstMessage, s.project].some((v) => v && v.toLowerCase().includes(q)))
     if (!shown.length) return listEl.replaceChildren(el('p', 'muted', sessions.length ? 'No session matches.' : 'No Claude Code sessions found on this machine.'))
-    if (view === 'waiting') return listEl.replaceChildren(...[...shown].sort(byTime).sort(waitingFirst).map(row))
+    if (view === 'waiting') return listEl.replaceChildren(...nest([...shown].sort(byTime).sort(waitingFirst), { folded }).map(row))
     shown.sort(byTime)
+    // Spawned sessions follow the session that started them (R20.4), whatever
+    // their own folder; only the top-level sessions are grouped.
+    const ids = new Set(shown.map((s) => s.id))
     const groups = new Map()
-    for (const s of shown) {
+    for (const s of shown.filter((x) => !(x.parent && ids.has(x.parent)))) {
       const key = s.cwd ?? s.project
       if (!groups.has(key)) groups.set(key, [])
       groups.get(key).push(s)
@@ -94,7 +128,7 @@ export function mountSessions(root, currentId) {
     listEl.replaceChildren(
       ...ordered.map(([folder, list]) => {
         const g = el('section', 'sessions-group')
-        g.append(el('h3', null, folder), ...list.map(row))
+        g.append(el('h3', null, folder), ...nest(shown, { roots: list, folded }).map(row))
         return g
       }),
     )

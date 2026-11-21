@@ -9,6 +9,7 @@ import { readdir, stat } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import { readEdge } from './reader.js'
 import { classify } from './records.js'
+import { readParents } from '../spawned.js'
 
 const EDGE = 64 * 1024
 const RECENT_MS = 10 * 60 * 1000
@@ -38,7 +39,7 @@ export async function describeSession(file, now = Date.now()) {
 }
 
 // Every session under `projectsDir`, most recently written first.
-export async function listSessions(projectsDir, now = Date.now()) {
+export async function listSessions(projectsDir, now = Date.now(), parents = null) {
   let dirs
   try {
     dirs = await readdir(projectsDir, { withFileTypes: true })
@@ -63,5 +64,8 @@ export async function listSessions(projectsDir, now = Date.now()) {
       } catch {}
     }
   }
+  // Which session started which (R20); none where the desktop app keeps no record.
+  const from = parents ?? (await readParents().catch(() => ({})))
+  for (const s of out) s.parent = from[s.id] ?? null
   return out.sort((a, b) => b.modified - a.modified)
 }

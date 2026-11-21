@@ -5,28 +5,28 @@
   "panels": [
     "panel-waiting"
   ],
-  "done": "That is it: Set-up Info opens, with the text to paste into a session.",
+  "done": "That is it: Set-up Info opens, with the commands that update the plugin.",
   "steps": [
     {
       "target": [
         "setup-stale"
       ],
       "action": "point",
-      "caption": "After an update, the app compares what Claude installed with what it now ships, and says when they differ."
+      "caption": "After an update, the app compares the garnet-scoping plugin in Claude Code with its own version, and says when they differ."
     },
     {
       "target": [
         "setup-stale"
       ],
       "action": "point",
-      "caption": "Some features need the new files: the notice names the ones that are out of date."
+      "caption": "The notice also says when the plugin is missing or turned off, or when the installation from before the plugin is still there."
     },
     {
       "target": [
         "open-setup"
       ],
       "action": "point",
-      "caption": "Open Set-up Info, and paste its text into a session again. Claude replaces the old files."
+      "caption": "Open Set-up Info, and run the two update commands in a terminal. New sessions then use the new plugin."
     },
     {
       "target": [

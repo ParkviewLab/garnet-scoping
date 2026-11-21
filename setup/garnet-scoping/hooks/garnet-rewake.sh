@@ -36,10 +36,10 @@ trap 'rm -f "$pidfile"' EXIT
 # The watcher ends without a signal when Claude Code, this hook's parent, is
 # gone (killed outright, so that it could not end its hooks itself); then
 # there is no session to wake.
-out=$(GARNET_WATCH_OWNER=$PPID bash "$HOME/.claude/hooks/garnet-watch.sh" "$id") || exit 0
+out=$(GARNET_WATCH_OWNER=$PPID bash "$(dirname "$0")/garnet-watch.sh" "$id") || exit 0
 {
   echo "garnet-scoping: the person signalled this session."
   echo "$out"
-  echo "Handle it as the section \"garnet-scoping signals\" in ~/.claude/CLAUDE.md says. The watcher restarts by itself at the end of your turn; do not start one."
+  echo "Handle it as the garnet-scoping rules given at the start of this session say. The watcher restarts by itself at the end of your turn; do not start one."
 } >&2
 exit 2
