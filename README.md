@@ -99,7 +99,7 @@ The voice is chosen from those phonorheos lists. Alerts that arrive together are
 
 ## Limits
 
-The transcript is Claude Code's internal format, not a published interface, and a new version of Claude Code may change it. This release was checked against Claude Code 2.1.170 to 2.1.325; the Desk says when a session's version is newer than that, and counts any record it does not recognise, so that a change shows rather than passing silently. Subagents' own transcripts are not shown.
+The transcript is Claude Code's internal format, not a published interface, and a new version of Claude Code may change it. This release was checked against Claude Code 2.1.170 to 2.1.328; the Desk says when a session's version is newer than that, and counts any record it does not recognise, so that a change shows rather than passing silently. Subagents' own transcripts are not shown.
 
 ## Documents
 
