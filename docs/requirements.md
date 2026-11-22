@@ -96,7 +96,7 @@ R5.2. A transcript can hold anything a tool printed, secrets included. The Desk 
 
 R5.3. A long session's transcript can run to tens of megabytes: a Desk reads it incrementally, and opens within two seconds on a current laptop for a session of that size. The session list is built from each file's size, time and a few lines at its ends, never by reading whole files.
 
-R5.4. The app makes no network connection: every request that is not to the app's own files is refused in code, whatever part of the app makes it.
+R5.4. The app makes no network connection: every request that is not to the app's own files is refused in code, whatever part of the app makes it. The one exception is phonorheos's local Unix socket (R22, P18), a file on this machine through which no network is reached; the app never uses phonorheos's TCP port or its LAN listener.
 
 R5.5. Records that hold the session's setup rather than its work (the system prompt, the account's context) are never shown.
 
@@ -324,6 +324,26 @@ R21.4. The mode ends after one click, or on Esc; a click with Shift held keeps i
 
 R21.5. Every element the manual names (R18.11) has its name, explanation and purpose, and a check fails when one lacks any of them, so that a card cannot be blank for a control the app has.
 
+### R22. Speech
+
+Now: the app is silent. phonorheos, the lab's speaking app, may be running on the same machine; the manual's voice-over was made with it, but the app itself does not use it.
+
+R22.1. The app finds phonorheos on its own machine, if it is running, and keeps knowing whether it is: at start, when a window comes to the front, when phonorheos starts or quits, and at least every 30 seconds. Settings shows what it found ("phonorheos 0.10.0, ready", or that it is not running).
+
+R22.2. Four speech features, each **off until the person turns it on** in Settings, and each available only while phonorheos is running:
+- **A. A session needs you:** when a session becomes Waiting for you (R8.2), the app says so, with the session's title and why it waits, as R8.4 names it (a permission by its tool and one-line description, never the raw command; a question by its text): "Garnet-Scoping Development is waiting: permission to run npm test."
+- **B. A session finishes its turn:** when a session becomes Idle with the person's turn (R8.1): "macOS LAN co-op RTS game has finished; your turn."
+- **C. Read aloud:** a Read aloud item in the menu of a row, and on the Last word, aside answers, the agent's notes and What's This cards, which speaks that text; Stop silences it. Raw output is never read (R5.2).
+- **D. The agent answers on the board:** when a session answers a Review or a question placed on its board: "Garnet-Scoping Development answered your question on the board."
+
+R22.3. Settings has a Try button for each of A, B and D, which speaks its example.
+
+R22.4. The voice is one the person picks in Settings from the list phonorheos gives of its voices, or phonorheos's own default; where phonorheos gives no list (a version before the one that adds it), only the default is offered.
+
+R22.5. Each event is spoken once, whatever the number of windows open, and a burst of events (several sessions waiting at once) is spoken as one sentence naming them all, not as a queue of sentences. The app sends every event whether or not phonorheos is muted and pays no attention to its mute: muting is phonorheos's own concern, and phonorheos lists what it receives while muted, so the person can read what was sent.
+
+R22.6. What the app sends phonorheos is only the sentence to speak, with the app as its client name; phonorheos keeps it in memory only (its README). Nothing else of a transcript leaves the app.
+
 ### Rulings, 2026-11-14
 
 - **Waiting count:** both the count on the Dock and the waiting-first order (R8.3); on Ubuntu, a dock count where the system supports one and nothing where it does not.
@@ -343,6 +363,7 @@ R21.5. Every element the manual names (R18.11) has its name, explanation and pur
 - **Away:** accepted (R17): while away, the agent keeps its questions and moves on with work that does not need the person; on return it takes the person through what is pending, one item at a time.
 - **Manual:** proposed by the owner; lessons with voice-over, found from each panel and by search (R18); designed first, then made last, once the features it teaches exist.
 - **Resizing panels:** splitters between open panels, vertical or horizontal as the panels lie, with a 90 px minimum and a double-click reset (R19); demonstrated in a mock-up on 2026-11-15.
+- **Speech:** garnet-scoping uses phonorheos, found over its local socket, for four features: a session needs you, a session finishes its turn, Read aloud, and the agent answers on the board; each off until turned on; the voice picked from phonorheos's own list (R22); proposed by the owner and demonstrated in a mock-up on 2026-11-21.
 - **What's This:** a mode that asks what any element is, entered from a header button, the Help menu or ⌥⌘? (⇧F1 on Ubuntu), one click per entry with Shift to keep it on, answered by a card with a description and the element's lessons (R21); proposed by the owner and demonstrated in a mock-up on 2026-11-21.
 - **Spawned sessions:** indented beneath the session that started them, foldable by a chevron (R20); demonstrated in a mock-up on 2026-11-21.
 - **The manual window's frame:** teal diagonal stripes round the window, a teal practice strip with Leave the manual, its own title and demo tags (R18.12); chosen 2026-11-21 from six rendered frames, the pattern so that it reads without colour vision.
@@ -365,6 +386,7 @@ R21.5. Every element the manual names (R18.11) has its name, explanation and pur
 - P15. **Lessons replay the interface, not video:** each lesson is a script of steps (point at an element, click, type, wait), each step naming the element it acts on and its caption, which the manual window plays on the app's own interface with an overlaid pointer. Reason: a recording goes stale with every interface change and weighs tens of megabytes, while a script names elements, so R18.11's check can find a lesson whose element has gone, and the same named element checks the person's own try (R18.6).
 - P16. **The demo session** is a fixture shipped with the app: a transcript, a board and a state file in a folder of its own, read by the same code as a real session, so that a lesson shows the real panels; the manual window writes signals only to that folder, never to the boards folder.
 - P17. **Spawned sessions** are read from the desktop app's own record of each session (`~/Library/Application Support/Claude/claude-code-sessions/…/local_<id>.json`), which holds the session's transcript id (`cliSessionId`) and, for a spawned session, the record id of the session that started it (`spawnedFrom.sessionId`). The record is undocumented; it is read only, and where it is missing or unrecognised every session is listed at the top level (R20.3, R6). Found 2026-11-21 on desktop app sessions running Claude Code 2.1.328; transcripts themselves do not name the parent.
+- P18. **Finding phonorheos** is a request over its Unix socket (`~/Library/Application Support/phonorheos/phonorheos.sock` on macOS, `$XDG_RUNTIME_DIR/phonorheos/phonorheos.sock` on Linux, or `PHONORHEOS_SOCKET` where set): `GET /health`, then `GET /status` for its version and voice state. A missing socket, or one that refuses the connection, means phonorheos is not running. The folder holding the socket is watched, so that a start or a quit is seen at once, with a 30-second check behind it. Speech is `POST /speak`; Read aloud's Stop is `POST /stop`. Probed 2026-11-21 against phonorheos 0.10.0: `/health` answered in 16 ms and `/status` reported the voice ready. The list of voices awaits an endpoint being added to phonorheos (`GET /voices`), proposed the same day.
 
 ### Open questions
 
