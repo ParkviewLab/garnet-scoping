@@ -29,6 +29,8 @@ const IGNORED_TYPES = new Set([
   'tools-used',
   'dev-mods',
   'session-owner',
+  // Claude Code 2.1.328: the folder a session moved to (relocatedCwd).
+  'relocated',
 ])
 
 // Attachment kinds that hold the session's setup rather than its work; never

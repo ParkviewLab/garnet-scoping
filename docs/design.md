@@ -188,4 +188,4 @@ The descriptions are `manual/whats-this.json`, a name, an explanation and a purp
 
 ## Versions checked
 
-The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.
+The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.328. How a newer version is checked, and the record of each check, are in `claude-code-compatibility.md`.
