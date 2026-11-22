@@ -176,6 +176,16 @@ The Sessions panel orders the top-level sessions as before (R8.3) and places eac
 
 The descriptions are `manual/whats-this.json`, a name, an explanation and a purpose for each `data-ui` name (the purpose shown on its own line, muted), shipped with the manual; names made from a pattern (`lessons-<panel>`, `menu-<label>`) share one entry by prefix. The lessons for an element are those with a step whose target names it; with none, those whose `panels` include the nearest panel (`panel-*` or `pane-*`) that holds it, and the card says "Lessons for this panel". The test that holds each lesson's targets to the interface's names (R18.11) also holds every name to a description.
 
+## Speech (R22, P18)
+
+`src/main/speech.js` owns phonorheos. It speaks HTTP to phonorheos's Unix socket only (`PHONORHEOS_SOCKET`, else the macOS Application Support path, else `$XDG_RUNTIME_DIR/phonorheos/` or phonorheos's data folder on Linux), so no network is reached (R5.4). `check()` asks `GET /health`, then `GET /status` for the version and the voice's state, and `GET /voices` once per version phonorheos reports; a phonorheos without that endpoint gives an empty list and only its default is offered. It runs at start, whenever a window comes to the front, 300 ms after anything changes in the socket's folder (watched once the folder exists), and every 30 seconds. Every window, Settings included, is sent `speech:changed` when what was found changes.
+
+**Events.** A and B come from `computeLive`: `transitions()` compares each listed session's live state with the one last seen (nothing on the first, so start-up is silent) and reports a session that has begun waiting (a hold the person asked for excepted) or has become idle with the person's turn. D comes from the board's request handling: a request carrying `answers` or `"reviewed": true` calls `onAnswered`, so it fires for a session whose window has its board open (a request is read only then). The manual's demo never speaks. `event()` drops an event whose setting is off, keeps one of each kind per session in the burst, and 1.5 s after the last one speaks `sentence(burst)`: one event as it is, several named together by kind. The app sends whatever phonorheos's mute; muting is phonorheos's own concern.
+
+**Settings.** `settings.speech` holds `waiting`, `finished`, `board` and `readAloud`, all false until the person turns them on, and `voice` (null for phonorheos's default). The Settings window's Speech section shows the status line, a switch and a Try for each alert, Read aloud, and the voices phonorheos lists; its controls are disabled while phonorheos is not found.
+
+**Read aloud.** While `readAloud` is on and phonorheos is found, the session window adds Read aloud and Stop to the row menu, the Last word, aside answers and the agent's notes, and What's This cards add them too. They call `speech:say` and `speech:stop` (`POST /speak` and `POST /stop`). The text read is what the window shows, so raw output is never read (R5.2).
+
 ## Versions checked
 
 The app carries the list of Claude Code versions its reader was checked against, and the Desk says when a session's version is newer than any of them (R6.2). The first version was checked against 2.1.170 to 2.1.299, and later against versions up to 2.1.325.

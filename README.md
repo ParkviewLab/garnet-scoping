@@ -4,6 +4,8 @@
 
 A desktop app for macOS and Ubuntu that shows what a Claude Code session is doing, for the person working with it, and gives the person and the agent a board on which to draw together.
 
+Documentation: https://parkviewlab.github.io/garnet-scoping/
+
 It reads each session's transcript, the file Claude Code writes as the session runs, and opens on the most recently active session. Each session's window shows:
 
 - **Sessions:** every session on the machine with its live state (Working, Idle, Waiting for you, Not running), and, for one waiting, what it waits on and since when; waiting first, recent first by project, or alphabetically by project. A session that another session started is listed, indented, beneath it, with an arrow on the parent that folds such sessions away. The Dock icon counts the sessions waiting for you. Click a session to open its window.
@@ -16,7 +18,7 @@ The app only reads what Claude Code writes: it never writes under `~/.claude`, a
 
 ## Install
 
-Download from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
+Download from the [download page](https://parkviewlab.github.io/garnet-scoping/downloads/), or from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
 
 - **macOS (Apple silicon):** open the `.dmg` and drag garnet-scoping to Applications. From 0.14.3 the app is signed with a Developer ID and notarised by Apple, so it opens like any other. Releases before 0.14.3 were not signed: macOS refuses their first launch until you open them once with Control-click, Open.
 
@@ -83,6 +85,17 @@ Review, Discuss and Hold are written to the session's state file. For the agent 
 
 - **The plugin (any session).** garnet-scoping's side of Claude Code is one Claude Code plugin, `garnet-scoping`, which the app keeps at its own version in a local marketplace in `~/.garnet-scoping/claude-plugin`. Set-up Info gives the two `claude plugin` commands that install it, and the two that update it after an app update; the plugin is then listed on the Claude app's Plugins page. It brings a watcher, which Claude Code itself runs as an `asyncRewake` hook at the end of every turn and when a session is resumed (a new session is watched from the end of its first turn, because Claude Code waits for any hook run at a new session's start); the board tools; and the rules for answering signals, which its session-start hook gives each session at its start and after a compaction. When a signal appears, the watcher exits and Claude Code wakes the session at once, mid-task or idle, with a description of the new signal. Nothing depends on the agent remembering to watch, and since the desktop app does not count a hook as work, a waiting watcher raises no "Claude is still working" warning on quit. Versions up to 0.12 installed these pieces one by one into `~/.claude`; Set-up Info has the text that has Claude remove them, and each session window says while they remain.
 - **The channel (terminal sessions).** garnet-scoping ships a channel server, an MCP server that pushes each signal into the session the moment it appears. Claude Code supports channels as a research preview, in terminal sessions only; the desktop app does not load them yet. The second block is the command that starts a terminal session with it. The server runs with the app's own binary, needs no separate Node install, and opens no network connection.
+
+## Speech
+
+When [phonorheos](https://github.com/ParkviewLab/phonorheos), the lab's speaking app, runs on the same computer, garnet-scoping can speak through it. It reaches phonorheos over its local socket only, never over the network. In Settings, under Speech, each feature is off until you turn it on:
+
+- **A session needs you:** spoken when a session stops for a permission or a question.
+- **A session finishes its turn:** spoken when the agent ends its turn and it is yours.
+- **The agent answers on the board:** spoken when a session answers a Review or a question on its board.
+- **Read aloud:** a Read aloud button, with Stop, on rows, the Last word, aside answers, the agent's notes and What's This cards.
+
+The voice is chosen from those phonorheos lists. Alerts that arrive together are said in one sentence, and they are sent whether or not phonorheos is muted; phonorheos shows what arrived while it was muted.
 
 ## Limits
 

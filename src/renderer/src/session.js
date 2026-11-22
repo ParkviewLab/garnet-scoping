@@ -54,6 +54,22 @@ let trailShown = TRAIL_PAGE
 const open = new Set() // turn indexes the person opened
 const closed = new Set() // turn indexes the person closed
 let view = null
+// Read aloud (R22.2 C): offered while the setting is on and phonorheos runs.
+let readAloud = false
+let speechUp = false
+const speaking = () => readAloud && speechUp
+// A Read aloud button with a Stop beside it, or nothing while speech is off.
+function readAloudEl(text) {
+  if (!speaking() || !String(text ?? '').trim()) return null
+  const wrap = el('span', 'read-aloud')
+  const say = ui(el('button', null, 'Read aloud'), 'read-aloud')
+  const stop = ui(el('button', null, 'Stop'), 'read-aloud-stop')
+  for (const b of [say, stop]) b.type = 'button'
+  say.addEventListener('click', (e) => (e.stopPropagation(), window.garnet.speech.say(text)))
+  stop.addEventListener('click', (e) => (e.stopPropagation(), window.garnet.speech.stop()))
+  wrap.append(say, stop)
+  return wrap
+}
 let memory = null
 
 // ---- the viewer: a note, or an action's command and output ----
@@ -258,6 +274,8 @@ function showMenu(e, row, extra = []) {
   ]
   const m = openMark(row.key)
   if (m) items.push(['Withdraw the discussion', () => withdraw(m.id)])
+  // data-ui: menu-read-aloud, menu-stop-reading
+  if (speaking()) items.push(['Read aloud', () => window.garnet.speech.say(row.text)], ['Stop reading', () => window.garnet.speech.stop()])
   items.push(...extra)
   menu.replaceChildren(
     ...items.map(([label, act]) => {
@@ -338,6 +356,8 @@ function markable(node, row, onClick = null, extra = []) {
       ask.type = 'button'
       ask.addEventListener('click', (e) => (e.stopPropagation(), mark(row, aside.question)))
       box.append(ask)
+      const aloud = readAloudEl(aside.answer)
+      if (aloud) box.append(aloud)
     } else box.append(el('div', 'muted small', aside.error ?? 'No answer. Is the garnet-scoping plugin installed in Claude Code (Set-up Info)?'))
     node.append(box)
   }
@@ -500,6 +520,8 @@ function renderPresent() {
   // The agent writes Markdown; it is shown rendered, whole, in a box that
   // scrolls when it is long.
   if (lw?.text) box.append(Object.assign(markdown(lw.text), { className: 'speech markdown' }))
+  const lwAloud = readAloudEl(lw?.text)
+  if (lwAloud) box.append(lwAloud)
   if (lw?.recap) box.append(el('div', 'recap', lw.recap))
   if (lw?.ask) box.append(el('div', 'awaiting', `Asked: ${lw.ask}`))
   const lwNote = notes.find((n) => n.status === 'open' && n.on.panel === 'lastword')
@@ -1011,6 +1033,8 @@ function noteItem(n) {
   const item = ui(el('div', `discuss-item note ${n.status}`), 'note')
   const body = el('div', 'discuss-body')
   body.append(el('div', 'note-from', 'From the agent'), el('div', 'discuss-what', n.text))
+  const noteAloud = readAloudEl(n.text)
+  if (noteAloud) body.append(noteAloud)
   body.append(el('div', 'discuss-meta', [NOTE_WHERE[n.on.panel] ?? n.on.panel, n.on.panel === 'plan' ? n.on.key.slice(5) : n.on.panel === 'foryou' ? basename(n.on.key.slice(5)) : null, n.at ? ago(n.at) : null].filter(Boolean).join(' · ')))
   if (n.status === 'open') {
     const row = el('div', 'note-actions')
@@ -1190,13 +1214,29 @@ function jumpTo(m) {
     node.classList.add('jumped')
   })
 }
+function speechChanged() {
+  if (view) renderPresent()
+  renderDiscuss()
+}
 window.garnet.settings.get().then((s) => {
   boardSide = s.boardSide
+  readAloud = s.speech?.readAloud === true
   layout()
+  speechChanged()
 })
 window.garnet.settings.onChanged((s) => {
   boardSide = s.boardSide
+  readAloud = s.speech?.readAloud === true
   layout()
+  speechChanged()
+})
+window.garnet.speech.status().then((st) => {
+  speechUp = Boolean(st?.available)
+  speechChanged()
+})
+window.garnet.speech.onChanged((st) => {
+  speechUp = Boolean(st?.available)
+  speechChanged()
 })
 layout()
 // A request from the agent waits until the board is open: mark its toggle.
