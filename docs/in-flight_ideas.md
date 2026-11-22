@@ -50,3 +50,24 @@ It is a finer form of signalling intent at the point of reading (northstar draft
 Open questions: how a quote is shown on the Desk once sent (a flag on its row with the quoted words, or a mark on the words themselves); whether a quote must carry a note, since quoted words without a question say less than a flag; how a quote of text that later changes (a Last word replaced by a newer message) keeps pointing at what was quoted; whether quotes from the board's text belong here too.
 
 Raised 2026-10-20.
+
+## Seeing sessions on other machines on the LAN
+
+The person runs Claude Code sessions on more than one machine (a Mac and an Ubuntu desktop, say), and garnet-scoping on one cannot see the sessions on the other. The idea: garnet-scoping instances on the same LAN connect to each other, so that the person at machine A can switch to seeing what is on machine B, where garnet-scoping also runs. It fits the northstar, since shared perception should not stop at a machine's edge, but it crosses the app's firmest line: R5.4 and P2 say the app makes no network connection, "since a transcript can hold anything", so this would be the first feature to send transcript content over a network, and most of its design follows from that.
+
+**The likely shape**, mirroring phonorheos's LAN listener:
+- garnet-scoping on machine B, when switched on, serves its own data to the LAN: the session list and live states, each session's Desk and Trail as the app already derives them, and its board and signals.
+- garnet-scoping on machine A finds B by Bonjour/mDNS, as phonorheos advertises itself, or by an address typed in.
+- A's Sessions panel gains a group per remote machine ("speed"); opening one of its sessions shows the same window, fed from B instead of from local files. The windows barely change; what changes is where a session's data comes from.
+
+**Scope.** View only (sessions, Desk, Trail, live state, and speech alerts from B's sessions), or also acting on B: Discuss, Hold, Away, the board and asides. Acting needs B to accept writes from A, which is a larger trust step. The inclination is view only first, through B's own app with a token, and acting on remote sessions later, once the reading side has proved itself.
+
+**Security.** Every request carries a token per pair of machines, as phonorheos's LAN mode does. The home lab's threat model (a private, single-user LAN) suggests that suffices without TLS. The feature is off by default, and B decides which machines may connect. An action's raw output (R5.2) stays on B unless the person asks for it, as it does locally.
+
+**An alternative: SSH instead of a server.** A could read B's transcripts and board files over the person's existing SSH connections, reusing their keys and encryption, with no listener on B at all. The trade-off: B would need no garnet-scoping running, but A would redo all of B's parsing remotely and need SSH access, and live state (B's per-process files) is harder to follow over SSH than from B's own app.
+
+**Beside the Claude desktop app.** The desktop app already shows its own remote sessions; this would cover terminal and SSH sessions on other machines too, which it does not.
+
+Open questions: view only first, or full use (signals, Hold and the board) from the start; B's app serving the LAN, or A reading B over SSH; how a remote machine and its sessions are shown and told apart from local ones; how pairing works (a token copied once, or a code confirmed on both machines); what R5.4 is restated to, and how the exception is enforced in code as narrowly as R5.4 is now.
+
+Raised 2026-11-21.
