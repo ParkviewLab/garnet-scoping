@@ -4,6 +4,21 @@ All notable changes to this project are recorded here.
 
 ## [Unreleased]
 
+## [v0.16.0] - 2026-11-21
+
+### Highlights
+
+This release adds optional spoken alerts through phonorheos, found only over its local Unix socket so the app still makes no network connection. Four features, each off until enabled in a new Speech section in Settings, cover a session beginning to wait for you, a session finishing its turn, the agent answering a question or Review on the board, and a Read aloud command on row menus for the Last word, aside answers, agent notes and What's This cards; Settings shows whether phonorheos was found, offers a Try button per alert, and lets you pick a voice from phonorheos's list where available. Events within 1.5 seconds of each other are merged into one sentence, and no alerts fire at start-up. The README now links the documentation site and offers the download page ahead of the releases page.
+
+### Features
+
+- Speech through phonorheos (R22) (#115)
+
+### Docs
+
+- Link the documentation site and the download page from the README (#113)
+- Speech through phonorheos (R22) (#114)
+
 ## [v0.15.0] - 2026-11-21
 
 ### Highlights
