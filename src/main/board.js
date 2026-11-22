@@ -328,7 +328,7 @@ export async function inheritBoard(id, ancestors, dir = BOARDS) {
 }
 
 // One session's board: load, save, and watch for requests and outside edits.
-export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExternal, onPending, onState, onDelivery }) {
+export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExternal, onPending, onState, onDelivery, onAnswered }) {
   const p = boardPaths(id, dir)
   let lastWritten = null
   // The elements the rendition was last written from, and the board's state.
@@ -539,6 +539,8 @@ export function openBoard(id, { title = null, dir = BOARDS, onRequest, onExterna
         ...(pinned ? { notes: [...state.notes, ...pinned.map((n, i) => ({ id: `n${Date.now().toString(36)}${i}`, on: n.on, text: n.text, at: now(), status: 'open' }))] } : {}),
       })
     }
+    // The agent has answered on the board: a question, or a Review (R22.2 D).
+    if (answers?.length || req?.reviewed === true) onAnswered?.({ answered: answers?.length ?? 0, reviewed: req?.reviewed === true })
     if (!changes) await writeOutcome({ requestId: req?.requestId ?? null, ok: true, reviewed: req?.reviewed === true, discussed: Array.isArray(req?.discussed) ? req.discussed.length : 0, answered: answers ? answers.length : 0, pinned: pinned ? pinned.length : 0, notesRefused: Array.isArray(req?.notes) ? req.notes.length - (pinned?.length ?? 0) : 0, holding, holdIgnored: req?.holding === true && !holding })
     if (changes) {
       // An image the agent adds by path is read here and passed on as data.
