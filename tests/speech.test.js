@@ -49,10 +49,10 @@ describe('transitions', () => {
 
 describe('parseVoices', () => {
   it('reads a list of voices, by object or by name, and marks the default', () => {
-    const v = parseVoices(JSON.stringify({ voices: [{ id: 'bm_lewis', name: 'Lewis', accent: 'British', gender: 'male', default: true }, 'af_heart', { id: '../bad' }] }))
+    const v = parseVoices(JSON.stringify({ default: 'bm_lewis', voices: [{ id: 'bm_lewis', name: 'Lewis', accent: 'british', gender: 'male', default: true }, 'af_heart', { id: '../bad' }] }))
     expect(v).toEqual([
-      { id: 'bm_lewis', label: 'Lewis (British, male)', default: true },
-      { id: 'af_heart', label: 'af_heart', default: false },
+      { id: 'bm_lewis', name: 'Lewis', label: 'Lewis (British, male)', default: true },
+      { id: 'af_heart', name: 'af_heart', label: 'af_heart', default: false },
     ])
     expect(parseVoices('not json')).toEqual([])
   })
@@ -109,7 +109,7 @@ describe('createSpeech', () => {
     const { sock, spoken } = await fake()
     const sp = createSpeech({ sock, settings: () => ({ speech: { voice: 'bf_emma' } }) })
     await until(() => sp.status().available)
-    expect(sp.status()).toMatchObject({ available: true, version: '0.11.0', voices: [{ id: 'bf_emma', label: 'Emma' }] })
+    expect(sp.status()).toMatchObject({ available: true, version: '0.11.0', voices: [{ id: 'bf_emma', name: 'Emma', label: 'Emma' }] })
     expect(await sp.say('Hello.')).toBe(true)
     expect(spoken).toEqual([{ text: 'Hello.', client: CLIENT, voice: 'bf_emma' }])
     sp.close()

@@ -37,7 +37,7 @@ function show(st) {
   for (const el of [...boxes, ...tries, voice]) el.disabled = !up
   const voices = st?.voices ?? []
   const def = voices.find((v) => v.default)
-  const opts = [new Option(`phonorheos's default${def ? ` (${def.label})` : ''}`, '')]
+  const opts = [new Option(`phonorheos's default${def ? `: ${def.name}` : ''}`, '')]
   for (const v of voices) opts.push(new Option(v.label, v.id))
   voice.replaceChildren(...opts)
   voice.value = voices.some((v) => v.id === settings.speech?.voice) ? settings.speech.voice : ''

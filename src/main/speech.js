@@ -58,9 +58,12 @@ export function parseVoices(body) {
     .map((v) => (typeof v === 'string' ? { id: v } : v))
     .filter((v) => v && typeof v.id === 'string' && /^[a-z]{1,3}_[a-z0-9]+$/.test(v.id))
     .map((v) => {
-      const extra = [v.accent, v.gender].filter((x) => typeof x === 'string' && x).join(', ')
+      // An accent is a proper adjective ("British"); a gender is not.
+      const accent = typeof v.accent === 'string' && v.accent ? v.accent[0].toUpperCase() + v.accent.slice(1) : null
+      const gender = typeof v.gender === 'string' && v.gender ? v.gender.toLowerCase() : null
+      const extra = [accent, gender].filter(Boolean).join(', ')
       const name = typeof v.name === 'string' && v.name ? v.name : v.id
-      return { id: v.id, label: extra ? `${name} (${extra})` : name, default: v.default === true || v.selected === true }
+      return { id: v.id, name, label: extra ? `${name} (${extra})` : name, default: v.default === true || v.selected === true }
     })
 }
 
