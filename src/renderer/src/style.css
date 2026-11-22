@@ -1508,3 +1508,70 @@ body.whats-this .whats-this-btn {
   color: var(--muted);
   cursor: pointer;
 }
+
+/* Settings, Speech (R22): each feature a row with its switch, what it does,
+   what it says, and a Try button. */
+.speech-status.ok::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #1d9e75;
+  margin-right: 7px;
+}
+.speech-list {
+  display: flex;
+  flex-direction: column;
+}
+.speech-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+.speech-opt > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.speech-opt b {
+  font-weight: 500;
+}
+.speech-opt .muted {
+  font-size: 12px;
+}
+.speech-opt i {
+  font-size: 12px;
+  color: #c9b38a;
+}
+.speech-opt input[type='checkbox'] {
+  margin-top: 3px;
+}
+.speech-opt button {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+.speech-opt :disabled {
+  opacity: 0.45;
+}
+.speech-voice select {
+  max-width: 240px;
+}
+/* Read aloud and its Stop (R22.2 C). */
+.read-aloud {
+  display: inline-flex;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+.read-aloud button {
+  font-size: 11px;
+  padding: 1px 8px;
+}
+.settings-page h2 + p.speech-status,
+.settings-page .sides + h2 {
+  margin-top: 22px;
+}

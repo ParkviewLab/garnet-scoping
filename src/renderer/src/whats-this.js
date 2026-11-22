@@ -45,6 +45,13 @@ export function mountWhatsThis() {
   let texts = { names: {}, prefixes: {} }
   let lessons = []
   window.garnet.whatsThis().then((t) => t && (texts = t))
+  // Read aloud on the card (R22.2 C), while the setting is on and phonorheos runs.
+  let aloud = false
+  let up = false
+  window.garnet.settings?.get().then((st) => (aloud = st?.speech?.readAloud === true))
+  window.garnet.settings?.onChanged((st) => (aloud = st?.speech?.readAloud === true))
+  window.garnet.speech?.status().then((st) => (up = Boolean(st?.available)))
+  window.garnet.speech?.onChanged((st) => (up = Boolean(st?.available)))
   window.garnet.manual.lessons().then((l) => (lessons = l ?? []))
 
   const outline = el('div', 'whats-this-outline')
@@ -83,6 +90,17 @@ export function mountWhatsThis() {
     close.addEventListener('click', closeCard)
     card.append(close, el('h3', null, d.title), el('p', null, d.text))
     if (d.purpose) card.append(el('p', 'whats-this-purpose', d.purpose))
+    if (aloud && up) {
+      const wrap = el('span', 'read-aloud')
+      // data-ui is not set here: the card is the mode's own, never asked about.
+      const say = el('button', null, 'Read aloud')
+      const stop = el('button', null, 'Stop')
+      for (const b of [say, stop]) b.type = 'button'
+      say.addEventListener('click', () => window.garnet.speech.say(`${d.title}. ${d.text} ${d.purpose ?? ''}`))
+      stop.addEventListener('click', () => window.garnet.speech.stop())
+      wrap.append(say, stop)
+      card.append(wrap)
+    }
     if (mine.length) {
       card.append(el('div', 'muted small', ofPanel ? 'Lessons for this panel' : 'Lessons'))
       for (const l of mine) {

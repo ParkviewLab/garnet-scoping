@@ -86,6 +86,17 @@ Review, Discuss and Hold are written to the session's state file. For the agent 
 - **The plugin (any session).** garnet-scoping's side of Claude Code is one Claude Code plugin, `garnet-scoping`, which the app keeps at its own version in a local marketplace in `~/.garnet-scoping/claude-plugin`. Set-up Info gives the two `claude plugin` commands that install it, and the two that update it after an app update; the plugin is then listed on the Claude app's Plugins page. It brings a watcher, which Claude Code itself runs as an `asyncRewake` hook at the end of every turn and when a session is resumed (a new session is watched from the end of its first turn, because Claude Code waits for any hook run at a new session's start); the board tools; and the rules for answering signals, which its session-start hook gives each session at its start and after a compaction. When a signal appears, the watcher exits and Claude Code wakes the session at once, mid-task or idle, with a description of the new signal. Nothing depends on the agent remembering to watch, and since the desktop app does not count a hook as work, a waiting watcher raises no "Claude is still working" warning on quit. Versions up to 0.12 installed these pieces one by one into `~/.claude`; Set-up Info has the text that has Claude remove them, and each session window says while they remain.
 - **The channel (terminal sessions).** garnet-scoping ships a channel server, an MCP server that pushes each signal into the session the moment it appears. Claude Code supports channels as a research preview, in terminal sessions only; the desktop app does not load them yet. The second block is the command that starts a terminal session with it. The server runs with the app's own binary, needs no separate Node install, and opens no network connection.
 
+## Speech
+
+When [phonorheos](https://github.com/ParkviewLab/phonorheos), the lab's speaking app, runs on the same computer, garnet-scoping can speak through it. It reaches phonorheos over its local socket only, never over the network. In Settings, under Speech, each feature is off until you turn it on:
+
+- **A session needs you:** spoken when a session stops for a permission or a question.
+- **A session finishes its turn:** spoken when the agent ends its turn and it is yours.
+- **The agent answers on the board:** spoken when a session answers a Review or a question on its board.
+- **Read aloud:** a Read aloud button, with Stop, on rows, the Last word, aside answers, the agent's notes and What's This cards.
+
+The voice is chosen from those phonorheos lists. Alerts that arrive together are said in one sentence, and they are sent whether or not phonorheos is muted; phonorheos shows what arrived while it was muted.
+
 ## Limits
 
 The transcript is Claude Code's internal format, not a published interface, and a new version of Claude Code may change it. This release was checked against Claude Code 2.1.170 to 2.1.325; the Desk says when a session's version is newer than that, and counts any record it does not recognise, so that a change shows rather than passing silently. Subagents' own transcripts are not shown.

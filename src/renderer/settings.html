@@ -17,6 +17,15 @@
       <label><input type="radio" name="side" value="top" data-ui="board-side-top" /> Top</label>
       <label><input type="radio" name="side" value="bottom" data-ui="board-side-bottom" /> Bottom</label>
     </div>
+    <h2>Speech</h2>
+    <p class="speech-status muted" id="speech-status" data-ui="speech-status">Looking for phonorheos…</p>
+    <div class="speech-list">
+      <label class="speech-opt"><input type="checkbox" data-key="waiting" data-ui="speech-waiting" /><span><b>Tell me when a session needs me</b><span class="muted">When a session stops for a permission or a question.</span><i>"Garnet-Scoping Development is waiting: permission to run npm test."</i></span><button type="button" data-try="waiting" data-ui="speech-try">Try</button></label>
+      <label class="speech-opt"><input type="checkbox" data-key="finished" data-ui="speech-finished" /><span><b>Tell me when a session finishes its turn</b><span class="muted">When the agent ends its turn and it is yours.</span><i>"macOS LAN co-op RTS game has finished; your turn."</i></span><button type="button" data-try="finished" data-ui="speech-try">Try</button></label>
+      <label class="speech-opt"><input type="checkbox" data-key="board" data-ui="speech-board" /><span><b>Tell me when the agent answers on the board</b><span class="muted">When a session answers a Review or a question on its board.</span><i>"Garnet-Scoping Development answered your question on the board."</i></span><button type="button" data-try="board" data-ui="speech-try">Try</button></label>
+      <label class="speech-opt"><input type="checkbox" data-key="readAloud" data-ui="speech-read-aloud" /><span><b>Read aloud</b><span class="muted">Adds Read aloud to rows, the Last word, aside answers, notes and What's This cards.</span></span></label>
+      <label class="speech-opt speech-voice"><span><b>Voice</b><span class="muted" id="voice-note">One of phonorheos's voices.</span></span><select id="voice" data-ui="speech-voice"></select></label>
+    </div>
     <script type="module" src="./src/settings.js"></script>
   </body>
 </html>

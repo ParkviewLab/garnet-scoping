@@ -17,6 +17,7 @@ import { follow } from './follower.js'
 import { openBoard, inheritBoard } from './board.js'
 import { openAboutWindow, openLicensesWindow } from './about.js'
 import { loadSettings, saveSettings, clean } from './settings.js'
+import { createSpeech, transitions } from './speech.js'
 import { openSetupInfo, installChannel, installPlugin } from './setupInfo.js'
 import { pluginStatus } from './plugin.js'
 import { watchLive } from './live/index.js'
@@ -40,6 +41,8 @@ let listWindow = null
 let settingsWindow = null
 let settingsFile = null
 let settings = null
+let speech = null // phonorheos, when found (R22)
+let lastStates = null // the live states last seen, for speech's events
 const windows = new Map() // session id -> { win, follower, project }
 let known = [] // the session list, as listSessions gives it
 let liveFacts = { available: true, bySession: {} }
@@ -121,6 +124,8 @@ function openSession(info, { sessions = false, demo = false, query = {}, bounds 
         onExternal: (elements) => send('board:external', elements),
         onPending: () => send('board:pending'),
         onDelivery: (d) => send('board:delivery', d),
+        // R22.2 D: the agent answered on the board. Never for the manual's demo.
+        onAnswered: ({ answered }) => !demo && speech?.event({ kind: 'board', id: info.id, title: titleOf(info.id) ?? info.title ?? 'A session', what: answered === 1 ? 'your question' : answered > 1 ? 'your questions' : 'your review' }),
         onState: (state) => {
           send('board:state', state)
           updateLive()
@@ -220,17 +225,22 @@ function inside(dir, p) {
 // The Settings window (one at a time).
 function openSettings() {
   if (settingsWindow && !settingsWindow.isDestroyed()) return settingsWindow.focus()
-  settingsWindow = new BrowserWindow({ width: 420, height: 230, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, title: 'Settings', backgroundColor: '#17181a', webPreferences: webPreferences() })
+  settingsWindow = new BrowserWindow({ width: 560, height: 640, resizable: false, minimizable: false, maximizable: false, fullscreenable: false, title: 'Settings', backgroundColor: '#17181a', webPreferences: webPreferences() })
   load(settingsWindow, 'settings')
   settingsWindow.on('closed', () => (settingsWindow = null))
 }
 
 function registerIpc() {
   ipcMain.handle('settings:get', () => settings)
+  // Speech (R22): what was found, and speaking on request (Read aloud, Try).
+  ipcMain.handle('speech:status', () => speech?.status() ?? { available: false, voices: [] })
+  ipcMain.handle('speech:check', () => speech?.check())
+  ipcMain.handle('speech:say', (_e, text) => (speech ? speech.say(String(text ?? '')) : false))
+  ipcMain.handle('speech:stop', () => (speech ? speech.stop() : false))
   ipcMain.handle('settings:set', async (_e, next) => {
     settings = clean(next)
     await saveSettings(settingsFile, settings)
-    for (const w of windows.values()) if (!w.win.isDestroyed()) w.win.webContents.send('settings:changed', settings)
+    for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send('settings:changed', settings)
     return settings
   })
   // The manual's window lists the demo alone, so that a lesson never opens a
@@ -379,6 +389,11 @@ async function boardStateOf(id, dir = BOARDS) {
     return null
   }
 }
+// A session's name as the Sessions panel shows it, for speech.
+function titleOf(id) {
+  const s = known.find((k) => k.id === id)
+  return s ? (s.title ?? s.firstMessage?.slice(0, 60) ?? null) : null
+}
 async function computeLive() {
   if (!known.length) known = await listSessions(PROJECTS)
   const states = {}
@@ -399,6 +414,11 @@ async function computeLive() {
     for (const o of demo?.others ?? []) states[o.id] = demoState(o)
   }
   live = { available: liveFacts.available, states }
+  // R22.2 A and B: a session that has begun waiting, or finished its turn.
+  // The manual's demo sessions never speak.
+  const real = Object.fromEntries(known.map((s) => [s.id, states[s.id]]).filter(([, st]) => st))
+  if (speech) for (const e of transitions(lastStates, real, titleOf)) speech.event(e)
+  lastStates = real
   for (const w of BrowserWindow.getAllWindows()) {
     try {
       if (!w.isDestroyed() && !w.webContents.isDestroyed()) w.webContents.send('live:changed', live)
@@ -451,6 +471,15 @@ app.whenReady().then(() => {
   installChannel().catch(() => {})
   installPlugin().catch((err) => console.error('garnet-scoping: the Claude Code plugin was not written:', err))
   refuseNetwork()
+  // phonorheos, over its local socket (R22, P18): checked now, when a window
+  // comes to the front, when its socket appears or goes, and every 30 s.
+  speech = createSpeech({
+    settings: () => settings,
+    onStatus: (st) => {
+      for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send('speech:changed', st)
+    },
+  })
+  app.on('browser-window-focus', () => speech.check())
   registerIpc()
   buildMenu()
   watchProjects()

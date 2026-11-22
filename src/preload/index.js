@@ -40,6 +40,14 @@ contextBridge.exposeInMainWorld('garnet', {
     set: (s) => ipcRenderer.invoke('settings:set', s),
     onChanged: (fn) => ipcRenderer.on('settings:changed', (_e, s) => fn(s)),
   },
+  // Speech through phonorheos (R22).
+  speech: {
+    status: () => ipcRenderer.invoke('speech:status'),
+    check: () => ipcRenderer.invoke('speech:check'),
+    say: (text) => ipcRenderer.invoke('speech:say', text),
+    stop: () => ipcRenderer.invoke('speech:stop'),
+    onChanged: (fn) => ipcRenderer.on('speech:changed', (_e, s) => fn(s)),
+  },
   board: {
     open: () => ipcRenderer.invoke('board:open'),
     save: (scene) => ipcRenderer.invoke('board:save', scene),

@@ -1,0 +1,34 @@
+{
+  "n": 31,
+  "title": "Hear when a session needs you",
+  "group": "Setting up",
+  "panels": [
+    "pane-sessions"
+  ],
+  "done": "That is it: each speech feature stays off until you turn it on, and works while phonorheos runs.",
+  "steps": [
+    {
+      "target": [
+        "pane-sessions"
+      ],
+      "action": "point",
+      "caption": "garnet-scoping can speak through phonorheos, the lab's speaking app, when it runs on this computer."
+    },
+    {
+      "target": [],
+      "action": "window",
+      "text": "settings",
+      "caption": "The speech features are in Settings, under Speech. Here it is."
+    },
+    {
+      "target": [],
+      "action": "point",
+      "caption": "Turn on what you want to hear: a session that needs you, a session that has finished, an answer on the board, and Read aloud. Try plays each one."
+    },
+    {
+      "target": [],
+      "action": "point",
+      "caption": "Choose a voice from those phonorheos lists. The status line says whether phonorheos is running."
+    }
+  ]
+}
