@@ -53,21 +53,19 @@ Raised 2026-10-20.
 
 ## Seeing sessions on other machines on the LAN
 
-The person runs Claude Code sessions on more than one machine (a Mac and an Ubuntu desktop, say), and garnet-scoping on one cannot see the sessions on the other. The idea: garnet-scoping instances on the same LAN connect to each other, so that the person at machine A can switch to seeing what is on machine B, where garnet-scoping also runs. It fits the northstar, since shared perception should not stop at a machine's edge, but it crosses the app's firmest line: R5.4 and P2 say the app makes no network connection, "since a transcript can hold anything", so this would be the first feature to send transcript content over a network, and most of its design follows from that.
+The person runs Claude Code sessions on more than one machine (a Mac and an Ubuntu desktop, say), and garnet-scoping on one cannot see the sessions on the other. The idea: garnet-scoping instances on the same LAN find and talk to one another, so that the person at one machine sees, and acts on, the sessions on every machine. It fits the northstar, since shared perception should not stop at a machine's edge, but it crosses the app's firmest line: axiom 4, R5.4, S2 and P2 say the app makes no network connection, "since a transcript can hold anything", so this would be the first feature to send transcript content over a network.
 
-**The likely shape**, mirroring phonorheos's LAN listener:
-- garnet-scoping on machine B, when switched on, serves its own data to the LAN: the session list and live states, each session's Desk and Trail as the app already derives them, and its board and signals.
-- garnet-scoping on machine A finds B by Bonjour/mDNS, as phonorheos advertises itself, or by an address typed in.
-- A's Sessions panel gains a group per remote machine ("speed"); opening one of its sessions shows the same window, fed from B instead of from local files. The windows barely change; what changes is where a session's data comes from.
+The design was worked out with the owner on 2026-11-21 and written up as a proposal in the Library (Proposals, "Sessions on other machines for garnet-scoping"), where the reasons, the alternatives set aside and the open questions are recorded. In brief, as ruled:
 
-**Scope.** View only (sessions, Desk, Trail, live state, and speech alerts from B's sessions), or also acting on B: Discuss, Hold, Away, the board and asides. Acting needs B to accept writes from A, which is a larger trust step. The inclination is view only first, through B's own app with a token, and acting on remote sessions later, once the reading side has proved itself.
+- **Peers at one version.** garnet-scoping runs on every development machine that runs Claude Code (all have a desktop); each serves its own sessions and shows the others', and all instances must be at the same version, a machine at another version being shown as refused.
+- **Full use, the same UI.** A remote session works as a local one does (Desk, Trail, board, every signal); the Sessions panel gains machine names as its top level, Waiting first stays one list across all machines, the Dock count covers them all, and each session still opens in its own window.
+- **Found by Bonjour, trusted by pairing.** A typed address is the fallback; a found machine is trusted only after the person confirms, once, that both screens show the same six-digit code.
+- **Mutual TLS with pinned certificates.** Each machine's private key is kept with Electron's `safeStorage` (the Keychain, or GNOME Keyring), and LAN sharing is refused without a secure store.
+- **Off by default, private addresses only.** With sharing off, R5.4 is unchanged; with it on, the app reaches only Bonjour and paired peers at private addresses.
+- **Features tied to a machine.** Speech follows each machine's own settings; a remote file is previewed, or opened as a copy, but not shown in the Finder; raw output is fetched for the one action picked, never saved; the serving machine's board file is the single authority.
 
-**Security.** Every request carries a token per pair of machines, as phonorheos's LAN mode does. The home lab's threat model (a private, single-user LAN) suggests that suffices without TLS. The feature is off by default, and B decides which machines may connect. An action's raw output (R5.2) stays on B unless the person asks for it, as it does locally.
+Set aside: SSH instead of a listener; view only first; one window per machine; a certificate authority (Infisical) for now; answering a session's question from the app, and Claude Code's Remote Control, which goes through Anthropic.
 
-**An alternative: SSH instead of a server.** A could read B's transcripts and board files over the person's existing SSH connections, reusing their keys and encryption, with no listener on B at all. The trade-off: B would need no garnet-scoping running, but A would redo all of B's parsing remotely and need SSH access, and live state (B's per-process files) is harder to follow over SSH than from B's own app.
+Open: whether to add the feature at all, which the owner is deciding; the wording of the restated axiom 4, R5.4, S2 and P2; and the smaller questions listed in the proposal.
 
-**Beside the Claude desktop app.** The desktop app already shows its own remote sessions; this would cover terminal and SSH sessions on other machines too, which it does not.
-
-Open questions: view only first, or full use (signals, Hold and the board) from the start; B's app serving the LAN, or A reading B over SSH; how a remote machine and its sessions are shown and told apart from local ones; how pairing works (a token copied once, or a code confirmed on both machines); what R5.4 is restated to, and how the exception is enforced in code as narrowly as R5.4 is now.
-
-Raised 2026-11-21.
+Raised 2026-11-21; proposal written 2026-11-21.
