@@ -4,6 +4,8 @@
 
 A desktop app for macOS and Ubuntu that shows what a Claude Code session is doing, for the person working with it, and gives the person and the agent a board on which to draw together.
 
+Documentation: https://parkviewlab.github.io/garnet-scoping/
+
 It reads each session's transcript, the file Claude Code writes as the session runs, and opens on the most recently active session. Each session's window shows:
 
 - **Sessions:** every session on the machine with its live state (Working, Idle, Waiting for you, Not running), and, for one waiting, what it waits on and since when; waiting first, recent first by project, or alphabetically by project. A session that another session started is listed, indented, beneath it, with an arrow on the parent that folds such sessions away. The Dock icon counts the sessions waiting for you. Click a session to open its window.
@@ -16,7 +18,7 @@ The app only reads what Claude Code writes: it never writes under `~/.claude`, a
 
 ## Install
 
-Download from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
+Download from the [download page](https://parkviewlab.github.io/garnet-scoping/downloads/), or from the [releases page](https://github.com/ParkviewLab/garnet-scoping/releases).
 
 - **macOS (Apple silicon):** open the `.dmg` and drag garnet-scoping to Applications. From 0.14.3 the app is signed with a Developer ID and notarised by Apple, so it opens like any other. Releases before 0.14.3 were not signed: macOS refuses their first launch until you open them once with Control-click, Open.
 
